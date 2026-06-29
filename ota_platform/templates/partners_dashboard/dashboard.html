@@ -1,0 +1,782 @@
+{% extends "partners_dashboard/base_partners.html" %}
+{% load static %}
+
+{% block page_title %}Partner Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 mb-0">Partner Dashboard</h2>
+        <div>
+            <a class="btn btn-outline-secondary btn-sm" href="#">Settings</a>
+            <a class="btn btn-primary btn-sm" href="#">Create Listing</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-primary"><i class="fas fa-hotel fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ hotel_count }}</div>
+                        <small class="text-muted">Hotels</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-info"><i class="fas fa-plane fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ flight_count }}</div>
+                        <small class="text-muted">Flights</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-success"><i class="fas fa-car fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ car_count }}</div>
+                        <small class="text-muted">Cars</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-warning"><i class="fas fa-mountain fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ tour_count }}</div>
+                        <small class="text-muted">Tours</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-primary"><i class="fas fa-chart-line fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ bookings_count }}</div>
+                        <small class="text-muted">Total Bookings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-success"><i class="fas fa-dollar-sign fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ revenue }}</div>
+                        <small class="text-muted">Revenue</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-info"><i class="fas fa-bed fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ occupancy_rate }}</div>
+                        <small class="text-muted">Occupancy</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-warning"><i class="fas fa-exclamation-circle fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ pending_issues }}</div>
+                        <small class="text-muted">Pending Issues</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-primary"><i class="fas fa-check-circle fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ confirmed_bookings }}</div>
+                        <small class="text-muted">Confirmed Bookings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-success"><i class="fas fa-money-bill-wave fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ adr }}</div>
+                        <small class="text-muted">ADR</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-info"><i class="fas fa-chart-area fa-2x"></i></div>
+                    <div>
+                        <div class="h5 mb-0">{{ revpar }}</div>
+                        <small class="text-muted">RevPAR</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        {% for section in module_sections %}
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card shadow-sm p-3 h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3 text-primary"><i class="{{ section.icon }} fa-2x"></i></div>
+                    <h5 class="mb-0">{{ section.title }}</h5>
+                </div>
+                <ul class="mb-0 ps-3 text-muted">
+                    {% for item in section.items %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card shadow-sm p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Performance</h5>
+                    <small class="text-muted">Last 30 days</small>
+                </div>
+                <canvas id="bookingsChart" height="150"></canvas>
+            </div>
+
+            <div class="card shadow-sm p-3">
+                <h5 class="mb-3">Recent Activity</h5>
+                {% if bookings %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Service</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            <tr>
+                                <td>{{ b.user.get_full_name|default:b.user.email }}</td>
+                                <td>
+                                    {% if b.content_type.model == 'hotel' %}
+                                        {{ b.content_object.name }}
+                                    {% elif b.content_type.model == 'flight' %}
+                                        {{ b.content_object }}
+                                    {% elif b.content_type.model == 'carrental' %}
+                                        {{ b.content_object }}
+                                    {% elif b.content_type.model == 'tour' %}
+                                        {{ b.content_object.name }}
+                                    {% else %}
+                                        {{ b.content_object }}
+                                    {% endif %}
+                                    <div><small class="text-muted text-uppercase">{{ b.content_type.model }}</small></div>
+                                </td>
+                                <td>{{ b.created_at|date:"Y-m-d" }}</td>
+                                <td><span class="badge bg-{{ b.status|default:"secondary" }}">{{ b.status|title }}</span></td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary" href="#">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent activity.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm p-3 mb-3">
+                <h5 class="mb-3">Your Facilities</h5>
+                {% if hotels %}
+                    <ul class="list-group list-group-flush">
+                        {% for hotel in hotels %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ hotel.name }}</div>
+                                <small class="text-muted">{% if hotel.city %}{{ hotel.city.name }}{% else %}—{% endif %}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm {% if hotel.is_active %}btn-success{% else %}btn-outline-secondary{% endif %} toggle-availability" data-hotel-id="{{ hotel.id }}">
+                                    {% if hotel.is_active %}Available{% else %}Offline{% endif %}
+                                </button>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No facilities found.</p>
+                {% endif %}
+            </div>
+
+            <div class="card shadow-sm p-3">
+                <h5 class="mb-3">Operational Snapshot</h5>
+                <div class="d-grid gap-2">
+                    <div class="border rounded p-2">
+                        <small class="text-muted">Available properties</small>
+                        <div class="fw-semibold">{{ active_hotels }} active</div>
+                    </div>
+                    <div class="border rounded p-2">
+                        <small class="text-muted">Pending bookings</small>
+                        <div class="fw-semibold">{{ pending_bookings }}</div>
+                    </div>
+                    <div class="border rounded p-2">
+                        <small class="text-muted">Cancelled bookings</small>
+                        <div class="fw-semibold">{{ cancelled_bookings }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm p-3 mt-3">
+                <h5 class="mb-3">Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a class="btn btn-outline-primary" href="#">New Booking</a>
+                    <a class="btn btn-outline-secondary" href="#">Export</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-3">
+        <div class="col-12">
+            <div class="card shadow-sm p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-0">Your Listings</h5>
+                        <small class="text-muted">All properties linked to your partner account</small>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-primary">{{ hotel_count }} Hotels</span>
+                        <span class="badge bg-info">{{ flight_count }} Flights</span>
+                        <span class="badge bg-success">{{ car_count }} Cars</span>
+                        <span class="badge bg-warning text-dark">{{ tour_count }} Tours</span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="card border-0 shadow-sm p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Hotels</h6>
+                                    <small class="text-muted">Managed hotels</small>
+                                </div>
+                                <span class="badge bg-primary">{{ hotels|length }}</span>
+                            </div>
+                            {% if hotels %}
+                            <ul class="list-group list-group-flush">
+                                {% for hotel in hotels %}
+                                <li class="list-group-item px-0 py-3 border-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-semibold">{{ hotel.name }}</div>
+                                            <small class="text-muted">{{ hotel.city.name }} · {{ hotel.price_per_night }}</small>
+                                        </div>
+                                        <span class="badge bg-{{ hotel.is_available|yesno:'success,secondary' }}">{{ hotel.is_available|yesno:'Available,Offline' }}</span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                                <p class="text-muted mb-0">No hotels found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="card border-0 shadow-sm p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Flights</h6>
+                                    <small class="text-muted">Managed flight schedules</small>
+                                </div>
+                                <span class="badge bg-info">{{ flights|length }}</span>
+                            </div>
+                            {% if flights %}
+                            <ul class="list-group list-group-flush">
+                                {% for flight in flights %}
+                                <li class="list-group-item px-0 py-3 border-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-semibold">{{ flight.airline.name }} {{ flight.flight_number }}</div>
+                                            <small class="text-muted">{{ flight.origin.code }} → {{ flight.destination.code }} · {{ flight.departure_time|date:"M d" }}</small>
+                                        </div>
+                                        <span class="badge bg-{{ flight.is_available|yesno:'success,secondary' }}">{{ flight.status|title }}</span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                                <p class="text-muted mb-0">No flights found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="card border-0 shadow-sm p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Cars</h6>
+                                    <small class="text-muted">Managed car rentals</small>
+                                </div>
+                                <span class="badge bg-success">{{ cars|length }}</span>
+                            </div>
+                            {% if cars %}
+                            <ul class="list-group list-group-flush">
+                                {% for car in cars %}
+                                <li class="list-group-item px-0 py-3 border-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-semibold">{{ car.car_model }}</div>
+                                            <small class="text-muted">{{ car.city.name }} · {{ car.price_per_day }}</small>
+                                        </div>
+                                        <span class="badge bg-{{ car.is_available|yesno:'success,secondary' }}">{{ car.is_available|yesno:'Available,Offline' }}</span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                                <p class="text-muted mb-0">No cars found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="card border-0 shadow-sm p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Tours</h6>
+                                    <small class="text-muted">Managed tours & activities</small>
+                                </div>
+                                <span class="badge bg-warning text-dark">{{ tours|length }}</span>
+                            </div>
+                            {% if tours %}
+                            <ul class="list-group list-group-flush">
+                                {% for tour in tours %}
+                                <li class="list-group-item px-0 py-3 border-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-semibold">{{ tour.name }}</div>
+                                            <small class="text-muted">{{ tour.destination.name }} · {{ tour.price_per_person }}</small>
+                                        </div>
+                                        <span class="badge bg-{{ tour.is_available|yesno:'success,secondary' }}">{{ tour.is_available|yesno:'Available,Offline' }}</span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                                <p class="text-muted mb-0">No tours found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066cc;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --card-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .card {
+            border: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .card:hover {
+            box-shadow: var(--card-hover-shadow) !important;
+            transform: translateY(-2px);
+        }
+
+        .card.shadow-sm {
+            box-shadow: var(--card-shadow) !important;
+        }
+
+        .card-title, .card h5 {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .card p-3 {
+            padding: 1.5rem !important;
+        }
+
+        .card .h5 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.25rem;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .card .text-primary { color: var(--primary) !important; }
+        .card .text-success { color: var(--success) !important; }
+        .card .text-warning { color: var(--warning) !important; }
+        .card .text-danger { color: var(--danger) !important; }
+
+        /* Buttons */
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background-color: #0052a3;
+            border-color: #0052a3;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        /* Table */
+        .table-responsive {
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 102, 204, 0.05);
+        }
+
+        .table thead.table-light {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .table th {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-color: #e9ecef;
+        }
+
+        /* Badge */
+        .badge {
+            padding: 0.4rem 0.75rem;
+            font-weight: 500;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .badge.bg-pending { background-color: #ffc107 !important; color: #212529; }
+        .badge.bg-confirmed { background-color: var(--success) !important; }
+        .badge.bg-cancelled { background-color: #6c757d !important; }
+        .badge.bg-completed { background-color: var(--primary) !important; }
+
+        /* List Group */
+        .list-group-item {
+            border-color: #e9ecef;
+            padding: 1rem;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Charts */
+        canvas {
+            max-height: 200px;
+        }
+
+        /* Header */
+        .d-flex.justify-content-between.align-items-center {
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 2rem;
+        }
+
+        .h4 {
+            font-weight: 700;
+            color: #212529;
+        }
+
+        /* Grid spacing */
+        .row.g-3 > .col-lg-8,
+        .row.g-3 > .col-lg-4 {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Quick actions */
+        .d-grid.gap-2 .btn {
+            padding: 0.75rem 1rem;
+        }
+
+        /* Status indicators */
+        .toggle-availability {
+            min-width: 90px;
+        }
+
+        /* Icon sizing */
+        .fa-2x {
+            width: 2.5em;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .h4 {
+                font-size: 1.25rem;
+            }
+
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .btn-sm {
+                width: 100%;
+            }
+        }
+
+        /* Loading state */
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.2em;
+        }
+
+        /* Success/Error messages */
+        .alert {
+            border-radius: 6px;
+            border: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            // Initialize bookings chart
+            const ctx = document.getElementById('bookingsChart');
+            if (ctx) {
+                try {
+                    const labels = {{ bookings_dates|safe }};
+                    const data = {{ bookings_counts|safe }};
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Bookings',
+                                data: data,
+                                borderColor: '#0066cc',
+                                backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#0066cc',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    labels: { font: { weight: '600', size: 12 }, padding: 15 }
+                                },
+                                filler: { propagate: true }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+                                    ticks: { font: { size: 12 } }
+                                },
+                                x: {
+                                    grid: { display: false, drawBorder: false },
+                                    ticks: { font: { size: 12 } }
+                                }
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error('Chart initialization error:', e);
+                }
+            }
+
+            // Toggle availability with AJAX
+            document.querySelectorAll('.toggle-availability').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const hotelId = this.dataset.hotelId;
+                    const btn = this;
+                    
+                    btn.classList.add('loading');
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+                    fetch('{% url "partners_dashboard:toggle_availability" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `hotel_id=${hotelId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            btn.classList.remove('loading');
+                            const isActive = data.is_active;
+                            btn.classList.toggle('btn-success', isActive);
+                            btn.classList.toggle('btn-outline-secondary', !isActive);
+                            btn.textContent = isActive ? 'Available' : 'Offline';
+                            showNotification('Status updated successfully', 'success');
+                        } else {
+                            throw new Error('Failed to update');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        btn.classList.remove('loading');
+                        btn.textContent = btn.classList.contains('btn-success') ? 'Available' : 'Offline';
+                        showNotification('Error updating status', 'danger');
+                    });
+                });
+            });
+
+            // Helper function to get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Notification helper
+            function showNotification(message, type) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.insertAdjacentElement('afterbegin', alertDiv);
+                setTimeout(() => alertDiv.remove(), 4000);
+            }
+        });
+    </script>
+{% endblock %}

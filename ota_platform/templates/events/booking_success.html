@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking confirmed - {{ site_settings.site_name|default:'TravelHub' }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <span class="badge bg-success mb-3">Success</span>
+                    <h2 class="mb-3">Booking confirmed</h2>
+                    <p class="text-muted mb-4">Your tickets are reserved for <strong>{{ booking.event.name }}</strong>.</p>
+
+                    <div class="row g-3 text-start mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Booking number</p>
+                            <h5>{{ booking.booking_number }}</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Ticket category</p>
+                            <h5>{{ booking.ticket_category.name }}</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Quantity</p>
+                            <h5>{{ booking.quantity }}</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Total paid</p>
+                            <h5>{{ booking.final_price }}</h5>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'events:event_detail' booking.event.id %}" class="btn btn-outline-primary me-2">Back to event</a>
+                    <a href="{% url 'events:event_list' %}" class="btn btn-primary">Browse more events</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}System Settings - Admin Dashboard{% endblock %}
+
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">General Settings</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Maintenance Mode -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Maintenance Mode</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="maintenance_mode" id="maintenance_mode" {% if settings.maintenance_mode %}checked{% endif %}>
+                                <label class="form-check-label" for="maintenance_mode">
+                                    Enable Maintenance Mode
+                                </label>
+                            </div>
+                            <small class="text-muted">When enabled, the site will show a maintenance message to visitors</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label class="form-label">Maintenance Message</label>
+                            <textarea class="form-control" name="maintenance_message" rows="3" placeholder="We're currently performing scheduled maintenance...">{{ settings.maintenance_message }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Booking Settings -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Booking Settings</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Maximum Booking Days in Advance</label>
+                            <input type="number" class="form-control" name="max_booking_days_advance" value="{{ settings.max_booking_days_advance }}" min="1" max="730">
+                            <small class="text-muted">Maximum days customers can book in advance</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Minimum Booking Hours in Advance</label>
+                            <input type="number" class="form-control" name="min_booking_hours_advance" value="{{ settings.min_booking_hours_advance }}" min="1" max="72">
+                            <small class="text-muted">Minimum hours required before service date</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="auto_confirm_bookings" id="auto_confirm_bookings" {% if settings.auto_confirm_bookings %}checked{% endif %}>
+                                <label class="form-check-label" for="auto_confirm_bookings">
+                                    Auto-confirm Bookings
+                                </label>
+                            </div>
+                            <small class="text-muted">Automatically confirm bookings without manual review</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Notification Settings -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Notification Settings</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="email_notifications_enabled" id="email_notifications_enabled" {% if settings.email_notifications_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="email_notifications_enabled">
+                                    Enable Email Notifications
+                                </label>
+                            </div>
+                            <small class="text-muted">Send booking confirmations and updates via email</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="sms_notifications_enabled" id="sms_notifications_enabled" {% if settings.sms_notifications_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="sms_notifications_enabled">
+                                    Enable SMS Notifications
+                                </label>
+                            </div>
+                            <small class="text-muted">Send important updates via SMS</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> Save Settings
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- System Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">System Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Database</span>
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle"></i> Online
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Cache</span>
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle"></i> Active
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Email Service</span>
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle"></i> Working
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Payment Gateway</span>
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle"></i> Connected
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>API Services</span>
+                    <span class="badge bg-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Limited
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Clear Cache
+                    </button>
+                    <button class="btn btn-outline-success">
+                        <i class="bi bi-download me-2"></i>Backup Database
+                    </button>
+                    <button class="btn btn-outline-warning">
+                        <i class="bi bi-gear me-2"></i>Run Diagnostics
+                    </button>
+                    <button class="btn btn-outline-info">
+                        <i class="bi bi-arrow-repeat me-2"></i>Sync External APIs
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Information -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">System Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="h6">Django</div>
+                        <small class="text-muted">4.2.7</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h6">Python</div>
+                        <small class="text-muted">3.11.0</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h6">Database</div>
+                        <small class="text-muted">PostgreSQL</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h6">Cache</div>
+                        <small class="text-muted">Redis</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="small text-muted">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Server Time:</span>
+                        <span id="serverTime"></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Uptime:</span>
+                        <span>15 days, 4 hours</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Last Backup:</span>
+                        <span>2 hours ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update server time
+function updateServerTime() {
+    const now = new Date();
+    document.getElementById('serverTime').textContent = now.toLocaleString();
+}
+
+updateServerTime();
+setInterval(updateServerTime, 1000);
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const maxDays = parseInt(document.querySelector('input[name="max_booking_days_advance"]').value);
+    const minHours = parseInt(document.querySelector('input[name="min_booking_hours_advance"]').value);
+    
+    if (maxDays < 1 || maxDays > 730) {
+        e.preventDefault();
+        alert('Maximum booking days must be between 1 and 730');
+        return;
+    }
+    
+    if (minHours < 1 || minHours > 72) {
+        e.preventDefault();
+        alert('Minimum booking hours must be between 1 and 72');
+        return;
+    }
+});
+</script>
+{% endblock %}

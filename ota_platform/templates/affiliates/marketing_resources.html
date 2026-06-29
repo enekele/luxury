@@ -1,0 +1,153 @@
+{% extends 'affiliates/base_affiliate.html' %}
+
+{% block title %}Marketing Resources - Affiliate Dashboard{% endblock %}
+
+{% block page_title %}Marketing Resources{% endblock %}
+
+{% block content %}
+<!-- Resource Categories -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a href="{% url 'affiliates:marketing_resources' %}" class="btn {% if not selected_type %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        All Resources
+                    </a>
+                    <a href="?type=banner" class="btn {% if selected_type == 'banner' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Banners
+                    </a>
+                    <a href="?type=text_link" class="btn {% if selected_type == 'text_link' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Text Links
+                    </a>
+                    <a href="?type=email_template" class="btn {% if selected_type == 'email_template' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Email Templates
+                    </a>
+                    <a href="?type=social_post" class="btn {% if selected_type == 'social_post' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Social Posts
+                    </a>
+                    <a href="?type=guide" class="btn {% if selected_type == 'guide' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Guides
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resources Grid -->
+<div class="row">
+    {% for resource in resources %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100">
+            {% if resource.image %}
+                <img src="{{ resource.image.url }}" class="card-img-top" alt="{{ resource.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    {% if resource.resource_type == 'banner' %}
+                        <i class="bi bi-image" style="font-size: 3rem; color: #6b7280;"></i>
+                    {% elif resource.resource_type == 'email_template' %}
+                        <i class="bi bi-envelope" style="font-size: 3rem; color: #6b7280;"></i>
+                    {% elif resource.resource_type == 'social_post' %}
+                        <i class="bi bi-share" style="font-size: 3rem; color: #6b7280;"></i>
+                    {% elif resource.resource_type == 'guide' %}
+                        <i class="bi bi-book" style="font-size: 3rem; color: #6b7280;"></i>
+                    {% else %}
+                        <i class="bi bi-file-text" style="font-size: 3rem; color: #6b7280;"></i>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title">{{ resource.title }}</h6>
+                    <span class="badge bg-light text-dark">{{ resource.get_resource_type_display }}</span>
+                </div>
+                
+                <p class="card-text">{{ resource.description }}</p>
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="bi bi-tag me-1"></i>{{ resource.get_service_type_display }}
+                    </small>
+                    <br>
+                    <small class="text-muted">
+                        <i class="bi bi-download me-1"></i>{{ resource.download_count }} downloads
+                    </small>
+                </div>
+                
+                {% if resource.content %}
+                    <div class="mb-3">
+                        <h6>Preview:</h6>
+                        <div class="bg-light p-2 rounded small">
+                            {{ resource.content|truncatewords:20 }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer bg-transparent">
+                <div class="d-flex gap-2">
+                    {% if resource.download_file %}
+                        <a href="{% url 'affiliates:download_resource' resource.id %}" class="btn btn-primary btn-sm flex-fill">
+                            <i class="bi bi-download me-1"></i>Download
+                        </a>
+                    {% endif %}
+                    {% if resource.content %}
+                        <button class="btn btn-outline-secondary btn-sm" onclick="copyContent({{ resource.id }})">
+                            <i class="bi bi-copy"></i>Copy
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-folder" style="font-size: 4rem; color: #6b7280;"></i>
+            <h4 class="mt-3">No Resources Available</h4>
+            <p class="text-muted">Marketing resources will be available here once you're approved.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Hidden content for copying -->
+{% for resource in resources %}
+    <textarea id="content-{{ resource.id }}" style="position: absolute; left: -9999px;">{{ resource.content }}</textarea>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyContent(resourceId) {
+    const content = document.getElementById(`content-${resourceId}`).value;
+    
+    // Replace placeholder with actual affiliate link
+    const affiliateLink = document.getElementById('affiliateLink').value;
+    const finalContent = content.replace(/\[AFFILIATE_LINK\]/g, affiliateLink);
+    
+    navigator.clipboard.writeText(finalContent).then(function() {
+        // Show success feedback
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i>';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-secondary');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+
+function copyAffiliateLink() {
+    const linkInput = document.getElementById('affiliateLink');
+    linkInput.select();
+    navigator.clipboard.writeText(linkInput.value);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,323 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}Analytics - Admin Dashboard{% endblock %}
+
+{% block page_title %}Analytics & Reports{% endblock %}
+
+{% block content %}
+<!-- Revenue Analytics -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Revenue by Service Type (Last 30 Days)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="revenueByServiceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Growth & Top Destinations -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">User Growth (Last 12 Months)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Top Destinations</h6>
+            </div>
+            <div class="card-body">
+                {% for destination in top_destinations %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="fw-medium">{{ destination.city__name }}</div>
+                        <small class="text-muted">{{ destination.city__country__name }}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ destination.booking_count }}</div>
+                        <small class="text-muted">bookings</small>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No destination data available</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon primary">
+                <i class="bi bi-eye"></i>
+            </div>
+            <div class="stats-value">125.4K</div>
+            <div class="stats-label">Page Views</div>
+            <small class="text-success">
+                <i class="bi bi-arrow-up"></i> +12.5% vs last month
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-cursor"></i>
+            </div>
+            <div class="stats-value">3.2%</div>
+            <div class="stats-label">Conversion Rate</div>
+            <small class="text-success">
+                <i class="bi bi-arrow-up"></i> +0.3% vs last month
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon warning">
+                <i class="bi bi-clock"></i>
+            </div>
+            <div class="stats-value">2m 34s</div>
+            <div class="stats-label">Avg. Session</div>
+            <small class="text-danger">
+                <i class="bi bi-arrow-down"></i> -15s vs last month
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon danger">
+                <i class="bi bi-arrow-return-left"></i>
+            </div>
+            <div class="stats-value">42.1%</div>
+            <div class="stats-label">Bounce Rate</div>
+            <small class="text-success">
+                <i class="bi bi-arrow-down"></i> -2.1% vs last month
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Reports -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Booking Trends</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="border-end">
+                            <div class="h4 text-primary">68%</div>
+                            <small class="text-muted">Mobile Bookings</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h4 text-success">32%</div>
+                        <small class="text-muted">Desktop Bookings</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Peak Booking Hours</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>9:00 AM - 11:00 AM</span>
+                        <div class="progress flex-grow-1 mx-3">
+                            <div class="progress-bar" style="width: 85%"></div>
+                        </div>
+                        <span class="text-muted">85%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>2:00 PM - 4:00 PM</span>
+                        <div class="progress flex-grow-1 mx-3">
+                            <div class="progress-bar bg-success" style="width: 72%"></div>
+                        </div>
+                        <span class="text-muted">72%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>7:00 PM - 9:00 PM</span>
+                        <div class="progress flex-grow-1 mx-3">
+                            <div class="progress-bar bg-warning" style="width: 58%"></div>
+                        </div>
+                        <span class="text-muted">58%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Customer Insights</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="h5 text-primary">4.2</div>
+                        <small class="text-muted">Avg. Trips/Year</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 text-success">$1,250</div>
+                        <small class="text-muted">Avg. Spend</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 text-warning">78%</div>
+                        <small class="text-muted">Return Rate</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Age Demographics</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>18-25</span>
+                        <div class="progress flex-grow-1 mx-3">
+                            <div class="progress-bar" style="width: 22%"></div>
+                        </div>
+                        <span class="text-muted">22%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>26-35</span>
+                        <div class="progress flex-grow-1 mx-3">
+                            <div class="progress-bar bg-success" style="width: 38%"></div>
+                        </div>
+                        <span class="text-muted">38%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>36-50</span>
+                        <div class="progress flex-grow-1 mx-3">
+                            <div class="progress-bar bg-warning" style="width: 28%"></div>
+                        </div>
+                        <span class="text-muted">28%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>50+</span>
+                        <div class="progress flex-grow-1 mx-3">
+                            <div class="progress-bar bg-info" style="width: 12%"></div>
+                        </div>
+                        <span class="text-muted">12%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Export Reports</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="bi bi-file-earmark-excel me-2"></i>Revenue Report
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-success w-100">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>User Analytics
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-warning w-100">
+                            <i class="bi bi-file-earmark-text me-2"></i>Booking Report
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-info w-100">
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i>Performance Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Revenue by Service Chart
+const revenueCtx = document.getElementById('revenueByServiceChart').getContext('2d');
+const revenueData =('{{ monthly_revenue|safe }}');
+
+new Chart(revenueCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Hotels', 'Flights', 'Car Rentals', 'Tours'],
+        datasets: [{
+            data: [revenueData.hotel, revenueData.flight, revenueData.carrental, revenueData.tour],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// User Growth Chart
+const userCtx = document.getElementById('userGrowthChart').getContext('2d');
+const userGrowthData = ('{{ user_growth|safe }}');
+
+new Chart(userCtx, {
+    type: 'line',
+    data: {
+        labels: userGrowthData.map(item => item.month),
+        datasets: [{
+            label: 'New Users',
+            data: userGrowthData.map(item => item.users),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

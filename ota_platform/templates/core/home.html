@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ site_settings.site_name|default:"TravelHub" }} - Your Travel Companion{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center hero-content">
+                <h1 class="display-4 fw-bold mb-4 animate-fade-in-up">
+                    Discover Your Next Adventure
+                </h1>
+                <p class="lead mb-4 animate-fade-in-up">
+                    Book hotels, flights, cars, and tours at the best prices worldwide. 
+                    Your journey starts here with {{ site_settings.site_name|default:"TravelHub" }}.
+                </p>
+                
+                <!-- Search Form -->
+                <div class="search-form animate-fade-in-up">
+                    <form action="{% url 'search' %}" method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <select class="form-select" name="type" id="serviceType">
+                                <option value="all">All Services</option>
+                                <option value="hotel">Hotels</option>
+                                <option value="flight">Flights</option>
+                                <option value="car">Car Rentals</option>
+                                <option value="tour">Tours</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="destination" placeholder="Where are you going?" id="destination">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="q" placeholder="Search anything..." id="searchQuery">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-4 animate-fade-in-up">
+                        <a href="{% url 'events:event_list' %}" class="btn btn-outline-light btn-lg me-2">
+                            <i class="bi bi-ticket-fill"></i> Browse Events
+                        </a>
+                        <a href="{% url 'events:event_list' %}?upcoming_only=1" class="btn btn-light btn-lg text-dark">
+                            Upcoming Events
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Destinations -->
+{% if popular_cities %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold">Popular Destinations</h2>
+                <p class="lead text-muted">Explore the most loved destinations by travelers worldwide</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for city in popular_cities %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100">
+                    <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=400" 
+                         class="card-img-top" alt="{{ city.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ city.name }}</h5>
+                        <p class="card-text text-muted">{{ city.country.name }}</p>
+                        <a href="{% url 'destination_detail' city.country.code %}" class="btn btn-outline-primary">
+                            Explore <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Hotels -->
+{% if featured_hotels %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold">Featured Hotels</h2>
+                <p class="lead text-muted">Handpicked accommodations for your perfect stay</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for hotel in featured_hotels %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100">
+                    <img src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=400" 
+                         class="card-img-top" alt="{{ hotel.name }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ hotel.name }}</h5>
+                            <div class="text-end">
+                                <div class="text-warning mb-1">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= hotel.star_rating %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% else %}
+                                            <i class="bi bi-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text text-muted mb-2">
+                            <i class="bi bi-geo-alt"></i> {{ hotel.city.name }}, {{ hotel.city.country.name }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-primary fw-bold">${{ hotel.price_per_night }}</span>
+                                <small class="text-muted">/night</small>
+                            </div>
+                            <a href="{% url 'hotels:hotel_detail' hotel.id %}" class="btn btn-primary btn-sm">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Services Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold">Our Services</h2>
+                <p class="lead text-muted">Everything you need for your perfect trip</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="bi bi-building" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Hotels</h5>
+                        <p class="card-text">From luxury resorts to budget-friendly stays, find the perfect accommodation for your trip.</p>
+                        <a href="{% url 'hotels:hotel_list' %}" class="btn btn-outline-primary">Browse Hotels</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="bi bi-airplane" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Flights</h5>
+                        <p class="card-text">Compare and book flights from major airlines worldwide with the best prices guaranteed.</p>
+                        <a href="{% url 'flights:flight_search' %}" class="btn btn-outline-primary">Search Flights</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="bi bi-car-front" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Car Rentals</h5>
+                        <p class="card-text">Rent a car from trusted providers and explore your destination with complete freedom.</p>
+                        <a href="{% url 'cars:car_list' %}" class="btn btn-outline-primary">Rent a Car</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="bi bi-map" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Tours</h5>
+                        <p class="card-text">Join guided tours and discover hidden gems with local experts and fellow travelers.</p>
+                        <a href="{% url 'tours:tour_list' %}" class="btn btn-outline-primary">Explore Tours</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="bi bi-ticket-perforated" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Events</h5>
+                        <p class="card-text">Find concerts, sports matches, and live shows with ticket booking built for every event.</p>
+                        <a href="{% url 'events:event_list' %}" class="btn btn-outline-primary">Browse Events</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Promotions Section -->
+{% if active_promotions %}
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold">Special Offers</h2>
+                <p class="lead">Don't miss out on these amazing deals and promotions</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for promotion in active_promotions %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 bg-white text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title">{{ promotion.title }}</h5>
+                            <span class="badge bg-warning">
+                                {% if promotion.discount_type == 'percentage' %}
+                                    {{ promotion.discount_value }}% OFF
+                                {% else %}
+                                    ${{ promotion.discount_value }} OFF
+                                {% endif %}
+                            </span>
+                        </div>
+                        <p class="card-text">{{ promotion.description }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <code class="bg-light px-2 py-1 rounded">{{ promotion.code }}</code>
+                            <small class="text-muted">Until {{ promotion.valid_until|date:"M d, Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Reviews Section -->
+{% if recent_reviews %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold">What Travelers Say</h2>
+                <p class="lead text-muted">Real reviews from real travelers</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for review in recent_reviews %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="card-title mb-0">{{ review.user.get_full_name }}</h6>
+                                <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                            </div>
+                            <div class="text-warning">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="card-text">{{ review.comment|truncatewords:20 }}</p>
+                        <small class="text-muted">
+                            <i class="bi bi-geo-alt"></i> {{ review.content_object }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Newsletter Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-5 fw-bold mb-4">Stay Updated</h2>
+                <p class="lead text-muted mb-4">Get the latest travel deals and destination guides delivered to your inbox</p>
+                
+                <form action="{% url 'newsletter_subscribe' %}" method="post" class="row g-3 justify-content-center">
+                    {% csrf_token %}
+                    <div class="col-md-6">
+                        <input type="email" class="form-control" name="email" placeholder="Enter your email address" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="name" placeholder="Your name (optional)">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-envelope"></i> Subscribe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ hotel.name }} - Hotels - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Hotel Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hotels:hotel_list' %}">Hotels</a></li>
+                    <li class="breadcrumb-item active">{{ hotel.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h1 class="mb-2">{{ hotel.name }}</h1>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="text-warning me-2">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= hotel.star_rating %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if hotel.average_rating %}
+                            <span class="badge bg-success me-2">{{ hotel.average_rating|floatformat:1 }}</span>
+                            <span class="text-muted">({{ hotel.total_reviews }} reviews)</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-geo-alt"></i> {{ hotel.address }}, {{ hotel.city.name }}, {{ hotel.city.country.name }}
+                    </p>
+                </div>
+                
+                <div class="text-end">
+                    <div class="mb-2">
+                        <span class="text-primary fw-bold h3">${{ hotel.price_per_night.amount }}</span>
+                        <small class="text-muted">/night</small>
+                    </div>
+                    {% if hotel.is_featured %}
+                        <span class="badge bg-warning">Featured</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Quick Booking Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Book Your Stay</h5>
+                </div>
+                <div class="card-body">
+                    <form id="bookingForm">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Check-in</label>
+                                <input type="date" class="form-control" id="checkIn" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Check-out</label>
+                                <input type="date" class="form-control" id="checkOut" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Guests</label>
+                            <select class="form-select" id="guests">
+                                <option value="1">1 Guest</option>
+                                <option value="2" selected>2 Guests</option>
+                                <option value="3">3 Guests</option>
+                                <option value="4">4 Guests</option>
+                                <option value="5">5+ Guests</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Check Availability</button>
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="addToWishlist('{{ hotel.id }}')">                            <i class="bi bi-heart"></i> Add to Wishlist
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hotel Images -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="row">
+                <div class="col-lg-8">
+                    {% if hotel.main_image %}
+                        <img src="{{ hotel.main_image.url }}" class="img-fluid rounded" alt="{{ hotel.name }}" style="height: 400px; width: 100%; object-fit: cover;">
+                    {% else %}
+                        <img src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800" class="img-fluid rounded" alt="{{ hotel.name }}" style="height: 400px; width: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div class="col-lg-4">
+                    <div class="row">
+                        <div class="col-6 col-lg-12 mb-2">
+                            <img src="https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=400" class="img-fluid rounded" alt="Hotel Room" style="height: 190px; width: 100%; object-fit: cover;">
+                        </div>
+                        <div class="col-6 col-lg-12">
+                            <img src="https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=400" class="img-fluid rounded" alt="Hotel Lobby" style="height: 190px; width: 100%; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hotel Details Tabs -->
+    <div class="row">
+        <div class="col-lg-8">
+            <ul class="nav nav-tabs" id="hotelTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">Overview</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms" type="button" role="tab">Rooms</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="amenities-tab" data-bs-toggle="tab" data-bs-target="#amenities" type="button" role="tab">Amenities</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">Reviews</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="location-tab" data-bs-toggle="tab" data-bs-target="#location" type="button" role="tab">Location</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="hotelTabsContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="p-4">
+                        <h4>About {{ hotel.name }}</h4>
+                        <p>{{ hotel.description }}</p>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h6>Check-in / Check-out</h6>
+                                <p class="text-muted">{{ hotel.check_in_time }} / {{ hotel.check_out_time }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Contact Information</h6>
+                                {% if hotel.phone %}
+                                    <p class="text-muted"><i class="bi bi-telephone"></i> {{ hotel.phone }}</p>
+                                {% endif %}
+                                {% if hotel.email %}
+                                    <p class="text-muted"><i class="bi bi-envelope"></i> {{ hotel.email }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if hotel.cancellation_policy %}
+                            <div class="mt-4">
+                                <h6>Cancellation Policy</h6>
+                                <p class="text-muted">{{ hotel.cancellation_policy }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Rooms Tab -->
+                <div class="tab-pane fade" id="rooms" role="tabpanel">
+                    <div class="p-4">
+                        <h4>Available Rooms</h4>
+                        {% for room_type in room_types %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <img src="https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=300" class="img-fluid rounded" alt="{{ room_type.name }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>{{ room_type.name }}</h5>
+                                            <p class="text-muted">{{ room_type.description }}</p>
+                                            <div class="mb-2">
+                                                <span class="badge bg-light text-dark me-1">
+                                                    <i class="bi bi-people"></i> {{ room_type.max_occupancy }} guests
+                                                </span>
+                                                {% if room_type.size_sqm %}
+                                                    <span class="badge bg-light text-dark me-1">{{ room_type.size_sqm }} m²</span>
+                                                {% endif %}
+                                                {% if room_type.bed_type %}
+                                                    <span class="badge bg-light text-dark">{{ room_type.bed_type }}</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if room_type.amenities %}
+                                                <div>
+                                                    {% for amenity in room_type.amenities|slice:":4" %}
+                                                        <small class="text-muted me-2">• {{ amenity }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-3 text-end">
+                                            <div class="mb-2">
+                                                <span class="text-primary fw-bold h5">${{ room_type.price_per_night.amount }}</span>
+                                                <small class="text-muted d-block">/night</small>
+                                            </div>
+                                            <p class="text-success mb-2">{{ room_type.available_rooms }} rooms left</p>
+                                            <button class="btn btn-primary btn-sm w-100 w-md-auto">Select Room</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No room information available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Amenities Tab -->
+                <div class="tab-pane fade" id="amenities" role="tabpanel">
+                    <div class="p-4">
+                        <h4>Hotel Amenities</h4>
+                        {% if hotel.amenities %}
+                            <div class="row">
+                                {% for amenity in hotel.amenities %}
+                                    <div class="col-md-6 mb-2">
+                                        <i class="bi bi-check-circle text-success me-2"></i>{{ amenity }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Amenity information not available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Reviews Tab -->
+                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Guest Reviews</h4>
+                            {% if can_review %}
+                                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                    Write a Review
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        {% if hotel.average_rating %}
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="display-4 text-primary fw-bold">{{ hotel.average_rating|floatformat:1 }}</div>
+                                        <div class="text-warning mb-2">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= hotel.average_rating %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <p class="text-muted">Based on {{ hotel.total_reviews }} reviews</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% for review in reviews %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-0">{{ review.user.get_full_name }}</h6>
+                                            <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div class="text-warning">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= review.rating %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <p class="mb-0">{{ review.comment }}</p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No reviews yet. Be the first to review this hotel!</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Location Tab -->
+                <div class="tab-pane fade" id="location" role="tabpanel">
+                    <div class="p-4">
+                        <h4>Location</h4>
+                        <p class="text-muted mb-3">{{ hotel.address }}, {{ hotel.city.name }}, {{ hotel.city.country.name }}</p>
+                        
+                        <!-- Map placeholder -->
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 300px;">
+                            <div class="text-center">
+                                <i class="bi bi-geo-alt" style="font-size: 3rem; color: var(--primary-color);"></i>
+                                <p class="text-muted mt-2">Interactive map would be displayed here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Nearby Hotels -->
+            {% if nearby_hotels %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Similar Hotels</h6>
+                    </div>
+                    <div class="card-body">
+                        {% for nearby_hotel in nearby_hotels %}
+                            <div class="d-flex mb-3">
+                                <img src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=100" class="rounded me-3" alt="{{ nearby_hotel.name }}" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ nearby_hotel.name }}</h6>
+                                    <div class="text-warning mb-1">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= nearby_hotel.star_rating %}
+                                                <i class="bi bi-star-fill small"></i>
+                                            {% else %}
+                                                <i class="bi bi-star small"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-primary fw-bold">${{ nearby_hotel.price_per_night.amount }}/night</small>
+                                        <a href="{% url 'hotels:hotel_detail' nearby_hotel.id %}" class="btn btn-outline-primary btn-sm">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Contact Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Need Help?</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Have questions about this hotel? Our travel experts are here to help.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'contact' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-chat-dots"></i> Contact Support
+                        </a>
+                        <a href="tel:{{ site_settings.support_phone }}" class="btn btn-outline-success">
+                            <i class="bi bi-telephone"></i> Call Us
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Your Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'bookings:create_booking' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="modalServiceType" name="service_type">
+                    <input type="hidden" id="modalServiceId" name="service_id">
+                    
+                    <div class="mb-3">
+                        <h6>Service: <span id="modalServiceName"></span></h6>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Check-in Date</label>
+                            <input type="date" class="form-control" id="modalCheckIn" name="check_in" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Check-out Date</label>
+                            <input type="date" class="form-control" id="modalCheckOut" name="check_out" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Number of Guests</label>
+                            <select class="form-select" id="modalGuests" name="guests">
+                                <option value="1">1 Guest</option>
+                                <option value="2" selected>2 Guests</option>
+                                <option value="3">3 Guests</option>
+                                <option value="4">4 Guests</option>
+                                <option value="5">5+ Guests</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Name</label>
+                            <input type="text" class="form-control" name="contact_name" value="{{ user.get_full_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Email</label>
+                            <input type="email" class="form-control" name="contact_email" value="{{ user.email }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Contact Phone</label>
+                        <input type="tel" class="form-control" name="contact_phone" value="{{ user.phone }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Special Requests</label>
+                        <textarea class="form-control" name="special_requests" rows="3" placeholder="Any special requirements or requests..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Complete Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating-input">
+                            <input type="radio" name="rating" value="5" id="star5">
+                            <label for="star5"><i class="bi bi-star"></i></label>
+                            <input type="radio" name="rating" value="4" id="star4">
+                            <label for="star4"><i class="bi bi-star"></i></label>
+                            <input type="radio" name="rating" value="3" id="star3">
+                            <label for="star3"><i class="bi bi-star"></i></label>
+                            <input type="radio" name="rating" value="2" id="star2">
+                            <label for="star2"><i class="bi bi-star"></i></label>
+                            <input type="radio" name="rating" value="1" id="star1">
+                            <label for="star1"><i class="bi bi-star"></i></label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Your Review</label>
+                        <textarea class="form-control" rows="4" placeholder="Share your experience..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input label {
+    cursor: pointer;
+    color: #ddd;
+    font-size: 1.5rem;
+    margin-right: 5px;
+}
+
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label {
+    color: #ffc107;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToWishlist(hotelId) {
+    // Add to wishlist functionality
+    alert('Added to wishlist!');
+}
+
+// Set minimum date to today
+document.getElementById('checkIn').min = new Date().toISOString().split('T')[0];
+document.getElementById('checkOut').min = new Date().toISOString().split('T')[0];
+
+// Update checkout minimum date when checkin changes
+document.getElementById('checkIn').addEventListener('change', function() {
+    const checkInDate = new Date(this.value);
+    checkInDate.setDate(checkInDate.getDate() + 1);
+    document.getElementById('checkOut').min = checkInDate.toISOString().split('T')[0];
+});
+</script>
+{% endblock %}

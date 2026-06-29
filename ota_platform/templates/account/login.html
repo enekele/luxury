@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - {{ site_settings.site_name|default:"TravelHub" }}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #05070d;
+            --bg-secondary: rgba(255,255,255,0.08);
+            --surface: rgba(25, 28, 40, 0.86);
+            --text-light: #f7f3ec;
+            --text-muted: #c7b8a5;
+            --gold: #d4af37;
+            --gold-soft: rgba(212, 175, 55, 0.15);
+            --white-soft: rgba(255,255,255,0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-light);
+            background: radial-gradient(circle at top left, rgba(212,175,55,0.22), transparent 28%),
+                        radial-gradient(circle at bottom right, rgba(81, 69, 49, 0.18), transparent 30%),
+                        linear-gradient(180deg, #02040a 0%, #08111f 40%, #0b1320 100%);
+        }
+
+        .page-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1rem;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 1040px;
+            border-radius: 2rem;
+            overflow: hidden;
+            background: rgba(9, 13, 24, 0.92);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.35);
+        }
+
+        .hero-panel {
+            position: relative;
+            padding: 4rem 3rem;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 60%),
+                        radial-gradient(circle at 20% 20%, rgba(212,175,55,0.16), transparent 30%),
+                        linear-gradient(180deg, #111827 0%, #0b1223 100%);
+            color: var(--text-light);
+        }
+
+        .hero-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%);
+        }
+
+        .hero-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--gold);
+            font-size: 0.9rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 1.8rem;
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.6rem, 4.5vw, 4.4rem);
+            line-height: 1.02;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-copy {
+            max-width: 34rem;
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .feature-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.15rem 1rem;
+            border-radius: 1.35rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .feature-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(212,175,55,0.16);
+            color: var(--gold);
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-light);
+        }
+
+        .feature-text {
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .form-panel {
+            padding: 3rem 3rem;
+            background: rgba(1, 4, 10, 0.96);
+        }
+
+        .form-panel h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-panel p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .form-control {
+            border-radius: 1rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(18, 23, 38, 0.92);
+            color: var(--text-light);
+            padding: 1rem 1.15rem;
+            min-height: 3.8rem;
+        }
+
+        .form-control:focus {
+            border-color: rgba(212,175,55,0.7);
+            box-shadow: 0 0 0 0.2rem rgba(212,175,55,0.14);
+            background: rgba(18, 23, 38, 1);
+            color: var(--text-light);
+        }
+
+        .input-group-text {
+            border: none;
+            background: rgba(255,255,255,0.04);
+            color: var(--gold);
+        }
+
+        .btn-signin {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: none;
+            color: #111;
+            background: linear-gradient(135deg, #ffd970 0%, #d4af37 100%);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-signin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(212,175,55,0.25);
+        }
+
+        .text-muted a {
+            color: rgb(247, 214, 29);
+            text-decoration: underline;
+        }
+
+        .text-muted a:hover {
+            color: var(--gold);
+        }
+
+        .alt-action {
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 1rem;
+            border-radius: 1.25rem;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .alert-custom {
+            background: rgba(212,175,55,0.08);
+            color: var(--text-light);
+            border: 1px solid rgba(212,175,55,0.15);
+        }
+
+        @media (max-width: 991.98px) {
+            .login-card {
+                border-radius: 1.5rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .hero-panel, .form-panel {
+                padding: 2rem 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 2.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="login-card row g-0">
+            <div class="col-lg-6 hero-panel d-flex flex-column justify-content-center">
+                <span class="hero-badge"><i class="bi bi-suit-diamond-fill"></i> Premium Access</span>
+                <h1 class="hero-title">Welcome to the ultimate luxury booking experience.</h1>
+                <p class="hero-copy">Sign in to access exclusive events, private travel offers, and elevated concierge service for every journey.</p>
+
+                <div class="feature-list">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-ticket-perforated-fill"></i></div>
+                        <div>
+                            <p class="feature-title">Private ticket access</p>
+                            <p class="feature-text">Book VIP seats for premium concerts, sports events, and live shows.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-globe2"></i></div>
+                        <div>
+                            <p class="feature-title">Curated journeys</p>
+                            <p class="feature-text">Unlock bespoke travel packages built for discerning guests.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-star-fill"></i></div>
+                        <div>
+                            <p class="feature-title">Elite rewards</p>
+                            <p class="feature-text">Earn premium benefits and insider perks with every booking.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 form-panel">
+                <div class="mb-5 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 5rem; height: 5rem; background: rgba(212,175,55,0.15); color: var(--gold); font-size: 1.75rem;">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                    </div>
+                    <h2>Sign in</h2>
+                    <p class="subtitle">Log in to continue your luxury travel experience.</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-custom alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted">Email address</label>
+                        <div class="input-group input-group-lg rounded-4 overflow-hidden mb-1">
+                            <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+                            <input type="email" name="login" class="form-control" placeholder="you@example.com" value="{{ form.login.value|default_if_none:'' }}" required>
+                        </div>
+                        {% if form.login.errors %}
+                            <div class="form-text text-danger">{{ form.login.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted">Password</label>
+                        <div class="input-group input-group-lg rounded-4 overflow-hidden mb-1">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="form-text text-danger">{{ form.password.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4 text-muted small">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                            <label class="form-check-label" for="remember">Remember me</label>
+                        </div>
+                        <a href="{% url 'account_reset_password' %}">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-signin mb-4">Sign In</button>
+
+                    <div class="alt-action text-center">
+                        <p class="mb-2 text-muted">New to {{ site_settings.site_name|default:'TravelHub' }}?</p>
+                        <a href="{% url 'account_signup' %}" class="text-gold fw-semibold">Create your account</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

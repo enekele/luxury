@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Live Chat Support | {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+{% block description %}Get instant support from our TravelHub team via live chat.{% endblock %}
+{% block content %}
+<div class="container py-5 mt-5">
+    <h2 class="mb-4">Live Chat Support</h2>
+    
+    <div class="card shadow-sm">
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;" id="chat-log">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="card-footer bg-white d-flex">
+            <input id="chat-message-input" type="text" class="form-control me-2" placeholder="Type your message...">
+            <button id="chat-message-submit" class="btn btn-primary">Send</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const roomName = "{{ room_name|escapejs }}";
+    const userName = "{{ request.user.get_full_name|default:request.user.username|default:'Guest' }}";
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const log = document.querySelector('#chat-log');
+        const message = `
+            <div class="mb-2">
+                <strong>${data.user}:</strong> ${data.message}
+            </div>`;
+        log.innerHTML += message;
+        log.scrollTop = log.scrollHeight;
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+        const input = document.querySelector('#chat-message-input');
+        const message = input.value;
+        if (message.trim() !== '') {
+            chatSocket.send(JSON.stringify({'message': message}));
+            input.value = '';
+        }
+    };
+
+    document.querySelector('#chat-message-input').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+            document.querySelector('#chat-message-submit').click();
+        }
+    });
+</script>
+{% endblock %}

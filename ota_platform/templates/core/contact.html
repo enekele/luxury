@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold mb-4">Contact Us</h1>
+            <p class="lead">Have questions or need help planning your trip? We're here to assist you every step of the way.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Contact Form -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Send us a Message</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Subject *</label>
+                            <select class="form-select" name="subject" required>
+                                <option value="">Select a subject</option>
+                                <option value="booking_inquiry">Booking Inquiry</option>
+                                <option value="booking_modification">Booking Modification</option>
+                                <option value="cancellation">Cancellation Request</option>
+                                <option value="payment_issue">Payment Issue</option>
+                                <option value="technical_support">Technical Support</option>
+                                <option value="partnership">Partnership Inquiry</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Message *</label>
+                            <textarea class="form-control" name="message" rows="6" placeholder="Please provide as much detail as possible..." required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter">
+                                <label class="form-check-label" for="newsletter">
+                                    Subscribe to our newsletter for travel deals and updates
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="col-lg-4">
+            <!-- Contact Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Get in Touch</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-telephone-fill text-primary me-3" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <strong>Phone</strong>
+                            <div class="text-muted">{{ site_settings.support_phone|default:"+1 (555) 123-4567" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-envelope-fill text-primary me-3" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <div class="text-muted">{{ site_settings.support_email|default:"support@travelhub.com" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-clock-fill text-primary me-3" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <strong>Support Hours</strong>
+                            <div class="text-muted">24/7 Customer Support</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt-fill text-primary me-3" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <strong>Address</strong>
+                            <div class="text-muted">
+                                123 Travel Street<br>
+                                San Francisco, CA 94102<br>
+                                United States
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAQ Quick Links -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Help</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-question-circle me-2"></i>
+                            Frequently Asked Questions
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-book me-2"></i>
+                            Booking Guide
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Cancellation Policy
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-credit-card me-2"></i>
+                            Payment Methods
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-airplane me-2"></i>
+                            Travel Tips
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Social Media -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Follow Us</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Stay connected for travel inspiration and updates</p>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-info">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-danger">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-dark">
+                            <i class="bi bi-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Office Locations -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Our Offices</h2>
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-building" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h5 class="mt-3">San Francisco HQ</h5>
+                            <p class="text-muted">
+                                123 Travel Street<br>
+                                San Francisco, CA 94102<br>
+                                United States
+                            </p>
+                            <p class="text-muted">
+                                <i class="bi bi-telephone"></i> +1 (555) 123-4567<br>
+                                <i class="bi bi-envelope"></i> sf@travelhub.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-building" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h5 class="mt-3">London Office</h5>
+                            <p class="text-muted">
+                                456 Travel Lane<br>
+                                London SW1A 1AA<br>
+                                United Kingdom
+                            </p>
+                            <p class="text-muted">
+                                <i class="bi bi-telephone"></i> +44 20 7123 4567<br>
+                                <i class="bi bi-envelope"></i> london@travelhub.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-building" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h5 class="mt-3">Singapore Office</h5>
+                            <p class="text-muted">
+                                789 Travel Avenue<br>
+                                Singapore 018956<br>
+                                Singapore
+                            </p>
+                            <p class="text-muted">
+                                <i class="bi bi-telephone"></i> +65 6123 4567<br>
+                                <i class="bi bi-envelope"></i> singapore@travelhub.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contact -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Emergency Travel Assistance
+                </h5>
+                <p class="mb-0">
+                    If you're currently traveling and need immediate assistance, please call our 24/7 emergency hotline at 
+                    <strong>+1 (555) 911-HELP</strong> or email <strong>emergency@travelhub.com</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

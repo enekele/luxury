@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Events - {{ site_settings.site_name|default:'TravelHub' }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-body">
+                    <h2 class="mb-3">Live Events & Tickets</h2>
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="search" name="q" class="form-control" placeholder="Search events, teams, artists" value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="category" class="form-select">
+                                <option value="">All categories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category.id|stringformat:'s' == selected_category|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-center">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="upcoming_only" value="1" id="upcomingOnly" {% if upcoming_only %}checked{% endif %}>
+                                <label class="form-check-label" for="upcomingOnly">Upcoming only</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter Events</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for event in events %}
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm border-0">
+                {% if event.image %}
+                <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.name }}" style="height: 250px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-secondary">{{ event.category.name }}</span>
+                        {% if event.is_featured %}
+                        <span class="badge bg-warning text-dark">Featured</span>
+                        {% endif %}
+                    </div>
+                    <h4 class="card-title">{{ event.name }}</h4>
+                    <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill"></i> {{ event.venue.name }}, {{ event.venue.city.name }}</p>
+                    <p class="text-muted small mb-3"><i class="bi bi-calendar-event"></i> {{ event.start_date|date:'F j, Y, P' }} &ndash; {{ event.end_date|date:'F j, Y, P' }}</p>
+                    <p class="card-text text-truncate">{{ event.description|truncatewords:28 }}</p>
+                    <div class="mt-auto pt-3 d-flex justify-content-between align-items-center">
+                        <span class="text-success fw-semibold">{{ event.available_tickets }} tickets left</span>
+                        <a href="{% url 'events:event_detail' event.id %}" class="btn btn-outline-primary btn-sm">View event</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">No events match your search criteria.</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

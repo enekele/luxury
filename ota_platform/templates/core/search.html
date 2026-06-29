@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Search Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="mb-4">Search Results</h2>
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Service Type</label>
+                            <select class="form-select" name="type">
+                                <option value="all" {% if service_type == 'all' %}selected{% endif %}>All Services</option>
+                                <option value="hotel" {% if service_type == 'hotel' %}selected{% endif %}>Hotels</option>
+                                <option value="flight" {% if service_type == 'flight' %}selected{% endif %}>Flights</option>
+                                <option value="car" {% if service_type == 'car' %}selected{% endif %}>Car Rentals</option>
+                                <option value="tour" {% if service_type == 'tour' %}selected{% endif %}>Tours</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Destination</label>
+                            <input type="text" class="form-control" name="destination" value="{{ destination }}" placeholder="Where are you going?">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Search Query</label>
+                            <input type="text" class="form-control" name="q" value="{{ query }}" placeholder="Search anything...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    {% if query or destination %}
+        <!-- Hotels Results -->
+        {% if results.hotels %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3>
+                        <i class="bi bi-building me-2"></i>
+                        Hotels ({{ results.hotels|length }})
+                    </h3>
+                </div>
+            </div>
+            <div class="row mb-5">
+                {% for hotel in results.hotels %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="card h-100">
+                            <img src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=400" class="card-img-top" alt="{{ hotel.name }}" style="height: 200px; object-fit: cover;">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ hotel.name }}</h6>
+                                <p class="card-text text-muted mb-2">
+                                    <i class="bi bi-geo-alt"></i> {{ hotel.city.name }}, {{ hotel.city.country.name }}
+                                </p>
+                                <div class="text-warning mb-2">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= hotel.star_rating %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% else %}
+                                            <i class="bi bi-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-primary fw-bold">${{ hotel.price_per_night.amount }}/night</span>
+                                    <a href="{% url 'hotels:hotel_detail' hotel.id %}" class="btn btn-primary btn-sm">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Flights Results -->
+        {% if results.flights %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3>
+                        <i class="bi bi-airplane me-2"></i>
+                        Flights ({{ results.flights|length }})
+                    </h3>
+                </div>
+            </div>
+            <div class="row mb-5">
+                {% for flight in results.flights %}
+                    <div class="col-12 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2 text-center">
+                                        <div class="fw-bold">{{ flight.airline.name }}</div>
+                                        <small class="text-muted">{{ flight.flight_number }}</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row">
+                                            <div class="col-4 text-center">
+                                                <div class="fw-bold">{{ flight.departure_time|time:"H:i" }}</div>
+                                                <div class="text-muted">{{ flight.origin.code }}</div>
+                                            </div>
+                                            <div class="col-4 text-center">
+                                                <i class="bi bi-airplane"></i>
+                                                <div class="text-muted">{{ flight.duration_hours|floatformat:1 }}h</div>
+                                            </div>
+                                            <div class="col-4 text-center">
+                                                <div class="fw-bold">{{ flight.arrival_time|time:"H:i" }}</div>
+                                                <div class="text-muted">{{ flight.destination.code }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <div class="text-primary fw-bold">${{ flight.economy_price.amount }}</div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <button class="btn btn-primary btn-sm">Select</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Cars Results -->
+        {% if results.cars %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3>
+                        <i class="bi bi-car-front me-2"></i>
+                        Car Rentals ({{ results.cars|length }})
+                    </h3>
+                </div>
+            </div>
+            <div class="row mb-5">
+                {% for car in results.cars %}
+                    <div class="col-lg-6 col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <img src="https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=200" class="img-fluid rounded" alt="{{ car.car_model }}">
+                                    </div>
+                                    <div class="col-8">
+                                        <h6>{{ car.car_model.brand.name }} {{ car.car_model.name }}</h6>
+                                        <p class="text-muted mb-2">{{ car.get_category_display }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-primary fw-bold">${{ car.price_per_day.amount }}/day</span>
+                                            <button class="btn btn-primary btn-sm">Select</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Tours Results -->
+        {% if results.tours %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3>
+                        <i class="bi bi-map me-2"></i>
+                        Tours ({{ results.tours|length }})
+                    </h3>
+                </div>
+            </div>
+            <div class="row mb-5">
+                {% for tour in results.tours %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="card h-100">
+                            <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=400" class="card-img-top" alt="{{ tour.name }}" style="height: 200px; object-fit: cover;">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ tour.name }}</h6>
+                                <p class="card-text text-muted mb-2">
+                                    <i class="bi bi-geo-alt"></i> {{ tour.destination.name }}
+                                </p>
+                                <p class="card-text text-muted mb-2">
+                                    <i class="bi bi-clock"></i> {{ tour.duration_display }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-primary fw-bold">${{ tour.price_per_person.amount }}/person</span>
+                                    <button class="btn btn-primary btn-sm">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- No Results -->
+        {% if not results.hotels and not results.flights and not results.cars and not results.tours %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="bi bi-search" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                        <h3 class="mt-3">No results found</h3>
+                        <p class="text-muted">Try adjusting your search terms or browse our popular destinations.</p>
+                        <a href="{% url 'home' %}" class="btn btn-primary">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty Search State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-search" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                    <h3 class="mt-3">Start Your Search</h3>
+                    <p class="text-muted">Enter a destination or search term to find hotels, flights, cars, and tours.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

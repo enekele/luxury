@@ -1,0 +1,291 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}Admin Dashboard - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon primary">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stats-value">{{ total_users|floatformat:0 }}</div>
+            <div class="stats-label">Total Users</div>
+            <small class="text-success">
+                <i class="bi bi-arrow-up"></i> +{{ new_users_30d }} this month
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stats-value">{{ total_bookings|floatformat:0 }}</div>
+            <div class="stats-label">Total Bookings</div>
+            <small class="text-warning">
+                <i class="bi bi-clock"></i> {{ pending_bookings }} pending
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon warning">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="stats-value">${{ total_revenue|floatformat:0 }}</div>
+            <div class="stats-label">Total Revenue</div>
+            <small class="text-success">
+                <i class="bi bi-arrow-up"></i> ${{ revenue_30d|floatformat:0 }} this month
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon danger">
+                <i class="bi bi-star"></i>
+            </div>
+            <div class="stats-value">4.8</div>
+            <div class="stats-label">Average Rating</div>
+            <small class="text-muted">
+                Based on {{ recent_reviews|length }} reviews
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Service Breakdown -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Revenue Trend (Last 30 Days)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Bookings by Service</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Hotels</span>
+                        <span class="fw-bold">{{ hotel_bookings }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: 2%">{% widthratio hotel_bookings total_bookings 100 %}</div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Flights</span>
+                        <span class="fw-bold">{{ flight_bookings }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 2%">{% widthratio flight_bookings total_bookings 100 %}</div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Cars</span>
+                        <span class="fw-bold">{{ car_bookings }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" style="width: 2%">{% widthratio car_bookings total_bookings 100 %}</div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Tours</span>
+                        <span class="fw-bold">{{ tour_bookings }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-danger" style="width: 2%">{% widthratio tour_bookings total_bookings 100 %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Recent Bookings</h6>
+                <a href="{% url 'admin_dashboard:bookings_management' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Service</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in recent_bookings %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-person text-white small"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">{{ booking.user.get_full_name }}</div>
+                                            <small class="text-muted">{{ booking.user.email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ booking.content_type.model|title }}</span>
+                                </td>
+                                <td class="fw-bold">${{ booking.total_amount.amount }}</td>
+                                <td>
+                                    <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ booking.created_at|date:"M d" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">New Users</h6>
+                <a href="{% url 'admin_dashboard:users_management' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Country</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if user.profile_picture %}
+                                            <img src="{{ user.profile_picture.url }}" class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                <i class="bi bi-person text-white small"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-medium">{{ user.get_full_name }}</div>
+                                            <small class="text-muted">{{ user.email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if user.country %}
+                                        {{ user.country.name }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_premium %}
+                                        <span class="badge bg-warning">Premium</span>
+                                    {% elif user.is_verified %}
+                                        <span class="badge bg-success">Verified</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Regular</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.date_joined|date:"M d" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Reviews -->
+{% if recent_reviews %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Recent Reviews</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for review in recent_reviews %}
+                    <div class="col-lg-4 mb-3">
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="fw-medium">{{ review.user.get_full_name }}</div>
+                                    <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                <div class="text-warning">
+                                    {% for i in "12345"|slice:":review.rating"|make_list %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% empty %}
+                                        <i class="bi bi-star"></i>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="mb-2">{{ review.content }}</p>
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'admin_dashboard:user_profile' review.user.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View Profile
+                                </a>
+                                <span class="badge bg-light text-dark">
+                                    {{ review.booking.content_type.model|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+const revenueData = JSON.parse('{{ revenue_chart_data|escapejs }}');
+</script>
+{% endblock %}

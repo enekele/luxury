@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Login - {{ site_settings.site_name|default:"TravelHub" }}</title>
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #059669, #047857);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 900px;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #059669, #047857);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="login-container">
+                    <div class="row g-0">
+                        <!-- Left Side - Branding -->
+                        <div class="col-lg-5">
+                            <div class="login-header">
+                                <div class="mb-4">
+                                    <i class="bi bi-graph-up" style="font-size: 4rem;"></i>
+                                </div>
+                                <h2 class="mb-3">Affiliate Portal</h2>
+                                <p class="lead mb-4">Access your affiliate dashboard and track your earnings</p>
+                                
+                                <div class="text-start">
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="bi bi-speedometer2"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">Real-time Dashboard</div>
+                                            <small class="opacity-75">Track performance instantly</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">Instant Payouts</div>
+                                            <small class="opacity-75">Get paid weekly</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="bi bi-tag"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">Custom Promo Codes</div>
+                                            <small class="opacity-75">Create your own codes</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Side - Login Form -->
+                        <div class="col-lg-7">
+                            <div class="p-5">
+                                <div class="text-center mb-4">
+                                    <h3>Sign In to Your Account</h3>
+                                    <p class="text-muted">Welcome back, affiliate partner!</p>
+                                </div>
+                                
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <form method="post">
+                                    {% csrf_token %}
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Address</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-envelope"></i>
+                                            </span>
+                                            <input type="email" class="form-control" name="email" placeholder="Enter your email" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Password</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-lock"></i>
+                                            </span>
+                                            <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="remember">
+                                            <label class="form-check-label" for="remember">
+                                                Remember me
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                                        Sign In to Dashboard
+                                    </button>
+                                    
+                                    <div class="text-center">
+                                        <a href="#" class="text-muted">Forgot your password?</a>
+                                    </div>
+                                </form>
+                                
+                                <hr class="my-4">
+                                
+                                <div class="text-center">
+                                    <p class="text-muted">Not an affiliate yet?</p>
+                                    <a href="{% url 'affiliates:signup' %}" class="btn btn-outline-primary">
+                                        Join Our Program
+                                    </a>
+                                </div>
+                                
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">
+                                        Looking for regular user login? 
+                                        <a href="{% url 'account_login' %}">Click here</a>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ country.name }} - Destinations - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'destinations' %}">Destinations</a></li>
+                    <li class="breadcrumb-item active">{{ country.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Country Header -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold">{{ country.name }}</h1>
+            <p class="lead text-muted">Discover the beauty and culture of {{ country.name }}</p>
+            
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-currency-exchange text-primary me-2"></i>
+                        <span>Currency: {{ country.currency.name }} ({{ country.currency.code }})</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-clock text-primary me-2"></i>
+                        <span>Timezone: {{ country.timezone }}</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                        <span>{{ cities|length }} Cities Available</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=500" 
+                 class="img-fluid rounded" alt="{{ country.name }}" style="height: 250px; width: 100%; object-fit: cover;">
+        </div>
+    </div>
+
+    <!-- Cities -->
+    {% if cities %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-4">Popular Cities in {{ country.name }}</h2>
+            <div class="row">
+                {% for city in cities %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=300" 
+                             class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ city.name }}</h5>
+                            {% if city.is_popular %}
+                                <span class="badge bg-warning mb-2">Popular</span>
+                            {% endif %}
+                            <p class="card-text text-muted">
+                                {% if city.latitude and city.longitude %}
+                                    <i class="bi bi-geo-alt"></i> {{ city.latitude|floatformat:2 }}, {{ city.longitude|floatformat:2 }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{% url 'hotels:hotel_list' %}?city={{ city.id }}" class="btn btn-primary btn-sm me-2">Hotels</a>
+                            <a href="{% url 'tours:tour_list' %}?destination={{ city.id }}" class="btn btn-outline-primary btn-sm">Tours</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Hotels in Country -->
+    {% if hotels %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Featured Hotels</h2>
+                <a href="{% url 'hotels:hotel_list' %}?country={{ country.code }}" class="btn btn-outline-primary">View All Hotels</a>
+            </div>
+            <div class="row">
+                {% for hotel in hotels %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <img src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=400" 
+                             class="card-img-top" alt="{{ hotel.name }}" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ hotel.name }}</h5>
+                            <p class="card-text text-muted mb-2">
+                                <i class="bi bi-geo-alt"></i> {{ hotel.city.name }}
+                            </p>
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= hotel.star_rating %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-primary fw-bold">${{ hotel.price_per_night.amount }}/night</span>
+                                <a href="{% url 'hotels:hotel_detail' hotel.id %}" class="btn btn-primary btn-sm">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tours in Country -->
+    {% if tours %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Popular Tours</h2>
+                <a href="{% url 'tours:tour_list' %}?destination={{ country.code }}" class="btn btn-outline-primary">View All Tours</a>
+            </div>
+            <div class="row">
+                {% for tour in tours %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=400" 
+                             class="card-img-top" alt="{{ tour.name }}" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ tour.name }}</h5>
+                            <p class="card-text text-muted mb-2">
+                                <i class="bi bi-clock"></i> {{ tour.duration_display }}
+                            </p>
+                            <p class="card-text">{{ tour.description|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-primary fw-bold">${{ tour.price_per_person.amount }}/person</span>
+                                <button class="btn btn-primary btn-sm">View Tour</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Travel Tips -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h3>Travel Tips for {{ country.name }}</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-info-circle text-primary me-2"></i>Essential Information</h5>
+                            <ul>
+                                <li>Check visa requirements before traveling</li>
+                                <li>Ensure your passport is valid for at least 6 months</li>
+                                <li>Consider travel insurance for your trip</li>
+                                <li>Research local customs and etiquette</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-lightbulb text-warning me-2"></i>Travel Tips</h5>
+                            <ul>
+                                <li>Book accommodations in advance during peak season</li>
+                                <li>Learn basic phrases in the local language</li>
+                                <li>Keep copies of important documents</li>
+                                <li>Research local transportation options</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

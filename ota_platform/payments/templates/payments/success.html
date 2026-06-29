@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Success - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-success">
+                <h4 class="alert-heading">Payment Successful</h4>
+                <p>Your payment has been confirmed successfully.</p>
+                <hr>
+                <p><strong>Reference:</strong> {{ data.reference }}</p>
+                <p><strong>Amount:</strong> {{ data.amount|floatformat:0 }}</p>
+                {% if package %}
+                    <p><strong>Package:</strong> {{ package.title }}</p>
+                    <p><strong>Subscription duration:</strong> {{ package.duration_days }} days</p>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'subscription_packages' %}" class="btn btn-primary">View Subscriptions</a>
+                <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Go to Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}Booking Management - Admin Dashboard{% endblock %}
+
+{% block page_title %}Booking Management{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="status">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                    <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Service Type</label>
+                <select class="form-select" name="service_type">
+                    <option value="">All Services</option>
+                    <option value="hotel" {% if service_type == 'hotel' %}selected{% endif %}>Hotels</option>
+                    <option value="flight" {% if service_type == 'flight' %}selected{% endif %}>Flights</option>
+                    <option value="carrental" {% if service_type == 'carrental' %}selected{% endif %}>Car Rentals</option>
+                    <option value="tour" {% if service_type == 'tour' %}selected{% endif %}>Tours</option>
+                    <option value="event" {% if service_type == 'event' %}selected{% endif %}>Event</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">From Date</label>
+                <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">To Date</label>
+                <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <a href="{% url 'admin_dashboard:bookings_management' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bookings Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Bookings ({{ bookings.paginator.count }} total)</h6>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download"></i> Export
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Details</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">#{{ booking.id }}</div>
+                            <small class="text-muted">{{ booking.booking_reference|default:"-" }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if booking.user.profile_picture %}
+                                    <img src="{{ booking.user.profile_picture.url }}" class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-person text-white small"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-medium">{{ booking.user.get_full_name }}</div>
+                                    <small class="text-muted">{{ booking.user.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if booking.content_type.model == 'hotel' %}
+                                    <i class="bi bi-building text-primary me-2"></i>
+                                {% elif booking.content_type.model == 'flight' %}
+                                    <i class="bi bi-airplane text-success me-2"></i>
+                                {% elif booking.content_type.model == 'carrental' %}
+                                    <i class="bi bi-car-front text-warning me-2"></i>
+                                {% elif booking.content_type.model == 'tour' %}
+                                    <i class="bi bi-map text-info me-2"></i>
+                                {% endif %}
+                                <span class="badge bg-light text-dark">{{ booking.content_type.model|title }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-medium">{{ booking.content_object.name|truncatechars:30 }}</div>
+                            {% if booking.booking_date %}
+                                <small class="text-muted">{{ booking.booking_date|date:"M d, Y" }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold">${{ booking.total_amount.amount }}</div>
+                            <small class="text-muted">{{ booking.total_amount.currency }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div>{{ booking.created_at|date:"M d, Y" }}</div>
+                            <small class="text-muted">{{ booking.created_at|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#">View Details</a></li>
+                                    {% if booking.status == 'pending' %}
+                                        <li><a class="dropdown-item text-success" href="#">Confirm Booking</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#">Cancel Booking</a></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item" href="#">Send Email</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#">Download Invoice</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi bi-calendar-x" style="font-size: 2rem; color: #6b7280;"></i>
+                            <div class="mt-2">No bookings found</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if bookings.has_other_pages %}
+    <div class="card-footer">
+        <nav aria-label="Bookings pagination">
+            <ul class="pagination justify-content-center mb-0">
+                {% if bookings.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if status %}status={{ status }}&{% endif %}{% if service_type %}service_type={{ service_type }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ bookings.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in bookings.paginator.page_range %}
+                    {% if bookings.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > bookings.number|add:'-3' and num < bookings.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if status %}status={{ status }}&{% endif %}{% if service_type %}service_type={{ service_type }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if bookings.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if status %}status={{ status }}&{% endif %}{% if service_type %}service_type={{ service_type }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ bookings.next_page_number }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

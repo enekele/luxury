@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Referrals - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h5>{{ user.get_full_name }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <div class="card mt-3">
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person me-2"></i> Profile Overview
+                    </a>
+                    <a href="{% url 'edit_profile' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-pencil me-2"></i> Edit Profile
+                    </a>
+                    <a href="{% url 'user_bookings' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-check me-2"></i> My Bookings
+                    </a>
+                    <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-heart me-2"></i> Wishlist
+                    </a>
+                    <a href="{% url 'loyalty_points' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-star me-2"></i> Loyalty Points
+                    </a>
+                    <a href="{% url 'referrals' %}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-share me-2"></i> Referrals
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Referrals Content -->
+        <div class="col-lg-9">
+            <!-- Referral Overview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-share text-primary me-2"></i>
+                        Refer Friends & Earn Rewards
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Share your referral link and earn rewards!</h6>
+                            <p class="text-muted">When your friends sign up and make their first booking, you both get rewards.</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Your Referral Link</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="referralLink" value="{{ referral_url }}" readonly>
+                                    <button class="btn btn-outline-primary" onclick="copyReferralLink()">
+                                        <i class="bi bi-copy"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="shareOnSocial('facebook')">
+                                    <i class="bi bi-facebook me-2"></i>Facebook
+                                </button>
+                                <button class="btn btn-info" onclick="shareOnSocial('twitter')">
+                                    <i class="bi bi-twitter me-2"></i>Twitter
+                                </button>
+                                <button class="btn btn-success" onclick="shareOnSocial('whatsapp')">
+                                    <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="bg-light rounded p-3">
+                                <i class="bi bi-gift text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="mt-2">Earn $25</h5>
+                                <p class="text-muted mb-0">For each friend who books</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Referral Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h3 text-primary">{{ referred_users|length }}</div>
+                            <p class="text-muted mb-0">Friends Referred</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h3 text-success">0</div>
+                            <p class="text-muted mb-0">Successful Bookings</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h3 text-warning">$0</div>
+                            <p class="text-muted mb-0">Rewards Earned</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="h3 text-info">0%</div>
+                            <p class="text-muted mb-0">Conversion Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Referred Users -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Your Referrals</h6>
+                </div>
+                <div class="card-body">
+                    {% if referred_users %}
+                        {% for referred_user in referred_users %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                            <div class="d-flex align-items-center">
+                                {% if referred_user.profile_picture %}
+                                    <img src="{{ referred_user.profile_picture.url }}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-medium">{{ referred_user.get_full_name }}</div>
+                                    <small class="text-muted">Joined {{ referred_user.date_joined|date:"M d, Y" }}</small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                {% if referred_user.total_bookings > 0 %}
+                                    <span class="badge bg-success">Active</span>
+                                    <div class="small text-muted">{{ referred_user.total_bookings }} booking{{ referred_user.total_bookings|pluralize }}</div>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    <div class="small text-muted">No bookings yet</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-people" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                            <h4 class="mt-3">No referrals yet</h4>
+                            <p class="text-muted">Share your referral link with friends to start earning rewards!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyReferralLink() {
+    const linkInput = document.getElementById('referralLink');
+    linkInput.select();
+    navigator.clipboard.writeText(linkInput.value);
+    
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    btn.classList.add('btn-success');
+    btn.classList.remove('btn-outline-primary');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-primary');
+    }, 2000);
+}
+
+function shareOnSocial(platform) {
+    const url = encodeURIComponent(document.getElementById('referralLink').value);
+    const text = encodeURIComponent('Join me on {{ site_settings.site_name|default:"TravelHub" }} and get amazing travel deals!');
+    
+    let shareUrl = '';
+    switch(platform) {
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+            break;
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+            break;
+        case 'whatsapp':
+            shareUrl = `https://wa.me/?text=${text} ${url}`;
+            break;
+    }
+    
+    if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h5>{{ user.get_full_name }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <div class="card mt-3">
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person me-2"></i> Profile Overview
+                    </a>
+                    <a href="{% url 'edit_profile' %}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-pencil me-2"></i> Edit Profile
+                    </a>
+                    <a href="{% url 'user_bookings' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-check me-2"></i> My Bookings
+                    </a>
+                    <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-heart me-2"></i> Wishlist
+                    </a>
+                    <a href="{% url 'loyalty_points' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-star me-2"></i> Loyalty Points
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Profile Form -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Edit Profile</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Profile Picture -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>Profile Picture</h6>
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}" alt="Current Profile Picture" class="rounded-circle me-3" width="80" height="80" style="object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center me-3" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-person text-muted" style="font-size: 2rem;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <input type="file" class="form-control" name="profile_picture" accept="image/*">
+                                        <small class="text-muted">Upload a new profile picture (JPG, PNG, max 5MB)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Personal Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>Personal Information</h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" value="{{ user.phone }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" name="date_of_birth" value="{{ user.date_of_birth|date:'Y-m-d' }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>Location</h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Country</label>
+                                <select class="form-select" name="country">
+                                    <option value="">Select Country</option>
+                                    <option value="US" {% if user.country == 'US' %}selected{% endif %}>United States</option>
+                                    <option value="CA" {% if user.country == 'CA' %}selected{% endif %}>Canada</option>
+                                    <option value="GB" {% if user.country == 'GB' %}selected{% endif %}>United Kingdom</option>
+                                    <option value="AU" {% if user.country == 'AU' %}selected{% endif %}>Australia</option>
+                                    <option value="DE" {% if user.country == 'DE' %}selected{% endif %}>Germany</option>
+                                    <option value="FR" {% if user.country == 'FR' %}selected{% endif %}>France</option>
+                                    <option value="ES" {% if user.country == 'ES' %}selected{% endif %}>Spain</option>
+                                    <option value="IT" {% if user.country == 'IT' %}selected{% endif %}>Italy</option>
+                                    <option value="JP" {% if user.country == 'JP' %}selected{% endif %}>Japan</option>
+                                    <option value="CN" {% if user.country == 'CN' %}selected{% endif %}>China</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" name="city" value="{{ user.city }}">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Address</label>
+                                <textarea class="form-control" name="address" rows="2">{{ user.address }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Preferences -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>Preferences</h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Preferred Currency</label>
+                                <select class="form-select" name="preferred_currency">
+                                    <option value="USD" {% if user.preferred_currency == 'USD' %}selected{% endif %}>USD - US Dollar</option>
+                                    <option value="EUR" {% if user.preferred_currency == 'EUR' %}selected{% endif %}>EUR - Euro</option>
+                                    <option value="GBP" {% if user.preferred_currency == 'GBP' %}selected{% endif %}>GBP - British Pound</option>
+                                    <option value="CAD" {% if user.preferred_currency == 'CAD' %}selected{% endif %}>CAD - Canadian Dollar</option>
+                                    <option value="AUD" {% if user.preferred_currency == 'AUD' %}selected{% endif %}>AUD - Australian Dollar</option>
+                                    <option value="JPY" {% if user.preferred_currency == 'JPY' %}selected{% endif %}>JPY - Japanese Yen</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Preferred Language</label>
+                                <select class="form-select" name="preferred_language">
+                                    <option value="en" {% if user.preferred_language == 'en' %}selected{% endif %}>English</option>
+                                    <option value="es" {% if user.preferred_language == 'es' %}selected{% endif %}>Spanish</option>
+                                    <option value="fr" {% if user.preferred_language == 'fr' %}selected{% endif %}>French</option>
+                                    <option value="de" {% if user.preferred_language == 'de' %}selected{% endif %}>German</option>
+                                    <option value="it" {% if user.preferred_language == 'it' %}selected{% endif %}>Italian</option>
+                                    <option value="pt" {% if user.preferred_language == 'pt' %}selected{% endif %}>Portuguese</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Bio -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>About Me</h6>
+                                <textarea class="form-control" name="bio" rows="4" placeholder="Tell us about yourself...">{{ user.userprofile.bio }}</textarea>
+                                <small class="text-muted">This information will be visible on your public profile.</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Website -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Website</label>
+                                <input type="url" class="form-control" name="website" value="{{ user.userprofile.website }}" placeholder="https://yourwebsite.com">
+                            </div>
+                        </div>
+                        
+                        <!-- Emergency Contact -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>Emergency Contact</h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Emergency Contact Name</label>
+                                <input type="text" class="form-control" name="emergency_contact_name" value="{{ user.userprofile.emergency_contact_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Emergency Contact Phone</label>
+                                <input type="tel" class="form-control" name="emergency_contact_phone" value="{{ user.userprofile.emergency_contact_phone }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Travel Documents -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>Travel Documents</h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Passport Number</label>
+                                <input type="text" class="form-control" name="passport_number" value="{{ user.userprofile.passport_number }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Passport Expiry Date</label>
+                                <input type="date" class="form-control" name="passport_expires" value="{{ user.userprofile.passport_expires|date:'Y-m-d' }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Notification Preferences -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6>Notification Preferences</h6>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="email_notifications" id="email_notifications" {% if user.email_notifications %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_notifications">
+                                        Email Notifications
+                                    </label>
+                                    <small class="text-muted d-block">Receive booking confirmations and updates via email</small>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="sms_notifications" id="sms_notifications" {% if user.sms_notifications %}checked{% endif %}>
+                                    <label class="form-check-label" for="sms_notifications">
+                                        SMS Notifications
+                                    </label>
+                                    <small class="text-muted d-block">Receive important updates via SMS</small>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="promotional_emails" id="promotional_emails" {% if user.promotional_emails %}checked{% endif %}>
+                                    <label class="form-check-label" for="promotional_emails">
+                                        Promotional Emails
+                                    </label>
+                                    <small class="text-muted d-block">Receive special offers and travel deals</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary me-2">Save Changes</button>
+                                <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

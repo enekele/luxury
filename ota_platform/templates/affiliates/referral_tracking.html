@@ -1,0 +1,314 @@
+{% extends 'affiliates/base_affiliate.html' %}
+
+{% block title %}Referral Tracking - Affiliate Dashboard{% endblock %}
+
+{% block page_title %}Referral Tracking{% endblock %}
+
+{% block content %}
+<!-- Referral Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon primary">
+                <i class="bi bi-cursor"></i>
+            </div>
+            <div class="stats-value">{{ total_clicks }}</div>
+            <div class="stats-label">Total Clicks</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stats-value">{{ referrals|length }}</div>
+            <div class="stats-label">Total Referrals</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon warning">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stats-value">{{ conversion_rate|floatformat:1 }}%</div>
+            <div class="stats-label">Conversion Rate</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="stats-value">${{ affiliate.average_commission_per_booking|floatformat:2 }}</div>
+            <div class="stats-label">Avg Commission</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Referral Trend (Last 6 Months)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="referralChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Your Affiliate Link</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Share this link to earn commissions:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="affiliateLink" value="https://{{ request.get_host }}/?aff={{ affiliate.affiliate_id }}" readonly>
+                        <button class="btn btn-outline-secondary" onclick="copyAffiliateLink()">
+                            <i class="bi bi-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="shareOnSocial('facebook')">
+                        <i class="bi bi-facebook me-2"></i>Share on Facebook
+                    </button>
+                    <button class="btn btn-info" onclick="shareOnSocial('twitter')">
+                        <i class="bi bi-twitter me-2"></i>Share on Twitter
+                    </button>
+                    <button class="btn btn-danger" onclick="shareOnSocial('instagram')">
+                        <i class="bi bi-instagram me-2"></i>Share on Instagram
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Referrals Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">All Referrals ({{ referrals|length }})</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Referred User</th>
+                        <th>Referral Date</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>First Booking</th>
+                        <th>Commission Earned</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for referral in referrals %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if referral.referred_user.profile_picture %}
+                                    <img src="{{ referral.referred_user.profile_picture.url }}" class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-person text-white small"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-medium">{{ referral.referred_user.get_full_name }}</div>
+                                    <small class="text-muted">{{ referral.referred_user.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ referral.created_at|date:"M d, Y" }}</div>
+                            <small class="text-muted">{{ referral.created_at|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            {% if referral.referral_source %}
+                                <span class="badge bg-light text-dark">{{ referral.referral_source }}</span>
+                            {% else %}
+                                <span class="text-muted">Direct</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if referral.converted %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Converted
+                                </span>
+                                {% if referral.conversion_date %}
+                                    <div class="small text-muted">{{ referral.conversion_date|date:"M d, Y" }}</div>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-clock me-1"></i>Pending
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if referral.first_booking_amount %}
+                                <div class="fw-bold">${{ referral.first_booking_amount.amount }}</div>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if referral.converted %}
+                                {% with commission=referral.affiliate_commissions.first %}
+                                    {% if commission %}
+                                        <div class="fw-bold text-success">${{ commission.commission_amount.amount }}</div>
+                                        <small class="text-muted">{{ commission.get_status_display }}</small>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-muted">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="bi bi-people" style="font-size: 2rem; color: #6b7280;"></i>
+                            <div class="mt-2">No referrals yet</div>
+                            <small class="text-muted">Share your affiliate link to start earning!</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Marketing Tips -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">Marketing Tips</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="text-center">
+                    <i class="bi bi-share text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="mt-2">Social Media</h6>
+                    <p class="text-muted small">Share on Facebook, Twitter, Instagram</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="text-center">
+                    <i class="bi bi-envelope text-success" style="font-size: 2rem;"></i>
+                    <h6 class="mt-2">Email Marketing</h6>
+                    <p class="text-muted small">Send to your email subscribers</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="text-center">
+                    <i class="bi bi-journal-text text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="mt-2">Blog Content</h6>
+                    <p class="text-muted small">Write travel guides and reviews</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="text-center">
+                    <i class="bi bi-camera-video text-info" style="font-size: 2rem;"></i>
+                    <h6 class="mt-2">Video Content</h6>
+                    <p class="text-muted small">Create YouTube or TikTok videos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Referral Chart
+const ctx = document.getElementById('referralChart').getContext('2d');
+const referralData = {{ monthly_referrals|safe} };
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: referralData.map(item => item.month).reverse(),
+        datasets: [{
+            label: 'Referrals',
+            data: referralData.map(item => item.referrals).reverse(),
+            borderColor: '#059669',
+            backgroundColor: 'rgba(5, 150, 105, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Copy affiliate link
+function copyAffiliateLink() {
+    const linkInput = document.getElementById('affiliateLink');
+    linkInput.select();
+    navigator.clipboard.writeText(linkInput.value);
+    
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i>';
+    btn.classList.add('btn-success');
+    btn.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+// Social sharing
+function shareOnSocial(platform) {
+    const url = encodeURIComponent(document.getElementById('affiliateLink').value);
+    const text = encodeURIComponent('Check out these amazing travel deals!');
+    
+    let shareUrl = '';
+    switch(platform) {
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+            break;
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+            break;
+        case 'instagram':
+            // Instagram doesn't support direct URL sharing, so copy to clipboard
+            copyAffiliateLink();
+            alert('Link copied! You can now paste it in your Instagram bio or stories.');
+            return;
+    }
+    
+    if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+</script>
+{% endblock %}

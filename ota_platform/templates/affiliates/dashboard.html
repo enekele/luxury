@@ -1,0 +1,318 @@
+{% extends 'affiliates/base_affiliate.html' %}
+
+{% block title %}Affiliate Dashboard - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<!-- KYC Status Alert -->
+{% if affiliate.kyc_status != 'approved' %}
+<div class="alert alert-warning">
+    <h6 class="alert-heading">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        KYC Verification Required
+    </h6>
+    <p class="mb-2">
+        {% if affiliate.kyc_status == 'pending' %}
+            Please complete your KYC verification to start earning commissions.
+        {% elif affiliate.kyc_status == 'under_review' %}
+            Your KYC documents are under review. We'll notify you once approved.
+        {% elif affiliate.kyc_status == 'rejected' %}
+            Your KYC verification was rejected. Please resubmit your documents.
+        {% endif %}
+    </p>
+    <a href="{% url 'affiliates:kyc_verification' %}" class="btn btn-warning btn-sm">Complete KYC</a>
+</div>
+{% endif %}
+
+<!-- Earnings Overview -->
+<div class="earnings-card">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="mb-3">Welcome back, {{ user.get_full_name }}!</h2>
+            <div class="row">
+                <div class="col-6">
+                    <div class="mb-3">
+                        <h3 class="mb-1">${{ total_earnings|floatformat:2 }}</h3>
+                        <p class="mb-0 opacity-75">Total Earnings</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="mb-3">
+                        <h3 class="mb-1">${{ pending_earnings|floatformat:2 }}</h3>
+                        <p class="mb-0 opacity-75">Pending Earnings</p>
+                    </div>
+                </div>
+            </div>
+            <p class="mb-0 opacity-75">Commission Rate: {{ affiliate.commission_rate }}%</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="d-flex flex-column gap-2">
+                <a href="{% url 'affiliates:promo_codes' %}" class="btn btn-light">
+                    <i class="bi bi-tag me-2"></i>Manage Promo Codes
+                </a>
+                <a href="{% url 'affiliates:marketing_resources' %}" class="btn btn-outline-light">
+                    <i class="bi bi-folder me-2"></i>Marketing Resources
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stats-value">{{ total_referrals }}</div>
+            <div class="stats-label">Total Referrals</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon primary">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stats-value">{{ total_bookings }}</div>
+            <div class="stats-label">Converted Bookings</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon warning">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stats-value">{{ conversion_rate|floatformat:1 }}%</div>
+            <div class="stats-label">Conversion Rate</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-tag"></i>
+            </div>
+            <div class="stats-value">{{ active_promo_codes|length }}</div>
+            <div class="stats-label">Active Promo Codes</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Analytics -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Earnings Trend (Last 12 Months)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="earningsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'affiliates:create_promo_code' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create Promo Code
+                    </a>
+                    <button class="btn btn-outline-primary" onclick="copyAffiliateLink()">
+                        <i class="bi bi-link me-2"></i>Copy Affiliate Link
+                    </button>
+                    <a href="{% url 'affiliates:marketing_resources' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-download me-2"></i>Download Resources
+                    </a>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Your Affiliate Link:</h6>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="affiliateLink" value="https://{{ request.get_host }}/?aff={{ affiliate.affiliate_id }}" readonly>
+                        <button class="btn btn-outline-secondary" onclick="copyAffiliateLink()">
+                            <i class="bi bi-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Recent Referrals</h6>
+                <a href="{% url 'affiliates:referral_tracking' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_referrals %}
+                    {% for referral in recent_referrals %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <div class="fw-medium">{{ referral.referred_user.get_full_name }}</div>
+                            <small class="text-muted">{{ referral.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="text-end">
+                            {% if referral.converted %}
+                                <span class="badge bg-success">Converted</span>
+                                {% if referral.first_booking_amount %}
+                                    <div class="text-muted small">${{ referral.first_booking_amount.amount }}</div>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No referrals yet. Start promoting to earn commissions!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Recent Commissions</h6>
+                <a href="{% url 'affiliates:earnings' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_commissions %}
+                    {% for commission in recent_commissions %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <div class="fw-medium">${{ commission.commission_amount.amount }}</div>
+                            <small class="text-muted">{{ commission.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-{% if commission.status == 'paid' %}success{% elif commission.status == 'approved' %}primary{% elif commission.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                {{ commission.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No commissions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promo Codes Overview -->
+{% if active_promo_codes %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Your Active Promo Codes</h6>
+                <a href="{% url 'affiliates:create_promo_code' %}" class="btn btn-sm btn-primary">Create New</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for promo in active_promo_codes %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="card border">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <code class="bg-light px-2 py-1 rounded">{{ promo.code }}</code>
+                                    <span class="badge bg-primary">
+                                        {% if promo.discount_type == 'percentage' %}
+                                            {{ promo.discount_value }}% OFF
+                                        {% else %}
+                                            ${{ promo.discount_value }} OFF
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <p class="small mb-2">{{ promo.description }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ promo.usage_count }} uses</small>
+                                    <small class="text-muted">Until {{ promo.valid_until|date:"M d" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Earnings Chart
+const ctx = document.getElementById('earningsChart').getContext('2d');
+const earningsData = {{ monthly_earnings|safe }};
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: earningsData.map(item => item.month).reverse(),
+        datasets: [{
+            label: 'Earnings',
+            data: earningsData.map(item => item.earnings).reverse(),
+            borderColor: '#059669',
+            backgroundColor: 'rgba(5, 150, 105, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Copy affiliate link function
+function copyAffiliateLink() {
+    const linkInput = document.getElementById('affiliateLink');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(linkInput.value);
+    
+    // Show success message
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    btn.classList.add('btn-success');
+    btn.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms of Service - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4">Terms of Service</h1>
+            <p class="text-muted mb-4">Last updated: {{ "now"|date:"F d, Y" }}</p>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h3>1. Acceptance of Terms</h3>
+                    <p>By accessing and using {{ site_settings.site_name|default:"TravelHub" }}, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h3>2. Use License</h3>
+                    <p>Permission is granted to temporarily use {{ site_settings.site_name|default:"TravelHub" }} for personal, non-commercial transitory viewing only.</p>
+                    
+                    <h4>This license shall automatically terminate if you violate any of these restrictions:</h4>
+                    <ul>
+                        <li>Modify or copy the materials</li>
+                        <li>Use the materials for commercial purposes or public display</li>
+                        <li>Attempt to reverse engineer any software</li>
+                        <li>Remove any copyright or proprietary notations</li>
+                    </ul>
+                    
+                    <h3>3. Booking Terms</h3>
+                    <h4>Reservations</h4>
+                    <ul>
+                        <li>All bookings are subject to availability</li>
+                        <li>Prices may change without notice until booking is confirmed</li>
+                        <li>You must provide accurate information for all bookings</li>
+                        <li>Payment is required at time of booking</li>
+                    </ul>
+                    
+                    <h4>Cancellations</h4>
+                    <ul>
+                        <li>Cancellation policies vary by service provider</li>
+                        <li>Some bookings may be non-refundable</li>
+                        <li>Cancellation fees may apply</li>
+                        <li>Refunds will be processed according to provider policies</li>
+                    </ul>
+                    
+                    <h3>4. User Accounts</h3>
+                    <p>When you create an account with us, you must provide accurate and complete information. You are responsible for:</p>
+                    <ul>
+                        <li>Maintaining the confidentiality of your account</li>
+                        <li>All activities that occur under your account</li>
+                        <li>Notifying us of any unauthorized use</li>
+                    </ul>
+                    
+                    <h3>5. Prohibited Uses</h3>
+                    <p>You may not use our service:</p>
+                    <ul>
+                        <li>For any unlawful purpose or to solicit unlawful acts</li>
+                        <li>To violate any international, federal, provincial, or state regulations or laws</li>
+                        <li>To transmit or procure the sending of any advertising or promotional material</li>
+                        <li>To impersonate or attempt to impersonate the company, employees, or other users</li>
+                    </ul>
+                    
+                    <h3>6. Disclaimer</h3>
+                    <p>The information on this website is provided on an 'as is' basis. To the fullest extent permitted by law, this Company:</p>
+                    <ul>
+                        <li>Excludes all representations and warranties relating to this website</li>
+                        <li>Excludes all liability for damages arising out of or in connection with your use of this website</li>
+                    </ul>
+                    
+                    <h3>7. Limitations</h3>
+                    <p>In no event shall {{ site_settings.site_name|default:"TravelHub" }} or its suppliers be liable for any damages arising out of the use or inability to use the materials on our website.</p>
+                    
+                    <h3>8. Accuracy of Materials</h3>
+                    <p>The materials appearing on {{ site_settings.site_name|default:"TravelHub" }} could include technical, typographical, or photographic errors. We do not warrant that any of the materials are accurate, complete, or current.</p>
+                    
+                    <h3>9. Links</h3>
+                    <p>{{ site_settings.site_name|default:"TravelHub" }} has not reviewed all of the sites linked to our website and is not responsible for the contents of any such linked site.</p>
+                    
+                    <h3>10. Modifications</h3>
+                    <p>{{ site_settings.site_name|default:"TravelHub" }} may revise these terms of service at any time without notice. By using this website, you are agreeing to be bound by the then current version of these terms of service.</p>
+                    
+                    <h3>11. Governing Law</h3>
+                    <p>These terms and conditions are governed by and construed in accordance with the laws of California, United States.</p>
+                    
+                    <h3>12. Contact Information</h3>
+                    <p>If you have any questions about these Terms of Service, please contact us at:</p>
+                    <ul>
+                        <li>Email: {{ site_settings.support_email|default:"legal@travelhub.com" }}</li>
+                        <li>Phone: {{ site_settings.support_phone|default:"+1 (555) 123-4567" }}</li>
+                        <li>Address: 123 Travel Street, San Francisco, CA 94102</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

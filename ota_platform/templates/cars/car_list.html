@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}Car Rentals - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Car Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="mb-4">Rent a Car</h2>
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Pick-up Location</label>
+                            <input type="text" class="form-control" name="pickup_location" placeholder="City or airport" value="{{ pickup_location }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Pick-up Date</label>
+                            <input type="date" class="form-control" name="pickup_date" value="{{ pickup_date }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Pick-up Time</label>
+                            <input type="time" class="form-control" name="pickup_time" value="{{ pickup_time|default:'10:00' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Return Date</label>
+                            <input type="date" class="form-control" name="return_date" value="{{ return_date }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Return Time</label>
+                            <input type="time" class="form-control" name="return_time" value="{{ return_time|default:'10:00' }}">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel"></i> Filters
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Car Category -->
+                        <div class="mb-3">
+                            <label class="form-label">Car Category</label>
+                            <select class="form-select" name="category">
+                                <option value="">All Categories</option>
+                                <option value="economy">Economy</option>
+                                <option value="compact">Compact</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="standard">Standard</option>
+                                <option value="full_size">Full Size</option>
+                                <option value="premium">Premium</option>
+                                <option value="luxury">Luxury</option>
+                                <option value="suv">SUV</option>
+                                <option value="minivan">Minivan</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Price Range (per day)</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="min_price" placeholder="Min $">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="max_price" placeholder="Max $">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transmission -->
+                        <div class="mb-3">
+                            <label class="form-label">Transmission</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transmission" value="" id="trans_all" checked>
+                                <label class="form-check-label" for="trans_all">All</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transmission" value="automatic" id="trans_auto">
+                                <label class="form-check-label" for="trans_auto">Automatic</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transmission" value="manual" id="trans_manual">
+                                <label class="form-check-label" for="trans_manual">Manual</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Fuel Type -->
+                        <div class="mb-3">
+                            <label class="form-label">Fuel Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="fuel_type" value="gasoline" id="fuel_gas">
+                                <label class="form-check-label" for="fuel_gas">Gasoline</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="fuel_type" value="diesel" id="fuel_diesel">
+                                <label class="form-check-label" for="fuel_diesel">Diesel</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="fuel_type" value="hybrid" id="fuel_hybrid">
+                                <label class="form-check-label" for="fuel_hybrid">Hybrid</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="fuel_type" value="electric" id="fuel_electric">
+                                <label class="form-check-label" for="fuel_electric">Electric</label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Car Results -->
+        <div class="col-lg-9">
+            {% if cars %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Available Cars</h3>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Sort by: Price (Low to High)
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Price (Low to High)</a></li>
+                            <li><a class="dropdown-item" href="#">Price (High to Low)</a></li>
+                            <li><a class="dropdown-item" href="#">Car Category</a></li>
+                            <li><a class="dropdown-item" href="#">Rating</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {% for car in cars %}
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        {% if car.main_image %}
+                                            <img src="{{ car.main_image.url }}" class="img-fluid rounded" alt="{{ car.car_model }}">
+                                        {% else %}
+                                            <img src="https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=300" class="img-fluid rounded" alt="{{ car.car_model }}">
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <h5>{{ car.car_model.brand.name }} {{ car.car_model.name }}</h5>
+                                        <p class="text-muted mb-2">{{ car.get_category_display }} • {{ car.year }}</p>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-people"></i> {{ car.passengers }} passengers
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-suitcase"></i> {{ car.bags }} bags
+                                                </small>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-gear"></i> {{ car.get_transmission_display }}
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-fuel-pump"></i> {{ car.get_fuel_type_display }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-2">
+                                            {% if car.air_conditioning %}
+                                                <span class="badge bg-light text-dark me-1">A/C</span>
+                                            {% endif %}
+                                            {% if car.gps %}
+                                                <span class="badge bg-light text-dark me-1">GPS</span>
+                                            {% endif %}
+                                            <span class="badge bg-light text-dark">{{ car.doors }} doors</span>
+                                        </div>
+                                        
+                                        <p class="text-muted mb-0">
+                                            <i class="bi bi-geo-alt"></i> {{ car.pickup_location }}
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="col-md-3 text-end">
+                                        <div class="mb-3">
+                                            <div class="text-primary fw-bold h4">${{ car.price_per_day.amount }}</div>
+                                            <small class="text-muted">per day</small>
+                                        </div>
+                                        
+                                        {% if car.average_rating %}
+                                            <div class="mb-2">
+                                                <span class="badge bg-success">{{ car.average_rating|floatformat:1 }}</span>
+                                                <small class="text-muted">({{ car.total_reviews }})</small>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="d-grid gap-2">
+                                                                                      <button class="btn btn-primary" onclick="bookService('car', '{{ car.id }}')">Select Car</button>
+                                            <button class="btn btn-outline-primary" onclick="addToWishlist('car', '{{ car.id }}')">
+                                            </button>
+                                        </div>
+                                        
+                                        <small class="text-success d-block mt-2">
+                                            <i class="bi bi-check-circle"></i> Free cancellation
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-car-front" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                    <h3 class="mt-3">No cars available</h3>
+                    <p class="text-muted">Try adjusting your search criteria or dates.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Popular Car Categories -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Popular Car Categories</h3>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-car-front" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Economy</h6>
+                            <p class="text-muted mb-1">From $25/day</p>
+                            <small class="text-muted">Great for city driving</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-truck" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">SUV</h6>
+                            <p class="text-muted mb-1">From $65/day</p>
+                            <small class="text-muted">Perfect for families</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-car-front-fill" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Luxury</h6>
+                            <p class="text-muted mb-1">From $120/day</p>
+                            <small class="text-muted">Premium experience</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-lightning" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Electric</h6>
+                            <p class="text-muted mb-1">From $45/day</p>
+                            <small class="text-muted">Eco-friendly option</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set minimum date to today
+const today = new Date().toISOString().split('T')[0];
+document.querySelector('input[name="pickup_date"]').min = today;
+document.querySelector('input[name="return_date"]').min = today;
+
+// Update return minimum date when pickup changes
+document.querySelector('input[name="pickup_date"]').addEventListener('change', function() {
+    document.querySelector('input[name="return_date"]').min = this.value;
+});
+</script>
+{% endblock %}

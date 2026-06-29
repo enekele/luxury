@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - {{ event.name }} {% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="mb-3">Checkout</h2>
+                    <p class="text-muted">Purchase tickets for <strong>{{ event.name }}</strong> at {{ event.venue.name }}.</p>
+
+                    {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Ticket category</label>
+                            <select class="form-select" name="ticket_category" required>
+                                <option value="">Select a ticket category</option>
+                                {% for category in ticket_categories %}
+                                <option value="{{ category.id }}" {% if category.id|stringformat:'s' == request.GET.ticket_category %}selected{% endif %}>
+                                    {{ category.name }} — {{ category.base_price }} ({{ category.available_quantity }} left)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3 row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone number</label>
+                                <input type="text" name="phone" class="form-control" value="">
+                            </div>
+                        </div>
+                        <hr>
+                        <h5 class="mb-3">Your information</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First name</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last name</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}" required>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Email address</label>
+                                <input type="email" name="email" class="form-control" value="{{ request.user.email }}" required>
+                            </div>
+                        </div>
+                        <div class="mt-4 d-flex justify-content-between align-items-center">
+                            <a href="{% url 'events:event_detail' event.id %}" class="btn btn-outline-secondary">Back to event</a>
+                            <button type="submit" class="btn btn-primary">Confirm purchase</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

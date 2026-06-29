@@ -1,0 +1,320 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}Content Management - Admin Dashboard{% endblock %}
+
+{% block page_title %}Content Management{% endblock %}
+
+{% block content %}
+<!-- Content Overview -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon primary">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="stats-value">{{ hotels_count }}</div>
+            <div class="stats-label">Hotels</div>
+            <a href="/admin/hotels/hotel/" class="btn btn-sm btn-outline-primary mt-2">Manage Hotels</a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-airplane"></i>
+            </div>
+            <div class="stats-value">{{ flights_count }}</div>
+            <div class="stats-label">Flights</div>
+            <a href="/admin/flights/flight/" class="btn btn-sm btn-outline-primary mt-2">Manage Flights</a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon warning">
+                <i class="bi bi-car-front"></i>
+            </div>
+            <div class="stats-value">{{ cars_count }}</div>
+            <div class="stats-label">Car Rentals</div>
+            <a href="/admin/cars/carrental/" class="btn btn-sm btn-outline-primary mt-2">Manage Cars</a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon danger">
+                <i class="bi bi-map"></i>
+            </div>
+            <div class="stats-value">{{ tours_count }}</div>
+            <div class="stats-label">Tours</div>
+            <a href="/admin/tours/tour/" class="btn btn-sm btn-outline-primary mt-2">Manage Tours</a>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="d-grid">
+                            <a href="/admin/hotels/hotel/add/" class="btn btn-outline-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Add Hotel
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="d-grid">
+                            <a href="/admin/flights/flight/add/" class="btn btn-outline-success">
+                                <i class="bi bi-plus-circle me-2"></i>Add Flight
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="d-grid">
+                            <a href="/admin/cars/carrental/add/" class="btn btn-outline-warning">
+                                <i class="bi bi-plus-circle me-2"></i>Add Car Rental
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="d-grid">
+                            <a href="/admin/tours/tour/add/" class="btn btn-outline-danger">
+                                <i class="bi bi-plus-circle me-2"></i>Add Tour
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Content -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Recent Hotels</h6>
+                <a href="/admin/hotels/hotel/" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Hotel</th>
+                                <th>Location</th>
+                                <th>Rating</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hotel in recent_hotels %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if hotel.main_image %}
+                                            <img src="{{ hotel.main_image.url }}" class="rounded me-2" width="40" height="40" style="object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-building text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-medium">{{ hotel.name|truncatechars:25 }}</div>
+                                            <small class="text-muted">ID: {{ hotel.id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>{{ hotel.city.name }}</div>
+                                    <small class="text-muted">{{ hotel.city.country.name }}</small>
+                                </td>
+                                <td>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= hotel.star_rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">${{ hotel.price_per_night.amount }}</div>
+                                    <small class="text-muted">/night</small>
+                                </td>
+                                <td>
+                                    {% if hotel.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                    {% if hotel.is_featured %}
+                                        <span class="badge bg-warning">Featured</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">No hotels found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Recent Tours</h6>
+                <a href="/admin/tours/tour/" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tour</th>
+                                <th>Destination</th>
+                                <th>Duration</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tour in recent_tours %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if tour.main_image %}
+                                            <img src="{{ tour.main_image.url }}" class="rounded me-2" width="40" height="40" style="object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-map text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-medium">{{ tour.name|truncatechars:25 }}</div>
+                                            <small class="text-muted">{{ tour.category.name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>{{ tour.destination.name }}</div>
+                                    <small class="text-muted">{{ tour.destination.country.name }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ tour.duration_display }}</div>
+                                    <small class="text-muted">{{ tour.get_difficulty_level_display }}</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">${{ tour.price_per_person.amount }}</div>
+                                    <small class="text-muted">/person</small>
+                                </td>
+                                <td>
+                                    {% if tour.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                    {% if tour.is_featured %}
+                                        <span class="badge bg-warning">Featured</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">No tours found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Management -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    Pending Reviews 
+                    {% if pending_reviews > 0 %}
+                        <span class="badge bg-warning">{{ pending_reviews }}</span>
+                    {% endif %}
+                </h6>
+                <a href="/admin/reviews/review/" class="btn btn-sm btn-outline-primary">Manage Reviews</a>
+            </div>
+            <div class="card-body">
+                {% if pending_reviews > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        You have {{ pending_reviews }} review{{ pending_reviews|pluralize }} waiting for approval.
+                    </div>
+                {% else %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        All reviews have been processed. Great job!
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content Management Tools -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Content Management Tools</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-4 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-upload" style="font-size: 2rem; color: var(--admin-accent);"></i>
+                            <h6 class="mt-2">Bulk Import</h6>
+                            <p class="text-muted small">Import hotels, flights, or tours from CSV files</p>
+                            <button class="btn btn-outline-primary btn-sm">Import Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-download" style="font-size: 2rem; color: var(--admin-success);"></i>
+                            <h6 class="mt-2">Export Data</h6>
+                            <p class="text-muted small">Export content data for backup or analysis</p>
+                            <button class="btn btn-outline-success btn-sm">Export Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-arrow-clockwise" style="font-size: 2rem; color: var(--admin-warning);"></i>
+                            <h6 class="mt-2">Sync APIs</h6>
+                            <p class="text-muted small">Synchronize data with external API providers</p>
+                            <button class="btn btn-outline-warning btn-sm">Sync Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

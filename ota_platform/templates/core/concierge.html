@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Concierge - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title mb-4">Personalized AI Concierge</h1>
+                    <p class="text-muted mb-4">Ask your concierge for travel recommendations, itinerary planning, and automated booking support.</p>
+
+                    <form id="concierge-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="query" class="form-label">How can I help you today?</label>
+                            <textarea id="query" name="query" class="form-control" rows="4" placeholder="e.g. Find a hotel in Paris from 2025-06-10 to 2025-06-15"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Ask Concierge</button>
+                    </form>
+
+                    <div id="concierge-response" class="mt-4" style="display:none;">
+                        <div class="alert alert-info" id="concierge-answer"></div>
+                    </div>
+
+                    <div class="mt-5">
+                        <h4>Automated Booking Action</h4>
+                        <p class="text-muted">When you are ready, provide service details below and let the concierge create the booking for you.</p>
+                        <form id="booking-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="query" id="booking-query" value="">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="service_type">Service Type</label>
+                                    <select id="service_type" name="service_type" class="form-select">
+                                        <option value="hotel">Hotel</option>
+                                        <option value="flight">Flight</option>
+                                        <option value="car">Car Rental</option>
+                                        <option value="tour">Tour</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="service_id">Service ID</label>
+                                    <input id="service_id" name="service_id" class="form-control" placeholder="Enter service ID" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="booking_date">Booking Date</label>
+                                    <input id="booking_date" name="booking_date" type="date" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="guests">Guests / Passengers</label>
+                                    <input id="guests" name="guests" type="number" min="1" value="1" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="check_in">Check In</label>
+                                    <input id="check_in" name="check_in" type="date" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="check_out">Check Out</label>
+                                    <input id="check_out" name="check_out" type="date" class="form-control">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="contact_phone">Contact Phone</label>
+                                    <input id="contact_phone" name="contact_phone" type="tel" class="form-control" value="{{ user.phone|default:'' }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="special_requests">Special Requests</label>
+                                    <textarea id="special_requests" name="special_requests" class="form-control" rows="3" placeholder="Any special instructions for the concierge"></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success mt-4">Create Booking</button>
+                        </form>
+                        <div id="booking-response" class="mt-3" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const conciergeForm = document.getElementById('concierge-form');
+const bookingForm = document.getElementById('booking-form');
+const responseBox = document.getElementById('concierge-response');
+const answerBox = document.getElementById('concierge-answer');
+const bookingQuery = document.getElementById('booking-query');
+const bookingResponse = document.getElementById('booking-response');
+
+conciergeForm?.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const query = document.getElementById('query').value.trim();
+    if (!query) {
+        answerBox.textContent = 'Please enter a request for concierge assistance.';
+        responseBox.style.display = 'block';
+        return;
+    }
+
+    bookingQuery.value = query;
+
+    const formData = new FormData(conciergeForm);
+    const response = await fetch('{% url "concierge_chat" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+    const data = await response.json();
+    answerBox.textContent = data.answer || 'Unable to get a response from concierge.';
+    responseBox.style.display = 'block';
+});
+
+bookingForm?.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const formData = new FormData(bookingForm);
+    const response = await fetch('{% url "concierge_book" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+    const data = await response.json();
+    bookingResponse.style.display = 'block';
+    bookingResponse.className = data.success ? 'alert alert-success' : 'alert alert-danger';
+    bookingResponse.textContent = data.message || 'Unable to create booking.';
+});
+</script>
+{% endblock %}

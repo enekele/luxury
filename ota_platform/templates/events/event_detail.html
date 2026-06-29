@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.name }} - {{ site_settings.site_name|default:'TravelHub' }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row gy-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                {% if event.image %}
+                <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.name }}" style="height: 420px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h1 class="h3">{{ event.name }}</h1>
+                            <p class="text-muted mb-1">{{ event.category.name }} event at {{ event.venue.name }}, {{ event.venue.city.name }}</p>
+                            <small class="text-muted"><i class="bi bi-calendar-event"></i> {{ event.start_date|date:'F j, Y, P' }} &ndash; {{ event.end_date|date:'F j, Y, P' }}</small>
+                        </div>
+                        <span class="badge bg-success">{{ event.available_tickets }} seats left</span>
+                    </div>
+                    <p>{{ event.description }}</p>
+                    {% if event.featured_artists %}
+                    <div class="mb-3">
+                        <h5>Featured performers</h5>
+                        <p>{{ event.featured_artists }}</p>
+                    </div>
+                    {% endif %}
+                    {% if event.rules %}
+                    <div class="mb-3">
+                        <h5>Entry rules</h5>
+                        <p>{{ event.rules }}</p>
+                    </div>
+                    {% endif %}
+                    {% if event.age_restriction %}
+                    <p class="text-muted">Age restriction: {{ event.age_restriction }}+</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row g-3">
+                {% for category in ticket_categories %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ category.name }}</h5>
+                            <p class="mb-1 text-muted">Price: {{ category.base_price }}</p>
+                            <p class="mb-1">{{ category.description|default:'Standard access ticket' }}</p>
+                            <p class="mb-2"><strong>{{ category.available_quantity }}</strong> tickets available</p>
+                            <a href="{% url 'events:event_checkout' event.id %}?ticket_category={{ category.id }}" class="btn btn-primary btn-sm">Buy {{ category.name }}</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="mb-3">Event summary</h5>
+                <ul class="list-unstyled mb-4">
+                    <li class="mb-2"><i class="bi bi-geo-alt-fill me-2"></i>{{ event.venue.address }}</li>
+                    <li class="mb-2"><i class="bi bi-people-fill me-2"></i>Capacity: {{ event.venue.capacity }}</li>
+                    <li class="mb-2"><i class="bi bi-clock-fill me-2"></i>Doors open: {{ event.doors_open|default:'Before start' }}</li>
+                    <li class="mb-2"><i class="bi bi-tag-fill me-2"></i>{{ event.category.name }}</li>
+                </ul>
+                <a href="{% url 'events:event_checkout' event.id %}" class="btn btn-primary w-100">Purchase tickets</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends 'affiliates/base_affiliate.html' %}
+
+{% block title %}Earnings - Affiliate Dashboard{% endblock %}
+
+{% block page_title %}Earnings & Commissions{% endblock %}
+
+{% block content %}
+<!-- Earnings Summary -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="stats-value">${{ affiliate.total_earnings.amount|floatformat:2 }}</div>
+            <div class="stats-label">Total Earnings</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon warning">
+                <i class="bi bi-clock"></i>
+            </div>
+            <div class="stats-value">${{ affiliate.pending_earnings.amount|floatformat:2 }}</div>
+            <div class="stats-label">Pending Earnings</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon primary">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stats-value">${{ affiliate.paid_earnings.amount|floatformat:2 }}</div>
+            <div class="stats-label">Paid Earnings</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stats-value">{{ affiliate.commission_rate }}%</div>
+            <div class="stats-label">Commission Rate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Commissions Table -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Commission History</h6>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                Filter: {% if selected_status %}{{ selected_status|title }}{% else %}All{% endif %}
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'affiliates:earnings' %}">All Commissions</a></li>
+                <li><a class="dropdown-item" href="?status=pending">Pending</a></li>
+                <li><a class="dropdown-item" href="?status=approved">Approved</a></li>
+                <li><a class="dropdown-item" href="?status=paid">Paid</a></li>
+                <li><a class="dropdown-item" href="?status=cancelled">Cancelled</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Booking</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Booking Amount</th>
+                        <th>Commission</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for commission in commissions %}
+                    <tr>
+                        <td>
+                            <div>{{ commission.created_at|date:"M d, Y" }}</div>
+                            <small class="text-muted">{{ commission.created_at|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-medium">#{{ commission.booking.id }}</div>
+                            <small class="text-muted">{{ commission.booking.booking_reference|default:"-" }}</small>
+                        </td>
+                        <td>
+                            <div>{{ commission.booking.user.get_full_name }}</div>
+                            <small class="text-muted">{{ commission.booking.user.email }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if commission.booking.content_type.model == 'hotel' %}
+                                    <i class="bi bi-building text-primary me-2"></i>
+                                {% elif commission.booking.content_type.model == 'flight' %}
+                                    <i class="bi bi-airplane text-success me-2"></i>
+                                {% elif commission.booking.content_type.model == 'carrental' %}
+                                    <i class="bi bi-car-front text-warning me-2"></i>
+                                {% elif commission.booking.content_type.model == 'tour' %}
+                                    <i class="bi bi-map text-info me-2"></i>
+                                {% endif %}
+                                <span class="badge bg-light text-dark">{{ commission.booking.content_type.model|title }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold">${{ commission.booking_amount.amount }}</div>
+                            <small class="text-muted">{{ commission.commission_rate }}% rate</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-success">${{ commission.commission_amount.amount }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if commission.status == 'paid' %}success{% elif commission.status == 'approved' %}primary{% elif commission.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                {{ commission.get_status_display }}
+                            </span>
+                            {% if commission.paid_at %}
+                                <div class="small text-muted">Paid {{ commission.paid_at|date:"M d" }}</div>
+                            {% elif commission.approved_at %}
+                                <div class="small text-muted">Approved {{ commission.approved_at|date:"M d" }}</div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="bi bi-currency-dollar" style="font-size: 2rem; color: #6b7280;"></i>
+                            <div class="mt-2">No commissions yet</div>
+                            <small class="text-muted">Start promoting to earn your first commission!</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History -->
+{% if payments %}
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">Payment History</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Payment Date</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Reference</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>
+                            <div>{{ payment.payment_date|date:"M d, Y" }}</div>
+                            <small class="text-muted">{{ payment.payment_date|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-success">${{ payment.amount.amount }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ payment.get_payment_method_display }}</span>
+                        </td>
+                        <td>
+                            <code class="small">{{ payment.payment_reference }}</code>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if payment.status == 'completed' %}success{% elif payment.status == 'processing' %}warning{% elif payment.status == 'failed' %}danger{% else %}secondary{% endif %}">
+                                {{ payment.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update discount symbol based on type
+document.getElementById('discountType').addEventListener('change', function() {
+    const symbol = document.getElementById('discountSymbol');
+    if (this.value === 'percentage') {
+        symbol.textContent = '%';
+    } else if (this.value === 'fixed') {
+        symbol.textContent = '$';
+    }
+});
+
+// Set minimum dates
+const today = new Date().toISOString().split('T')[0];
+document.querySelector('input[name="valid_from"]').min = today;
+document.querySelector('input[name="valid_until"]').min = today;
+
+// Update valid_until minimum when valid_from changes
+document.querySelector('input[name="valid_from"]').addEventListener('change', function() {
+    document.querySelector('input[name="valid_until"]').min = this.value;
+});
+</script>
+{% endblock %}

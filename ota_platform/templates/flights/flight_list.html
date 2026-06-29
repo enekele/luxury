@@ -1,0 +1,218 @@
+ {% extends 'base.html' %}
+  
+  {% block title %}Flights - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+  
+  {% block content %}
+  <div class="container mt-5 pt-4">
+      <!-- Flight Search Form -->
+      <div class="row mb-4">
+          <div class="col-12">
+              <div class="card">
+                  <div class="card-body">
+                      <h2 class="mb-4">Search Flights</h2>
+                      <form method="get" class="row g-3">
+                          <div class="col-md-2">
+                              <label class="form-label">Trip Type</label>
+                              <select class="form-select" name="trip_type">
+                                  <option value="round_trip">Round Trip</option>
+                                  <option value="one_way">One Way</option>
+                                  <option value="multi_city">Multi City</option>
+                              </select>
+                          </div>
+                          <div class="col-md-2">
+                              <label class="form-label">From</label>
+                              <input type="text" class="form-control" name="origin" placeholder="Origin city" value="{{ origin }}">
+                          </div>
+                          <div class="col-md-2">
+                              <label class="form-label">To</label>
+                              <input type="text" class="form-control" name="destination" placeholder="Destination city" value="{{ destination }}">
+                          </div>
+                          <div class="col-md-2">
+                              <label class="form-label">Departure</label>
+                              <input type="date" class="form-control" name="departure_date" value="{{ departure_date }}">
+                          </div>
+                          <div class="col-md-2">
+                              <label class="form-label">Return</label>
+                              <input type="date" class="form-control" name="return_date" value="{{ return_date }}">
+                          </div>
+                          <div class="col-md-2">
+                              <label class="form-label">Passengers</label>
+                              <select class="form-select" name="passengers">
+                                  <option value="1">1 Passenger</option>
+                                  <option value="2" selected>2 Passengers</option>
+                                  <option value="3">3 Passengers</option>
+                                  <option value="4">4 Passengers</option>
+                                  <option value="5">5+ Passengers</option>
+                              </select>
+                          </div>
+                          <div class="col-12">
+                              <button type="submit" class="btn btn-primary">
+                                  <i class="bi bi-search"></i> Search Flights
+                              </button>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+      </div>
+  
+      <!-- Flight Results -->
+      {% if flights %}
+          <div class="row mb-4">
+              <div class="col-12">
+                  <h3>Available Flights</h3>
+                  <p class="text-muted">{{ flights|length }} flights found</p>
+              </div>
+          </div>
+  
+          <div class="row">
+              {% for flight in flights %}
+              <div class="col-12 mb-3">
+                  <div class="card">
+                      <div class="card-body">
+                          <div class="row align-items-center">
+                              <div class="col-md-2">
+                                  <div class="text-center">
+                                      {% if flight.airline.logo %}
+                                          <img src="{{ flight.airline.logo.url }}" alt="{{ flight.airline.name }}" class="img-fluid mb-2" style="max-height: 40px;">
+                                      {% endif %}
+                                      <div class="fw-bold">{{ flight.airline.name }}</div>
+                                      <small class="text-muted">{{ flight.flight_number }}</small>
+                                  </div>
+                              </div>
+                              
+                              <div class="col-md-6">
+                                  <div class="row">
+                                      <div class="col-4 text-center">
+                                          <div class="fw-bold h5">{{ flight.departure_time|time:"H:i" }}</div>
+                                          <div class="text-muted">{{ flight.origin.code }}</div>
+                                          <small class="text-muted">{{ flight.origin.city.name }}</small>
+                                      </div>
+                                      <div class="col-4 text-center">
+                                          <div class="text-muted mb-1">
+                                              <i class="bi bi-airplane"></i>
+                                              {% if flight.is_direct %}Direct{% else %}{{ flight.stops }} stop{{ flight.stops|pluralize }}{% endif %}
+                                          </div>
+                                          <div class="border-top border-2 position-relative">
+                                              <small class="position-absolute top-0 start-50 translate-middle bg-white px-2 text-muted">
+                                                  {{ flight.duration_hours|floatformat:1 }}h
+                                              </small>
+                                          </div>
+                                      </div>
+                                      <div class="col-4 text-center">
+                                          <div class="fw-bold h5">{{ flight.arrival_time|time:"H:i" }}</div>
+                                          <div class="text-muted">{{ flight.destination.code }}</div>
+                                          <small class="text-muted">{{ flight.destination.city.name }}</small>
+                                      </div>
+                                  </div>
+                              </div>
+                              
+                              <div class="col-md-2 text-center">
+                                  <div class="text-primary fw-bold h4">${{ flight.economy_price.amount }}</div>
+                                  <small class="text-muted">per person</small>
+                                  <div class="mt-1">
+                                      <span class="badge bg-success">{{ flight.available_seats }} seats left</span>
+                                  </div>
+                              </div>
+                              
+                              <div class="col-md-2 text-center">
+                                  <button class="btn btn-primary w-100 mb-2" onclick="bookService('flight', '{{ flight.id }}')">Select Flight</button>
+                                  <button class="btn btn-outline-primary w-100 btn-sm" onclick="addToWishlist('flight', '{{ flight.id }}')">
+                                      <i class="bi bi-heart"></i> Wishlist
+                                  </button>
+                              </div>
+                          </div>
+                          
+                          <!-- Flight Classes -->
+                          {% if flight.classes.all %}
+                              <div class="row mt-3">
+                                  <div class="col-12">
+                                      <div class="d-flex gap-3">
+                                          {% for class in flight.classes.all %}
+                                              <div class="border rounded p-2 flex-fill text-center">
+                                                  <div class="fw-bold">{{ class.get_class_type_display }}</div>
+                                                  <div class="text-primary">${{ class.price.amount }}</div>
+                                                  <small class="text-muted">{{ class.available_seats }} left</small>
+                                              </div>
+                                          {% endfor %}
+                                      </div>
+                                  </div>
+                              </div>
+                          {% endif %}
+                      </div>
+                  </div>
+              </div>
+              {% endfor %}
+          </div>
+      {% else %}
+          <div class="row">
+              <div class="col-12">
+                  <div class="text-center py-5">
+                      <i class="bi bi-airplane" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                      <h3 class="mt-3">No flights found</h3>
+                      <p class="text-muted">Try adjusting your search criteria or dates.</p>
+                  </div>
+              </div>
+          </div>
+      {% endif %}
+  
+      <!-- Popular Routes -->
+      <div class="row mt-5">
+          <div class="col-12">
+              <h3>Popular Routes</h3>
+              <div class="row">
+                  <div class="col-md-3 mb-3">
+                      <div class="card">
+                          <div class="card-body text-center">
+                              <h6>New York → London</h6>
+                              <p class="text-muted mb-1">From $299</p>
+                              <small class="text-muted">7h 30m</small>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                      <div class="card">
+                          <div class="card-body text-center">
+                              <h6>Los Angeles → Tokyo</h6>
+                              <p class="text-muted mb-1">From $599</p>
+                              <small class="text-muted">11h 45m</small>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                      <div class="card">
+                          <div class="card-body text-center">
+                              <h6>Paris → Dubai</h6>
+                              <p class="text-muted mb-1">From $399</p>
+                              <small class="text-muted">6h 15m</small>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                      <div class="card">
+                          <div class="card-body text-center">
+                              <h6>Sydney → Singapore</h6>
+                              <p class="text-muted mb-1">From $449</p>
+                              <small class="text-muted">8h 20m</small>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  {% endblock %}
+  
+  {% block extra_js %}
+  <script>
+  // Set minimum date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="departure_date"]').min = today;
+  document.querySelector('input[name="return_date"]').min = today;
+  
+  // Update return minimum date when departure changes
+  document.querySelector('input[name="departure_date"]').addEventListener('change', function() {
+      document.querySelector('input[name="return_date"]').min = this.value;
+  });
+  </script>
+  {% endblock %}

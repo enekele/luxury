@@ -1,0 +1,213 @@
+{% extends 'affiliates/base_affiliate.html' %}
+
+{% block title %}Create Promo Code - Affiliate Dashboard{% endblock %}
+
+{% block page_title %}Create Promo Code{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Create New Promo Code</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Basic Information</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Promo Code *</label>
+                            <input type="text" class="form-control" name="code" placeholder="SAVE20" style="text-transform: uppercase;" required>
+                            <small class="text-muted">Use 4-12 characters, letters and numbers only</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Description *</label>
+                            <input type="text" class="form-control" name="description" placeholder="20% off all hotels" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Discount Settings -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Discount Settings</h6>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Discount Type *</label>
+                            <select class="form-select" name="discount_type" id="discountType" required>
+                                <option value="">Select type</option>
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Discount Value *</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="discountSymbol">%</span>
+                                <input type="number" class="form-control" name="discount_value" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Max Discount ($)</label>
+                            <input type="number" class="form-control" name="max_discount" step="0.01" min="0" placeholder="Optional">
+                            <small class="text-muted">Maximum discount amount</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Validity Period -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Validity Period</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Valid From *</label>
+                            <input type="date" class="form-control" name="valid_from" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Valid Until *</label>
+                            <input type="date" class="form-control" name="valid_until" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Restrictions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Restrictions</h6>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Service Type</label>
+                            <select class="form-select" name="service_type">
+                                <option value="all">All Services</option>
+                                <option value="hotel">Hotels Only</option>
+                                <option value="flight">Flights Only</option>
+                                <option value="car">Car Rentals Only</option>
+                                <option value="tour">Tours Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Usage Limit</label>
+                            <input type="number" class="form-control" name="usage_limit" min="1" placeholder="Unlimited">
+                            <small class="text-muted">Maximum number of uses</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Minimum Amount ($)</label>
+                            <input type="number" class="form-control" name="min_amount" step="0.01" min="0" placeholder="No minimum">
+                            <small class="text-muted">Minimum booking amount</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check me-2"></i>Create Promo Code
+                        </button>
+                        <a href="{% url 'affiliates:promo_codes' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Tips -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Promo Code Tips</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-success">
+                        <i class="bi bi-check-circle me-2"></i>Do's
+                    </h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1">• Use clear, memorable codes</li>
+                        <li class="mb-1">• Set reasonable expiry dates</li>
+                        <li class="mb-1">• Target specific audiences</li>
+                        <li class="mb-1">• Monitor performance regularly</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="text-danger">
+                        <i class="bi bi-x-circle me-2"></i>Don'ts
+                    </h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1">• Use offensive or inappropriate words</li>
+                        <li class="mb-1">• Set unrealistic discount amounts</li>
+                        <li class="mb-1">• Create too many similar codes</li>
+                        <li class="mb-1">• Forget to promote your codes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Commission Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Commission Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="h3 text-primary">{{ affiliate.commission_rate }}%</div>
+                    <p class="text-muted">Your Commission Rate</p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <i class="bi bi-info-circle me-1"></i>
+                        You earn {{ affiliate.commission_rate }}% commission on every booking made with your promo codes.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update discount symbol based on type
+document.getElementById('discountType').addEventListener('change', function() {
+    const symbol = document.getElementById('discountSymbol');
+    if (this.value === 'percentage') {
+        symbol.textContent = '%';
+    } else if (this.value === 'fixed') {
+        symbol.textContent = '$';
+    } else {
+        symbol.textContent = '%';
+    }
+});
+
+// Set minimum dates
+const today = new Date().toISOString().split('T')[0];
+document.querySelector('input[name="valid_from"]').min = today;
+document.querySelector('input[name="valid_until"]').min = today;
+
+// Update valid_until minimum when valid_from changes
+document.querySelector('input[name="valid_from"]').addEventListener('change', function() {
+    document.querySelector('input[name="valid_until"]').min = this.value;
+});
+
+// Auto-generate code suggestion
+document.querySelector('input[name="description"]').addEventListener('blur', function() {
+    const codeInput = document.querySelector('input[name="code"]');
+    if (!codeInput.value && this.value) {
+        // Simple code generation from description
+        const words = this.value.split(' ');
+        let suggestion = '';
+        words.forEach(word => {
+            if (suggestion.length < 8) {
+                suggestion += word.substring(0, 3).toUpperCase();
+            }
+        });
+        if (suggestion.length < 4) {
+            suggestion += Math.floor(Math.random() * 100);
+        }
+        codeInput.value = suggestion.substring(0, 12);
+    }
+});
+</script>
+{% endblock %}

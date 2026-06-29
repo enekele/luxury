@@ -1,0 +1,308 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}Promotions Management - Admin Dashboard{% endblock %}
+
+{% block page_title %}Promotions Management{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon primary">
+                <i class="bi bi-tag"></i>
+            </div>
+            <div class="stats-value">{{ promotions|length }}</div>
+            <div class="stats-label">Total Promotions</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon success">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stats-value">{{ promotions|length }}</div>
+            <div class="stats-label">Active Promotions</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon warning">
+                <i class="bi bi-clock"></i>
+            </div>
+            <div class="stats-value">0</div>
+            <div class="stats-label">Expiring Soon</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon danger">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="stats-value">$12.5K</div>
+            <div class="stats-label">Total Savings</div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotions Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">All Promotions</h6>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download"></i> Export
+            </button>
+            <a href="/admin/core/promotion/add/" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus"></i> Create Promotion
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Promotion</th>
+                        <th>Code</th>
+                        <th>Discount</th>
+                        <th>Service Type</th>
+                        <th>Usage</th>
+                        <th>Valid Period</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for promotion in promotions %}
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="fw-medium">{{ promotion.title }}</div>
+                                <small class="text-muted">{{ promotion.description|truncatechars:50 }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <code class="bg-light px-2 py-1 rounded">{{ promotion.code }}</code>
+                        </td>
+                        <td>
+                            <div class="fw-bold">
+                                {% if promotion.discount_type == 'percentage' %}
+                                    {{ promotion.discount_value }}%
+                                {% else %}
+                                    ${{ promotion.discount_value }}
+                                {% endif %}
+                            </div>
+                            {% if promotion.min_amount %}
+                                <small class="text-muted">Min: ${{ promotion.min_amount.amount }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ promotion.get_service_type_display }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                    {% if promotion.usage_limit %}
+                                        <div class="progress-bar" style="width: 1">{% widthratio promotion.used_count promotion.usage_limit 100 %}</div>
+                                    {% else %}
+                                        <div class="progress-bar" style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    {{ promotion.used_count }}{% if promotion.usage_limit %}/{{ promotion.usage_limit }}{% endif %}
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ promotion.valid_from|date:"M d" }} - {{ promotion.valid_until|date:"M d, Y" }}</div>
+                            <small class="text-muted">
+                                {% if promotion.is_valid %}
+                                    <i class="bi bi-check-circle text-success"></i> Active
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i> Expired
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if promotion.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="/admin/core/promotion/{{ promotion.id }}/change/">Edit Promotion</a></li>
+                                    <li><a class="dropdown-item" href="#">View Usage</a></li>
+                                    <li><a class="dropdown-item" href="#">Duplicate</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    {% if promotion.is_active %}
+                                        <li><a class="dropdown-item text-warning" href="#">Deactivate</a></li>
+                                    {% else %}
+                                        <li><a class="dropdown-item text-success" href="#">Activate</a></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item text-danger" href="#">Delete</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi bi-tag" style="font-size: 2rem; color: #6b7280;"></i>
+                            <div class="mt-2">No promotions found</div>
+                            <a href="/admin/core/promotion/add/" class="btn btn-primary btn-sm mt-2">Create Your First Promotion</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Promotion Templates -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Promotion Templates</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-percent" style="font-size: 2rem; color: var(--admin-primary);"></i>
+                            <h6 class="mt-2">Percentage Discount</h6>
+                            <p class="text-muted small">Create percentage-based discounts</p>
+                            <button class="btn btn-outline-primary btn-sm">Use Template</button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-currency-dollar" style="font-size: 2rem; color: var(--admin-success);"></i>
+                            <h6 class="mt-2">Fixed Amount</h6>
+                            <p class="text-muted small">Create fixed amount discounts</p>
+                            <button class="btn btn-outline-success btn-sm">Use Template</button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-calendar-event" style="font-size: 2rem; color: var(--admin-warning);"></i>
+                            <h6 class="mt-2">Seasonal Offer</h6>
+                            <p class="text-muted small">Create time-limited seasonal offers</p>
+                            <button class="btn btn-outline-warning btn-sm">Use Template</button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-people" style="font-size: 2rem; color: var(--admin-danger);"></i>
+                            <h6 class="mt-2">First Time User</h6>
+                            <p class="text-muted small">Welcome discount for new users</p>
+                            <button class="btn btn-outline-danger btn-sm">Use Template</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotion Performance -->
+<div class="row mt-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Promotion Performance</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="promotionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Top Performing Codes</h6>
+            </div>
+            <div class="card-body">
+                {% for promotion in promotions|slice:":5" %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <code class="bg-light px-2 py-1 rounded">{{ promotion.code }}</code>
+                        <div class="small text-muted">{{ promotion.title|truncatechars:20 }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ promotion.used_count }}</div>
+                        <small class="text-muted">uses</small>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No promotion data available</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Promotion Performance Chart
+const ctx = document.getElementById('promotionChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Promotions Used',
+            data: [120, 190, 300, 500, 200, 300],
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            borderColor: '#3b82f6',
+            borderWidth: 1
+        }, {
+            label: 'Savings Generated',
+            data: [1200, 1900, 3000, 5000, 2000, 3000],
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: '#10b981',
+            borderWidth: 1,
+            yAxisID: 'y1'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                position: 'left'
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                beginAtZero: true,
+                grid: {
+                    drawOnChartArea: false
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

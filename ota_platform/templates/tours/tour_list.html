@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block title %}Tours - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Tour Search Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="mb-4">Discover Amazing Tours</h2>
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Destination</label>
+                            <input type="text" class="form-control" name="destination" placeholder="Where do you want to go?" value="{{ destination }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" name="date" value="{{ date }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Duration</label>
+                            <select class="form-select" name="duration">
+                                <option value="">Any Duration</option>
+                                <option value="half_day">Half Day (4-6 hours)</option>
+                                <option value="full_day">Full Day (8+ hours)</option>
+                                <option value="multi_day">Multi Day</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category">
+                                <option value="">All Categories</option>
+                                <option value="adventure">Adventure</option>
+                                <option value="cultural">Cultural</option>
+                                <option value="food">Food & Drink</option>
+                                <option value="nature">Nature</option>
+                                <option value="historical">Historical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Search Tours
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel"></i> Filters
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Price Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="min_price" placeholder="Min $">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="max_price" placeholder="Max $">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Difficulty Level -->
+                        <div class="mb-3">
+                            <label class="form-label">Difficulty Level</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="difficulty" value="easy" id="diff_easy">
+                                <label class="form-check-label" for="diff_easy">Easy</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="difficulty" value="moderate" id="diff_moderate">
+                                <label class="form-check-label" for="diff_moderate">Moderate</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="difficulty" value="challenging" id="diff_challenging">
+                                <label class="form-check-label" for="diff_challenging">Challenging</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="difficulty" value="difficult" id="diff_difficult">
+                                <label class="form-check-label" for="diff_difficult">Difficult</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Group Size -->
+                        <div class="mb-3">
+                            <label class="form-label">Group Size</label>
+                            <select class="form-select" name="group_size">
+                                <option value="">Any Size</option>
+                                <option value="small">Small (1-8 people)</option>
+                                <option value="medium">Medium (9-15 people)</option>
+                                <option value="large">Large (16+ people)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Languages -->
+                        <div class="mb-3">
+                            <label class="form-label">Languages</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="languages" value="english" id="lang_en">
+                                <label class="form-check-label" for="lang_en">English</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="languages" value="spanish" id="lang_es">
+                                <label class="form-check-label" for="lang_es">Spanish</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="languages" value="french" id="lang_fr">
+                                <label class="form-check-label" for="lang_fr">French</label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tour Results -->
+        <div class="col-lg-9">
+            {% if tours %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Available Tours</h3>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Sort by: Featured
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Featured</a></li>
+                            <li><a class="dropdown-item" href="#">Price (Low to High)</a></li>
+                            <li><a class="dropdown-item" href="#">Price (High to Low)</a></li>
+                            <li><a class="dropdown-item" href="#">Duration</a></li>
+                            <li><a class="dropdown-item" href="#">Rating</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {% for tour in tours %}
+                    <div class="col-lg-6 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="position-relative">
+                                {% if tour.main_image %}
+                                    <img src="{{ tour.main_image.url }}" class="card-img-top" alt="{{ tour.name }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                    <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=400" class="card-img-top" alt="{{ tour.name }}" style="height: 200px; object-fit: cover;">
+                                {% endif %}
+                                
+                                {% if tour.is_featured %}
+                                    <span class="badge bg-warning position-absolute top-0 start-0 m-2">Featured</span>
+                                {% endif %}
+                                
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-primary">{{ tour.duration_display }}</span>
+                                </div>
+                                
+                                <div class="position-absolute bottom-0 start-0 m-2">
+                                    <span class="badge bg-dark">{{ tour.get_difficulty_level_display }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title">{{ tour.name }}</h5>
+                                    {% if tour.average_rating %}
+                                        <div>
+                                            <span class="badge bg-success">{{ tour.average_rating|floatformat:1 }}</span>
+                                            <small class="text-muted">({{ tour.total_reviews }})</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="card-text text-muted mb-2">
+                                    <i class="bi bi-geo-alt"></i> {{ tour.destination.name }}, {{ tour.destination.country.name }}
+                                </p>
+                                
+                                <p class="card-text">{{ tour.description|truncatewords:20 }}</p>
+                                
+                                <!-- Tour Highlights -->
+                                {% if tour.highlights %}
+                                    <div class="mb-3">
+                                        <h6 class="text-muted">Highlights:</h6>
+                                        <p class="small">{{ tour.highlights|truncatewords:15 }}</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Tour Details -->
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-people"></i> Max {{ tour.max_participants }} people
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-clock"></i> {{ tour.start_time }} - {{ tour.end_time }}
+                                        </small>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-translate"></i> 
+                                            {% for lang in tour.languages|slice:":2" %}
+                                                {{ lang }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-tag"></i> {{ tour.category.name }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-primary fw-bold h5">${{ tour.price_per_person.amount }}</span>
+                                        <small class="text-muted">/person</small>
+                                        {% if tour.child_price %}
+                                            <br><small class="text-muted">Child: ${{ tour.child_price.amount }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-primary" onclick="bookService('tour', '{{ tour.id }}')">Book Now</button>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="addToWishlist('tour', '{{ tour.id }}')">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-map" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                    <h3 class="mt-3">No tours found</h3>
+                    <p class="text-muted">Try adjusting your search criteria or explore different destinations.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Popular Tour Categories -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Popular Tour Categories</h3>
+            <div class="row">
+                <div class="col-md-2 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-mountain" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Adventure</h6>
+                            <small class="text-muted">Thrilling experiences</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-building" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Cultural</h6>
+                            <small class="text-muted">Local traditions</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-cup-hot" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Food & Drink</h6>
+                            <small class="text-muted">Culinary delights</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-tree" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Nature</h6>
+                            <small class="text-muted">Natural wonders</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-bank" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Historical</h6>
+                            <small class="text-muted">Ancient sites</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi bi-camera" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h6 class="mt-2">Photography</h6>
+                            <small class="text-muted">Picture perfect</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set minimum date to today
+const today = new Date().toISOString().split('T')[0];
+document.querySelector('input[name="date"]').min = today;
+</script>
+{% endblock %}

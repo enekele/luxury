@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h5>{{ user.get_full_name }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <div class="card mt-3">
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person me-2"></i> Profile Overview
+                    </a>
+                    <a href="{% url 'edit_profile' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-pencil me-2"></i> Edit Profile
+                    </a>
+                    <a href="{% url 'user_bookings' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-check me-2"></i> My Bookings
+                    </a>
+                    <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-heart me-2"></i> Wishlist
+                    </a>
+                    <a href="{% url 'loyalty_points' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-star me-2"></i> Loyalty Points
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Wishlist Content -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-heart-fill text-danger me-2"></i>
+                        My Wishlist ({{ wishlist_items|length }} items)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if wishlist_items %}
+                        <div class="row">
+                            {% for item in wishlist_items %}
+                                <div class="col-lg-6 col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="position-relative">
+                                            {% if item.content_type.model == 'hotel' %}
+                                                <img src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=400" class="card-img-top" alt="{{ item.content_object.name }}" style="height: 200px; object-fit: cover;">
+                                            {% elif item.content_type.model == 'tour' %}
+                                                <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=400" class="card-img-top" alt="{{ item.content_object.name }}" style="height: 200px; object-fit: cover;">
+                                            {% elif item.content_type.model == 'car' %}
+                                                <img src="https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=400" class="card-img-top" alt="{{ item.content_object.name }}" style="height: 200px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                    <i class="bi bi-image" style="font-size: 3rem; color: var(--text-secondary);"></i>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2" onclick="removeFromWishlist('{{ item.id }}')">
+                                                <i class="bi bi-heart-fill"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ item.content_object.name }}</h6>
+                                            
+                                            {% if item.content_type.model == 'hotel' %}
+                                                <p class="card-text text-muted mb-2">
+                                                    <i class="bi bi-geo-alt"></i> {{ item.content_object.city.name }}, {{ item.content_object.city.country.name }}
+                                                </p>
+                                                <div class="text-warning mb-2">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= item.content_object.star_rating %}
+                                                            <i class="bi bi-star-fill"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-star"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-primary fw-bold">${{ item.content_object.price_per_night.amount }}/night</span>
+                                                    <a href="{% url 'hotels:hotel_detail' item.content_object.id %}" class="btn btn-primary btn-sm">View Hotel</a>
+                                                </div>
+                                            {% elif item.content_type.model == 'tour' %}
+                                                <p class="card-text text-muted mb-2">
+                                                    <i class="bi bi-geo-alt"></i> {{ item.content_object.destination.name }}
+                                                </p>
+                                                <p class="card-text text-muted mb-2">
+                                                    <i class="bi bi-clock"></i> {{ item.content_object.duration_display }}
+                                                </p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-primary fw-bold">${{ item.content_object.price_per_person.amount }}/person</span>
+                                                    <button class="btn btn-primary btn-sm">View Tour</button>
+                                                </div>
+                                            {% elif item.content_type.model == 'car' %}
+                                                <p class="card-text text-muted mb-2">
+                                                    <i class="bi bi-geo-alt"></i> {{ item.content_object.city.name }}
+                                                </p>
+                                                <p class="card-text text-muted mb-2">
+                                                    <i class="bi bi-car-front"></i> {{ item.content_object.get_category_display }}
+                                                </p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-primary fw-bold">${{ item.content_object.price_per_day.amount }}/day</span>
+                                                    <button class="btn btn-primary btn-sm">View Car</button>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <small class="text-muted d-block mt-2">Added {{ item.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-heart" style="font-size: 4rem; color: var(--text-secondary);"></i>
+                            <h4 class="mt-3">Your wishlist is empty</h4>
+                            <p class="text-muted">Start adding your favorite hotels, tours, and cars to your wishlist!</p>
+                            <a href="{% url 'home' %}" class="btn btn-primary">Start Exploring</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function removeFromWishlist(itemId) {
+    if (confirm('Are you sure you want to remove this item from your wishlist?')) {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`/bookings/remove-from-wishlist/${itemId}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error removing item from wishlist.');
+            }
+        })
+        .catch(error => {
+            alert('Error removing item from wishlist. Please try again.');
+        });
+    }
+}
+</script>
+{% endblock %}

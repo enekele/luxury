@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold mb-4">About {{ site_settings.site_name|default:"TravelHub" }}</h1>
+            <p class="lead">We're passionate about making travel accessible, affordable, and unforgettable for everyone. Our mission is to connect travelers with the best experiences around the world.</p>
+        </div>
+    </div>
+
+    <!-- Story Section -->
+    <div class="row mb-5">
+        <div class="col-lg-6 mb-4">
+            <img src="https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=600" class="img-fluid rounded" alt="Our Story">
+        </div>
+        <div class="col-lg-6">
+            <h2 class="mb-4">Our Story</h2>
+            <p>Founded in 2020, {{ site_settings.site_name|default:"TravelHub" }} started with a simple idea: travel should be easy, affordable, and accessible to everyone. What began as a small startup has grown into a comprehensive travel platform serving millions of travelers worldwide.</p>
+            
+            <p>We believe that travel has the power to transform lives, broaden perspectives, and create lasting memories. That's why we've built a platform that not only helps you find the best deals but also provides the tools and information you need to plan the perfect trip.</p>
+            
+            <p>Today, we partner with thousands of hotels, airlines, car rental companies, and tour operators to bring you the widest selection of travel options at competitive prices.</p>
+        </div>
+    </div>
+
+    <!-- Mission & Vision -->
+    <div class="row mb-5">
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="bi bi-bullseye" style="font-size: 3rem; color: var(--primary-color);"></i>
+                    <h4 class="mt-3">Our Mission</h4>
+                    <p>To make travel planning effortless and enjoyable by providing comprehensive, reliable, and affordable travel solutions for every type of traveler.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="bi bi-eye" style="font-size: 3rem; color: var(--primary-color);"></i>
+                    <h4 class="mt-3">Our Vision</h4>
+                    <p>To be the world's most trusted travel platform, connecting people with experiences that inspire, educate, and create lifelong memories.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="bi bi-heart" style="font-size: 3rem; color: var(--primary-color);"></i>
+                    <h4 class="mt-3">Our Values</h4>
+                    <p>Transparency, reliability, customer-centricity, and innovation drive everything we do. We're committed to earning your trust every step of the way.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-5 bg-light rounded p-5">
+        <div class="col-lg-3 col-md-6 mb-4 text-center">
+            <div class="display-4 fw-bold text-primary">2M+</div>
+            <h5>Happy Travelers</h5>
+            <p class="text-muted">Customers who trust us with their travel plans</p>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4 text-center">
+            <div class="display-4 fw-bold text-primary">50K+</div>
+            <h5>Hotels</h5>
+            <p class="text-muted">Accommodations worldwide</p>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4 text-center">
+            <div class="display-4 fw-bold text-primary">500+</div>
+            <h5>Airlines</h5>
+            <p class="text-muted">Flight options to choose from</p>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4 text-center">
+            <div class="display-4 fw-bold text-primary">200+</div>
+            <h5>Countries</h5>
+            <p class="text-muted">Destinations to explore</p>
+        </div>
+    </div>
+
+    <!-- Team Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2>Meet Our Team</h2>
+            <p class="text-muted">The passionate people behind {{ site_settings.site_name|default:"TravelHub" }}</p>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <img src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200" class="rounded-circle mb-3" alt="CEO" width="100" height="100" style="object-fit: cover;">
+                    <h5>Sarah Johnson</h5>
+                    <p class="text-muted">CEO & Founder</p>
+                    <p class="small">Passionate traveler with 15+ years in the travel industry. Sarah founded {{ site_settings.site_name|default:"TravelHub" }} to make travel accessible to everyone.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <img src="https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=200" class="rounded-circle mb-3" alt="CTO" width="100" height="100" style="object-fit: cover;">
+                    <h5>Michael Chen</h5>
+                    <p class="text-muted">CTO</p>
+                    <p class="small">Tech visionary who leads our engineering team. Michael ensures our platform is fast, secure, and user-friendly.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <img src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200" class="rounded-circle mb-3" alt="Head of Operations" width="100" height="100" style="object-fit: cover;">
+                    <h5>Emily Rodriguez</h5>
+                    <p class="text-muted">Head of Operations</p>
+                    <p class="small">Operations expert who ensures everything runs smoothly. Emily manages our partnerships and customer experience.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <img src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=200" class="rounded-circle mb-3" alt="Head of Marketing" width="100" height="100" style="object-fit: cover;">
+                    <h5>David Thompson</h5>
+                    <p class="text-muted">Head of Marketing</p>
+                    <p class="small">Creative marketer who helps travelers discover amazing destinations and deals. David leads our content and marketing efforts.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Why Choose Us -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2>Why Choose {{ site_settings.site_name|default:"TravelHub" }}?</h2>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-shield-check" style="font-size: 2rem; color: var(--success-color);"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Secure & Trusted</h5>
+                    <p>Your personal and payment information is protected with industry-leading security measures. We're certified and trusted by millions of travelers.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-currency-dollar" style="font-size: 2rem; color: var(--success-color);"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Best Price Guarantee</h5>
+                    <p>We compare prices from hundreds of providers to ensure you get the best deal. If you find a lower price, we'll match it.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-headset" style="font-size: 2rem; color: var(--success-color);"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>24/7 Support</h5>
+                    <p>Our customer support team is available around the clock to help you with any questions or issues during your travel planning and journey.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-globe" style="font-size: 2rem; color: var(--success-color);"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Global Coverage</h5>
+                    <p>Access to accommodations, flights, and activities in over 200 countries and territories worldwide.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-phone" style="font-size: 2rem; color: var(--success-color);"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Mobile Friendly</h5>
+                    <p>Plan and manage your trips on the go with our responsive website and mobile apps available for iOS and Android.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-award" style="font-size: 2rem; color: var(--success-color);"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Award Winning</h5>
+                    <p>Recognized by industry leaders for excellence in customer service, innovation, and user experience.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <div class="bg-primary text-white rounded p-5">
+                <h2>Ready to Start Your Journey?</h2>
+                <p class="lead">Join millions of travelers who trust {{ site_settings.site_name|default:"TravelHub" }} for their adventures.</p>
+                <a href="{% url 'home' %}" class="btn btn-light btn-lg">Start Planning Your Trip</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
