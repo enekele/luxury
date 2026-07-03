@@ -14,6 +14,9 @@ class Partner(models.Model):
 		return self.company_name or str(self.user)
 
 
+Partnergit = Partner
+
+
 class PartnerCommission(models.Model):
 	STATUS_PENDING = 'pending'
 	STATUS_APPROVED = 'approved'
