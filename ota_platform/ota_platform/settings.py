@@ -1,20 +1,17 @@
 import os
 from pathlib import Path
-from decouple import config
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-development-secret-key-here')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.getenv(
     'ALLOWED_HOSTS',
     'localhost,127.0.0.1'
 ).split(',')
-
 
 CSRF_TRUSTED_ORIGINS=https://*.onrender.com
 
