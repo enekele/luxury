@@ -219,23 +219,23 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Stripe settings
-STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='pk_test_...')
-STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='sk_test_...')
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 
 # Paystack settings
-PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
-PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
-PAYSTACK_BASE_URL = config('PAYSTACK_BASE_URL', default='https://api.paystack.co')
+PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
+PAYSTACK_BASE_URL = os.getenv('PAYSTACK_BASE_URL', default='https://api.paystack.co')
 
 # API Keys
-AMADEUS_API_KEY = config('AMADEUS_API_KEY', default='')
-AMADEUS_API_SECRET = config('AMADEUS_API_SECRET', default='')
-BOOKING_API_KEY = config('BOOKING_API_KEY', default='')
-SKYSCANNER_API_KEY = config('SKYSCANNER_API_KEY', default='')
+AMADEUS_API_KEY = os.getenv('AMADEUS_API_KEY', default='')
+AMADEUS_API_SECRET = os.getenv('AMADEUS_API_SECRET', default='')
+BOOKING_API_KEY = os.getenv('BOOKING_API_KEY', default='')
+SKYSCANNER_API_KEY = os.getenv('SKYSCANNER_API_KEY', default='')
 
 # Celery settings
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', default='redis://localhost:6379')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', default='redis://localhost:6379')
 
 # Currency settings
 CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NZD']
