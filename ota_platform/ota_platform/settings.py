@@ -10,17 +10,11 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,.vercel.app',
-    cast=lambda value: [host.strip() for host in value.split(',') if host.strip()],
-)
+ALLOWED_HOSTS=.onrender.com
 
-CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:3000,http://127.0.0.1:3000',
-    cast=lambda value: [origin.strip() for origin in value.split(',') if origin.strip()],
-)
+
+CSRF_TRUSTED_ORIGINS=https://*.onrender.com
+
 
 # Application definition
 INSTALLED_APPS = [
