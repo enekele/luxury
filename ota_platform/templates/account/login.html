@@ -13,14 +13,23 @@
 
     <style>
         :root {
-            --bg-dark: #05070d;
-            --bg-secondary: rgba(255,255,255,0.08);
-            --surface: rgba(25, 28, 40, 0.86);
-            --text-light: #f7f3ec;
-            --text-muted: #c7b8a5;
-            --gold: #d4af37;
-            --gold-soft: rgba(212, 175, 55, 0.15);
-            --white-soft: rgba(255,255,255,0.18);
+            /* Luxury Color Palette */
+            --primary-color: #1a365d;
+            /* Deep Navy */
+            --secondary-color: #2d3748;
+            /* Rich Gray */
+            --accent-color: #d4af37;
+            /* Gold */
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-luxury: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --border-color: #e2e8f0;
+            --shadow-luxury: 0 20px 40px rgba(26, 54, 93, 0.1);
+            --shadow-gold: 0 10px 30px rgba(212, 175, 55, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.2);
         }
 
         * {
@@ -31,10 +40,9 @@
             margin: 0;
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
-            color: var(--text-light);
-            background: radial-gradient(circle at top left, rgba(212,175,55,0.22), transparent 28%),
-                        radial-gradient(circle at bottom right, rgba(81, 69, 49, 0.18), transparent 30%),
-                        linear-gradient(180deg, #02040a 0%, #08111f 40%, #0b1320 100%);
+            color: var(--text-primary);
+            background: var(--bg-luxury);
+            background-attachment: fixed;
         }
 
         .page-shell {
@@ -50,25 +58,23 @@
             max-width: 1040px;
             border-radius: 2rem;
             overflow: hidden;
-            background: rgba(9, 13, 24, 0.92);
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.35);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-luxury);
         }
 
         .hero-panel {
             position: relative;
             padding: 4rem 3rem;
-            background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 60%),
-                        radial-gradient(circle at 20% 20%, rgba(212,175,55,0.16), transparent 30%),
-                        linear-gradient(180deg, #111827 0%, #0b1223 100%);
-            color: var(--text-light);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
         }
 
         .hero-panel::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), transparent 60%);
         }
 
         .hero-panel > * {
@@ -82,9 +88,9 @@
             gap: 0.5rem;
             padding: 0.75rem 1.25rem;
             border-radius: 999px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--accent-color);
             font-size: 0.9rem;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -97,12 +103,13 @@
             line-height: 1.02;
             margin-bottom: 1.5rem;
             letter-spacing: -0.04em;
+            color: var(--primary-color);
         }
 
         .hero-copy {
             max-width: 34rem;
             font-size: 1.05rem;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             margin-bottom: 2.5rem;
         }
 
@@ -117,8 +124,8 @@
             gap: 1rem;
             padding: 1.15rem 1rem;
             border-radius: 1.35rem;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(212, 175, 55, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.15);
         }
 
         .feature-icon {
@@ -128,8 +135,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(212,175,55,0.16);
-            color: var(--gold);
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--accent-color);
             font-size: 1.25rem;
             flex-shrink: 0;
         }
@@ -137,50 +144,51 @@
         .feature-title {
             font-weight: 600;
             margin-bottom: 0.25rem;
-            color: var(--text-light);
+            color: var(--text-primary);
         }
 
         .feature-text {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             margin: 0;
         }
 
         .form-panel {
             padding: 3rem 3rem;
-            background: rgba(1, 4, 10, 0.96);
+            background: var(--bg-primary);
         }
 
         .form-panel h2 {
             font-family: 'Playfair Display', serif;
             font-size: 2.4rem;
             margin-bottom: 0.5rem;
+            color: var(--primary-color);
         }
 
         .form-panel p.subtitle {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             margin-bottom: 2rem;
         }
 
         .form-control {
             border-radius: 1rem;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(18, 23, 38, 0.92);
-            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             padding: 1rem 1.15rem;
             min-height: 3.8rem;
         }
 
         .form-control:focus {
-            border-color: rgba(212,175,55,0.7);
-            box-shadow: 0 0 0 0.2rem rgba(212,175,55,0.14);
-            background: rgba(18, 23, 38, 1);
-            color: var(--text-light);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.15);
+            background: var(--bg-primary);
+            color: var(--text-primary);
         }
 
         .input-group-text {
-            border: none;
-            background: rgba(255,255,255,0.04);
-            color: var(--gold);
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--accent-color);
         }
 
         .btn-signin {
@@ -190,36 +198,37 @@
             font-weight: 700;
             letter-spacing: 0.02em;
             border: none;
-            color: #111;
-            background: linear-gradient(135deg, #ffd970 0%, #d4af37 100%);
+            color: white;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .btn-signin:hover {
             transform: translateY(-2px);
-            box-shadow: 0 20px 40px rgba(212,175,55,0.25);
+            box-shadow: var(--shadow-luxury);
         }
 
         .text-muted a {
-            color: rgb(247, 214, 29);
-            text-decoration: underline;
+            color: var(--accent-color);
+            text-decoration: none;
         }
 
         .text-muted a:hover {
-            color: var(--gold);
+            color: var(--primary-color);
+            text-decoration: underline;
         }
 
         .alt-action {
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
             padding: 1rem;
             border-radius: 1.25rem;
-            background: rgba(255,255,255,0.03);
+            background: var(--bg-secondary);
         }
 
         .alert-custom {
-            background: rgba(212,175,55,0.08);
-            color: var(--text-light);
-            border: 1px solid rgba(212,175,55,0.15);
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(212, 175, 55, 0.2);
         }
 
         @media (max-width: 991.98px) {

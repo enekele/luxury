@@ -242,11 +242,29 @@ CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NZ
 DEFAULT_CURRENCY = 'USD'
 
 # Cache settings
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+# Use Redis only when a Redis URL is configured. If Redis is unavailable,
+# fall back to local-memory caching so allauth signup/login throttling does not
+# crash the app during local development or limited deployments.
+REDIS_URL = os.getenv('REDIS_URL', '').strip()
+
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'IGNORE_EXCEPTIONS': True,
+            },
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'local-auth-cache',
+        }
+    }
 
 # Logging
 LOGGING = {
