@@ -3,71 +3,292 @@
 {% block title %}Checkout - {{ event.name }} {% endblock %}
 
 {% block content %}
-<div class="container mt-5 pt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h2 class="mb-3">Checkout</h2>
-                    <p class="text-muted">Purchase tickets for <strong>{{ event.name }}</strong> at {{ event.venue.name }}.</p>
+<style>
+    :root {
+        --primary-color: #1a365d;
+        --secondary-color: #2d3748;
+        --accent-color: #d4af37;
+        --text-primary: #1a202c;
+        --text-secondary: #4a5568;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f7fafc;
+        --border-color: #e2e8f0;
+        --shadow-luxury: 0 20px 40px rgba(26, 54, 93, 0.1);
+    }
+    
+    .checkout-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 3rem 0;
+    }
+    
+    .checkout-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 2rem;
+        box-shadow: var(--shadow-luxury);
+        overflow: hidden;
+    }
+    
+    .checkout-header {
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        padding: 3rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .checkout-header h2 {
+        font-family: 'Playfair Display', serif;
+        color: var(--primary-color);
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+    
+    .checkout-header p {
+        color: var(--text-secondary);
+        font-size: 1.05rem;
+    }
+    
+    .checkout-body {
+        padding: 3rem;
+    }
+    
+    .form-section-title {
+        font-family: 'Playfair Display', serif;
+        color: var(--primary-color);
+        font-size: 1.3rem;
+        margin-top: 2rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .checkout-form .form-label {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+    
+    .checkout-form .form-select,
+    .checkout-form .form-control {
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        padding: 1rem 1.15rem;
+        min-height: 3.5rem;
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .checkout-form .form-select:focus,
+    .checkout-form .form-control:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.15);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+    
+    .order-summary {
+        background: rgba(212, 175, 55, 0.05);
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .order-summary-title {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .order-summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        color: var(--text-secondary);
+    }
+    
+    .order-total {
+        border-top: 2px solid rgba(212, 175, 55, 0.2);
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .order-total .amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+    }
+    
+    .checkout-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .btn-checkout {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2.5rem;
+        border-radius: 999px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        transition: all 0.3s ease;
+        min-width: 200px;
+    }
+    
+    .btn-checkout:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-luxury);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-back {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+        color: var(--primary-color);
+    }
+</style>
 
-                    {% if messages %}
-                    <div class="mb-3">
-                        {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                        {% endfor %}
+<div class="checkout-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="checkout-card">
+                    <div class="checkout-header">
+                        <h2>Event Ticket Checkout</h2>
+                        <p class="mb-0">Secure your spot at <strong>{{ event.name }}</strong> — {{ event.venue.name }}</p>
                     </div>
-                    {% endif %}
+                    
+                    <div class="checkout-body">
 
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Ticket category</label>
-                            <select class="form-select" name="ticket_category" required>
-                                <option value="">Select a ticket category</option>
-                                {% for category in ticket_categories %}
-                                <option value="{{ category.id }}" {% if category.id|stringformat:'s' == request.GET.ticket_category %}selected{% endif %}>
-                                    {{ category.name }} — {{ category.base_price }} ({{ category.available_quantity }} left)
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3 row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+                        {% if messages %}
+                        <div class="mb-4">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Phone number</label>
-                                <input type="text" name="phone" class="form-control" value="">
-                            </div>
+                            {% endfor %}
                         </div>
-                        <hr>
-                        <h5 class="mb-3">Your information</h5>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">First name</label>
-                                <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}" required>
+                        {% endif %}
+
+                        <form method="post" class="checkout-form">
+                            {% csrf_token %}
+                            
+                            <div class="form-section-title">Ticket Details</div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Select Ticket Category</label>
+                                <select class="form-select" name="ticket_category" required>
+                                    <option value="">Choose a ticket type...</option>
+                                    {% for category in ticket_categories %}
+                                    <option value="{{ category.id }}" {% if category.id|stringformat:'s' == request.GET.ticket_category %}selected{% endif %}>
+                                        {{ category.name }} • {{ category.base_price }} ({{ category.available_quantity }} available)
+                                    </option>
+                                    {% endfor %}
+                                </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last name</label>
-                                <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}" required>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" name="quantity" class="form-control" min="1" max="10" value="1" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" name="phone" class="form-control" placeholder="+234 (0)...">
+                                </div>
                             </div>
-                        </div>
-                        <div class="row g-3 mt-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Email address</label>
-                                <input type="email" name="email" class="form-control" value="{{ request.user.email }}" required>
+                            
+                            <div class="form-section-title">Your Information</div>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}" required>
+                                </div>
                             </div>
-                        </div>
-                        <div class="mt-4 d-flex justify-content-between align-items-center">
-                            <a href="{% url 'events:event_detail' event.id %}" class="btn btn-outline-secondary">Back to event</a>
-                            <button type="submit" class="btn btn-primary">Confirm purchase</button>
-                        </div>
-                    </form>
+                            
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" name="email" class="form-control" value="{{ request.user.email }}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="order-summary">
+                                <div class="order-summary-title">Order Summary</div>
+                                <div class="order-summary-item">
+                                    <span>Ticket Category:</span>
+                                    <span id="summary-category">—</span>
+                                </div>
+                                <div class="order-summary-item">
+                                    <span>Quantity:</span>
+                                    <span id="summary-quantity">1</span>
+                                </div>
+                                <div class="order-summary-item order-total">
+                                    <span>Total Amount:</span>
+                                    <span class="amount" id="summary-total">—</span>
+                                </div>
+                            </div>
+                            
+                            <div class="checkout-actions">
+                                <a href="{% url 'events:event_detail' event.id %}" class="btn-back">
+                                    <i class="bi bi-arrow-left"></i> Back to Event
+                                </a>
+                                <button type="submit" class="btn btn-checkout">
+                                    <i class="bi bi-lock-fill"></i> Proceed to Payment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.checkout-form');
+        const categorySelect = form.querySelector('select[name="ticket_category"]');
+        const quantityInput = form.querySelector('input[name="quantity"]');
+        
+        function updateSummary() {
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            if (selectedOption.value) {
+                const text = selectedOption.textContent;
+                const match = text.match(/([^•]+)•\s*([^(]+)/);
+                if (match) {
+                    document.getElementById('summary-category').textContent = match[1].trim();
+                    const price = parseFloat(match[2].trim());
+                    const quantity = parseInt(quantityInput.value) || 1;
+                    const total = (price * quantity).toFixed(2);
+                    document.getElementById('summary-total').textContent = '₦' + total.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                }
+            }
+            document.getElementById('summary-quantity').textContent = quantityInput.value;
+        }
+        
+        categorySelect.addEventListener('change', updateSummary);
+        quantityInput.addEventListener('change', updateSummary);
+        quantityInput.addEventListener('input', updateSummary);
+        updateSummary();
+    });
+</script>
 {% endblock %}
