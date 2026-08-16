@@ -401,6 +401,20 @@ def update_property(request, hotel_id):
     """Compatibility route for the legacy hotel update page."""
     return update_hotel_property(request, hotel_id)
 
+@login_required
+def cities_for_country(request):
+    country_id = request.GET.get('country_id')
+
+    if not country_id:
+        return JsonResponse({'cities': []})
+
+    cities = City.objects.filter(
+        country_id=country_id,
+        country__is_active=True,
+        is_active=True,
+    ).order_by('name').values('id', 'name')
+
+    return JsonResponse({'cities': list(cities)})
 
 @login_required
 def update_hotel_property(request, hotel_id):
