@@ -21,6 +21,7 @@ from bookings.models import Booking
 from cars.models import CarRental, CarBrand, CarModel, CarRentalCompany
 from flights.models import Flight, Airline, Airport
 from tours.models import Tour, TourCategory, TourOperator
+from core.models import Country
 from core.models import City
 from partners_dashboard.models import Partner
 
@@ -213,6 +214,8 @@ def manage_properties(request):
 def create_hotel_property(request):
     partner = get_partner_profile_for_user(request.user)
     if request.method == 'POST':
+        counntry_id = request.POST.get('country')
+        country = get_object_or_404(Country, id=counntry_id)
         city_id = request.POST.get('city')
         city = get_object_or_404(City, id=city_id)
         hotel = Hotel.objects.create(

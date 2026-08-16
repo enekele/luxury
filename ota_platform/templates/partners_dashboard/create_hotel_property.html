@@ -140,6 +140,14 @@
                         </div>
                         <input type="hidden" name="price_per_night_1" value="USD">
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Country</label>
+                        <select class="form-select" name="country" required>
+                            {% for country in countries %}
+                                <option value="{{ country.id }}">{{ country.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
                     <div class="col-md-6">
                         <label class="form-label">City</label>
