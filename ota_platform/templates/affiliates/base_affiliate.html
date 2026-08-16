@@ -47,7 +47,7 @@
         }
 
         .affiliate-sidebar {
-            background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(180deg, rgba(26, 54, 93, 0.98) 0%, rgba(45, 55, 72, 0.98) 100%);
             min-height: 100vh;
             width: 280px;
             position: fixed;
@@ -56,6 +56,7 @@
             z-index: 1000;
             transition: all 0.3s ease;
             box-shadow: 18px 0 40px rgba(26, 54, 93, 0.12);
+            border-right: 1px solid rgba(212, 175, 55, 0.18);
         }
 
         .affiliate-main {
@@ -66,34 +67,53 @@
         }
 
         .sidebar-brand {
-            padding: 1.75rem 1.5rem;
+            padding: 1.5rem 1.25rem;
             border-bottom: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.02);
         }
 
         .sidebar-brand h4 {
             color: white;
             margin: 0;
             font-weight: 700;
-            font-size: 1.45rem;
+            font-size: 1.2rem;
+            letter-spacing: 0.02em;
+        }
+
+        .brand-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #d4af37 0%, #f0d98a 100%);
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            font-weight: 800;
+            margin-right: 0.7rem;
+            box-shadow: var(--shadow-gold);
         }
 
         .nav-link {
             color: rgba(255,255,255,0.78);
-            padding: 0.8rem 1.5rem;
+            padding: 0.8rem 1.25rem;
             display: flex;
             align-items: center;
             text-decoration: none;
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
             font-weight: 500;
+            margin: 0.14rem 0.6rem;
+            border-radius: 0.85rem;
         }
 
         .nav-link:hover,
         .nav-link.active {
             color: white;
-            background: rgba(255,255,255,0.08);
+            background: rgba(212, 175, 55, 0.08);
             border-left-color: var(--accent-color);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+            box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.15);
         }
 
         .nav-link i {
@@ -104,16 +124,43 @@
         }
 
         .affiliate-header {
-            background: rgba(255,255,255,0.8);
+            background: linear-gradient(135deg, rgba(26, 54, 93, 0.98) 0%, rgba(45, 55, 72, 0.96) 100%);
             backdrop-filter: blur(14px);
             padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 20;
+            box-shadow: 0 12px 30px rgba(26, 54, 93, 0.12);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .header-brand-mark {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #d4af37 0%, #e7c96f 100%);
+            color: var(--primary-color);
+            font-weight: 800;
+            font-size: 1rem;
+            box-shadow: var(--shadow-gold);
+        }
+
+        .affiliate-header h5 {
+            color: white !important;
+            font-weight: 700;
+            letter-spacing: 0.02em;
         }
 
         .affiliate-content {
@@ -344,10 +391,18 @@
 
         .dropdown-toggle {
             border-radius: 999px;
-            border: 1.5px solid var(--border-color);
-            background: white;
-            color: var(--primary-color);
+            border: 1.5px solid rgba(212, 175, 55, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
             font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-toggle:hover,
+        .dropdown-toggle:focus {
+            background: rgba(212, 175, 55, 0.12);
+            color: white;
+            border-color: rgba(212, 175, 55, 0.8);
         }
 
         .table {
@@ -377,9 +432,40 @@
             margin: 1rem 0;
         }
 
-        @media (max-width: 768px) {
+        .mobile-menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            padding: 0;
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: white;
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.15);
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.42);
+            z-index: 999;
+        }
+
+        .sidebar-backdrop.show {
+            display: block;
+        }
+
+        @media (max-width: 991.98px) {
             .affiliate-sidebar {
-                transform: translateX(-100%);
+                width: min(82vw, 280px);
+                transform: translateX(-110%);
+                border-right: 1px solid rgba(212, 175, 55, 0.25);
+                box-shadow: 22px 0 40px rgba(26, 54, 93, 0.22);
             }
 
             .affiliate-sidebar.show {
@@ -390,12 +476,40 @@
                 margin-left: 0;
             }
 
+            .mobile-menu-toggle {
+                display: inline-flex;
+            }
+
             .affiliate-content {
                 padding: 1rem;
             }
 
             .affiliate-header {
-                padding: 1rem;
+                padding: 0.9rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar-brand {
+                padding: 1.25rem 1rem;
+            }
+
+            .sidebar-brand h4 {
+                font-size: 1.15rem;
+            }
+
+            .nav-link {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+            }
+
+            .affiliate-header h5 {
+                font-size: 1rem;
+            }
+
+            .dropdown-toggle {
+                padding: 0.55rem 0.8rem;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -403,12 +517,14 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- Sidebar -->
     <div class="affiliate-sidebar" id="sidebar">
         <div class="sidebar-brand">
             <h4>
-                <i class="bi bi-graph-up me-2"></i>
-                Affiliate Panel
+                <span class="brand-mark">L</span>
+                Luxury Affiliates
             </h4>
         </div>
         
@@ -470,7 +586,15 @@
     <div class="affiliate-main">
         <!-- Header -->
         <div class="affiliate-header">
-            <h5 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h5>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-primary mobile-menu-toggle" type="button" id="mobileSidebarToggle" aria-label="Toggle menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="header-brand">
+                    <span class="header-brand-mark">L</span>
+                    <h5 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h5>
+                </div>
+            </div>
             
             <div class="d-flex align-items-center">
                 <div class="dropdown">
@@ -478,7 +602,7 @@
                         <i class="bi bi-person-circle me-2"></i>
                         {{ user.get_full_name|default:user.email }}
                     </button>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                         <li><a class="dropdown-item" href="{% url 'affiliates:profile' %}">My Profile</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'account_logout' %}">Logout</a></li>
@@ -505,6 +629,40 @@
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('mobileSidebarToggle');
+            const backdrop = document.getElementById('sidebarBackdrop');
+
+            if (toggle && sidebar) {
+                toggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('show');
+                    if (backdrop) {
+                        backdrop.classList.toggle('show');
+                    }
+                });
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', function () {
+                    sidebar.classList.remove('show');
+                    backdrop.classList.remove('show');
+                });
+            }
+
+            document.querySelectorAll('.sidebar-nav .nav-link').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    if (window.innerWidth <= 991) {
+                        sidebar.classList.remove('show');
+                        if (backdrop) {
+                            backdrop.classList.remove('show');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
