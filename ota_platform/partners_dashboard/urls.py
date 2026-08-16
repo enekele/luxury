@@ -1,5 +1,7 @@
 from django.urls import path
+
 from . import views
+
 
 app_name = "partners_dashboard"
 
@@ -7,6 +9,7 @@ urlpatterns = [
     path('partners/', views.partners_dashboard, name='partners_dashboard'),
     path('properties/', views.manage_properties, name='manage_properties'),
     path('properties/hotels/create/', views.create_hotel_property, name='create_hotel_property'),
+    path('properties/hotels/cities/', views.cities_for_country, name='cities_for_country'),
     path('properties/flights/create/', views.create_flight_property, name='create_flight_property'),
     path('properties/cars/create/', views.create_car_property, name='create_car_property'),
     path('properties/tours/create/', views.create_tour_property, name='create_tour_property'),
@@ -21,5 +24,4 @@ urlpatterns = [
     path('properties/tours/<int:tour_id>/checkout/', views.checkout_tour_property, name='checkout_tour_property'),
     path('toggle-availability/', views.toggle_availability, name='toggle_availability'),
     path('confirm-reservation/', views.confirm_reservation, name='confirm_reservation'),
-    # ... other affiliate urls ...
 ]
