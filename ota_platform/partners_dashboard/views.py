@@ -67,11 +67,11 @@ def partners_dashboard(request):
 
     # Calculate chart data: bookings per day for last 30 days
     today = timezone.now().date()
-    thirty_days_ago = today - timedelta(days=30)
+    thirty_days_ago = today - timedelta(days=29)
     
     daily_bookings = {}
     for i in range(30):
-        date = today - timedelta(days=30-i)
+        date = thirty_days_ago + timedelta(days=i)
         daily_bookings[date.isoformat()] = 0
     
     bookings_30days = bookings_qs.filter(created_at__date__gte=thirty_days_ago)
@@ -214,40 +214,43 @@ def manage_properties(request):
 def create_hotel_property(request):
     partner = get_partner_profile_for_user(request.user)
     if request.method == 'POST':
-        counntry_id = request.POST.get('country')
-        country = get_object_or_404(Country, id=counntry_id)
+        country_id = request.POST.get('country')
         city_id = request.POST.get('city')
-        city = get_object_or_404(City, id=city_id)
-        hotel = Hotel.objects.create(
-            name=request.POST.get('name', '').strip(),
-            description=request.POST.get('description', ''),
-            city=city,
-            address=request.POST.get('address', ''),
-            star_rating=int(request.POST.get('star_rating', 3) or 3),
-            is_available=request.POST.get('is_available') == 'on',
-            is_featured=request.POST.get('is_featured') == 'on',
-        )
-        price_amount = request.POST.get('price_per_night_0')
-        if price_amount:
-            price_currency = request.POST.get('price_per_night_1', 'USD')
-            hotel.price_per_night = Money(Decimal(str(price_amount)), price_currency)
-        # Handle image upload
-        if 'main_image' in request.FILES:
-            hotel.main_image = request.FILES['main_image']
-        hotel.save()
-        
-        HotelPartner.objects.create(
-            owner=request.user,
-            hotel=hotel,
-            partner_name=partner.company_name or request.user.get_full_name() or 'Partner',
-            partner_id=f"HP-{hotel.id}",
-            partner_profile=partner,
-        )
+        country = get_object_or_404(Country, id=country_id)
+        city = get_object_or_404(City, id=city_id, country=country)
+
+        with transaction.atomic():
+            hotel = Hotel.objects.create(
+                name=request.POST.get('name', '').strip(),
+                description=request.POST.get('description', '').strip(),
+                city=city,
+                address=request.POST.get('address', '').strip(),
+                star_rating=int(request.POST.get('star_rating', 3) or 3),
+                is_available=request.POST.get('is_available') == 'on',
+                is_featured=request.POST.get('is_featured') == 'on',
+            )
+            price_amount = request.POST.get('price_per_night_0')
+            if price_amount:
+                price_currency = request.POST.get('price_per_night_1', 'USD')
+                hotel.price_per_night = Money(Decimal(str(price_amount)), price_currency)
+            if 'main_image' in request.FILES:
+                hotel.main_image = request.FILES['main_image']
+            hotel.save()
+
+            HotelPartner.objects.create(
+                owner=request.user,
+                hotel=hotel,
+                partner_name=partner.company_name or request.user.get_full_name() or 'Partner',
+                partner_id=f"HP-{hotel.id}",
+                partner_profile=partner,
+            )
         messages.success(request, f'{hotel.name} was added successfully.')
         return redirect('partners_dashboard:manage_properties')
 
-    cities = City.objects.filter(is_active=True)
-    return render(request, 'partners_dashboard/create_hotel_property.html', {'cities': cities})
+    countries = Country.objects.all().order_by('name')
+    cities = City.objects.filter(is_active=True).select_related('country').order_by('name')
+    context = {'countries': countries, 'cities': cities}
+    return render(request, 'partners_dashboard/create_hotel_property.html', context)
 
 
 @login_required
@@ -561,9 +564,13 @@ def toggle_availability(request):
     if not (partner and getattr(partner, 'owner', None) == request.user):
         return HttpResponseForbidden("Not allowed")
 
-    hotel.is_active = not bool(hotel.is_active)
-    hotel.save(update_fields=['is_active'])
-    return JsonResponse({'status': 'ok', 'is_active': hotel.is_active, 'hotel_id': hotel.id})
+    hotel.is_available = not bool(hotel.is_available)
+    hotel.save(update_fields=['is_available'])
+    return JsonResponse({
+        'status': 'ok',
+        'is_available': hotel.is_available,
+        'hotel_id': hotel.id,
+    })
 
 
 @login_required
