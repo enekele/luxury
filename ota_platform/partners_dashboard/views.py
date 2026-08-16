@@ -18,7 +18,7 @@ from djmoney.money import Money
 from affiliates.models import AffiliateProfile 
 from hotels.models import Hotel, HotelPartner
 from bookings.models import Booking
-from cars.models import CarRental, CarBrand, CarModel, CarRentalCompany
+from cars.models import CarBrand, CarRental, CarModel, CarRentalCompany
 from flights.models import Flight, Airline, Airport
 from tours.models import Tour, TourCategory, TourOperator
 from core.models import Country

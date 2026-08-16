@@ -11,6 +11,7 @@
         --luxury-light: #f7fafc;
         --luxury-border: #cbd5e0;
     }
+
     .page-header {
         background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-dark) 100%);
         color: white;
@@ -18,47 +19,58 @@
         margin-bottom: 2rem;
         border-bottom: 3px solid var(--luxury-gold);
     }
+
     .page-header h2 {
         font-size: 1.75rem;
         font-weight: 600;
         letter-spacing: -0.5px;
     }
+
     .page-header p {
         opacity: 0.9;
         font-size: 0.95rem;
     }
+
     .form-card {
         border: 1px solid var(--luxury-border);
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
+
     .form-card .card-header {
         background-color: var(--luxury-light);
         border-bottom: 1px solid var(--luxury-border);
         padding: 1.25rem;
     }
+
     .form-card .card-header h5 {
         color: var(--luxury-navy);
         font-weight: 600;
         margin: 0;
         font-size: 1.1rem;
     }
+
     .form-label {
         color: var(--luxury-navy);
         font-weight: 600;
         font-size: 0.9rem;
         margin-bottom: 0.5rem;
     }
-    .form-control, .form-select {
+
+    .form-control,
+    .form-select {
         border: 1px solid var(--luxury-border);
         border-radius: 6px;
         padding: 0.625rem 0.875rem;
         font-size: 0.95rem;
     }
-    .form-control:focus, .form-select:focus {
+
+    .form-control:focus,
+    .form-select:focus {
         border-color: var(--luxury-gold);
         box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
     }
+
     .btn-primary {
         background-color: var(--luxury-navy);
         border-color: var(--luxury-navy);
@@ -67,11 +79,13 @@
         border-radius: 6px;
         transition: all 0.3s ease;
     }
+
     .btn-primary:hover {
         background-color: var(--luxury-dark);
         border-color: var(--luxury-dark);
         box-shadow: 0 4px 12px rgba(26, 54, 93, 0.25);
     }
+
     .btn-primary::before {
         content: '';
         display: inline-block;
@@ -81,11 +95,13 @@
         border-radius: 50%;
         margin-right: 0.5rem;
     }
+
     .section-divider {
         height: 1px;
         background: linear-gradient(90deg, transparent, var(--luxury-border), transparent);
         margin: 1.5rem 0;
     }
+
     .form-section-title {
         color: var(--luxury-navy);
         font-weight: 700;
@@ -106,7 +122,8 @@
                 <h2>✨ Add hotel listing</h2>
                 <p class="mb-0">Create a new accommodation to expand your portfolio</p>
             </div>
-            <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-light">← Back to properties</a>
+            <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-light">← Back to
+                properties</a>
         </div>
     </div>
 </div>
@@ -135,7 +152,8 @@
                     <div class="col-md-3">
                         <label class="form-label">Price per night</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" name="price_per_night_0" value="0.00" required>
+                            <input type="number" step="0.01" class="form-control" name="price_per_night_0" value="0.00"
+                                required>
                             <span class="input-group-text">USD</span>
                         </div>
                         <input type="hidden" name="price_per_night_1" value="USD">
@@ -143,8 +161,11 @@
                     <div class="col-md-6">
                         <label class="form-label">Country</label>
                         <select class="form-select" name="country" required>
+                            <option value="">Select country</option>
                             {% for country in countries %}
-                                <option value="{{ country.id }}">{{ country.name }}</option>
+                            <option value="{{ country.id }}">{{ country.name }}</option>
+                            {% empty %}
+                            <option disabled>No countries available</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -152,8 +173,11 @@
                     <div class="col-md-6">
                         <label class="form-label">City</label>
                         <select class="form-select" name="city" required>
+                            <option value="">Select city</option>
                             {% for city in cities %}
-                                <option value="{{ city.id }}">{{ city.name }}</option>
+                            <option value="{{ city.id }}">{{ city.name }}</option>
+                            {% empty %}
+                            <option disabled>No cities available</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -189,7 +213,8 @@
                 </div>
 
                 <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
-                    <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{% url 'partners_dashboard:manage_properties' %}"
+                        class="btn btn-outline-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">✓ Create listing</button>
                 </div>
             </form>
