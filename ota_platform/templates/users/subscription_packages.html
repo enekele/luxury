@@ -15,7 +15,7 @@
         --border-color: #e2e8f0;
         --shadow-luxury: 0 20px 40px rgba(26, 54, 93, 0.1);
     }
-    
+
     .package-card {
         background: var(--bg-primary);
         border: 1px solid var(--border-color);
@@ -27,25 +27,25 @@
         flex-direction: column;
         overflow: hidden;
     }
-    
+
     .package-card:hover {
         transform: translateY(-8px);
         box-shadow: 0 30px 60px rgba(26, 54, 93, 0.15);
     }
-    
+
     .package-card-header {
         background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: white;
         padding: 2rem 1.5rem;
     }
-    
+
     .package-card-title {
         font-family: 'Playfair Display', serif;
         font-size: 1.8rem;
         margin-bottom: 0.5rem;
         letter-spacing: -0.02em;
     }
-    
+
     .package-badge {
         display: inline-block;
         background: rgba(212, 175, 55, 0.2);
@@ -55,20 +55,20 @@
         font-size: 0.85rem;
         font-weight: 600;
     }
-    
+
     .package-card-body {
         padding: 2rem 1.5rem;
         flex: 1;
         display: flex;
         flex-direction: column;
     }
-    
+
     .package-description {
         color: var(--text-secondary);
         margin-bottom: 1.5rem;
         flex: 1;
     }
-    
+
     .package-features {
         background: rgba(212, 175, 55, 0.05);
         border: 1px solid rgba(212, 175, 55, 0.15);
@@ -76,20 +76,20 @@
         padding: 1.5rem;
         margin-bottom: 1.5rem;
     }
-    
+
     .package-feature {
         display: flex;
         align-items: center;
         padding: 0.5rem 0;
         color: var(--text-secondary);
     }
-    
+
     .package-feature i {
         color: var(--accent-color);
         margin-right: 0.75rem;
         font-size: 1.1rem;
     }
-    
+
     .package-price {
         font-family: 'Playfair Display', serif;
         font-size: 2.5rem;
@@ -97,13 +97,13 @@
         font-weight: 700;
         margin-bottom: 0.5rem;
     }
-    
+
     .package-validity {
         color: var(--text-secondary);
         font-size: 0.95rem;
         margin-bottom: 1.5rem;
     }
-    
+
     .btn-subscribe {
         background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: white;
@@ -115,56 +115,56 @@
         transition: all 0.3s ease;
         width: 100%;
     }
-    
+
     .btn-subscribe:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-luxury);
         color: white;
     }
-    
+
     .profile-card {
         background: var(--bg-primary);
         border: 1px solid var(--border-color);
         border-radius: 1.5rem;
         box-shadow: var(--shadow-luxury);
     }
-    
+
     .sidebar-menu {
         border-radius: 1rem;
         overflow: hidden;
     }
-    
+
     .sidebar-menu a {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
         color: var(--text-primary) !important;
         font-weight: 500;
     }
-    
+
     .sidebar-menu a:hover {
         background: var(--bg-secondary) !important;
         color: var(--primary-color) !important;
     }
-    
+
     .sidebar-menu a.active {
         background: linear-gradient(135deg, rgba(26, 54, 93, 0.1) 0%, rgba(45, 55, 72, 0.05) 100%) !important;
         color: var(--primary-color) !important;
         border-left: 4px solid var(--accent-color);
         padding-left: calc(1rem - 4px);
     }
-    
+
     .subscription-status {
         border-radius: 1rem;
         padding: 1.5rem;
         margin-bottom: 2rem;
     }
-    
+
     .subscription-active {
         background: rgba(56, 161, 105, 0.1);
         border: 1px solid rgba(56, 161, 105, 0.2);
         color: #22543d;
     }
-    
+
     .subscription-none {
         background: rgba(66, 133, 244, 0.1);
         border: 1px solid rgba(66, 133, 244, 0.2);
@@ -178,18 +178,26 @@
             <div class="profile-card">
                 <div class="card-body text-center" style="padding: 2rem 1.5rem;">
                     {% if user.profile_picture %}
-                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover; border: 3px solid var(--accent-color);">
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3"
+                        width="100" height="100" style="object-fit: cover; border: 3px solid var(--accent-color);">
                     {% else %}
-                        <div style="width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 1rem; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); display: flex; align-items: center; justify-content: center; border: 3px solid var(--accent-color);">
-                            <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
-                        </div>
+                    <div
+                        style="width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 1rem; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); display: flex; align-items: center; justify-content: center; border: 3px solid var(--accent-color);">
+                        <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                    </div>
                     {% endif %}
-                    <h5 style="color: var(--primary-color); font-weight: 600; font-family: 'Playfair Display', serif; font-size: 1.3rem;">{{ user.get_full_name }}</h5>
+                    <h5
+                        style="color: var(--primary-color); font-weight: 600; font-family: 'Playfair Display', serif; font-size: 1.3rem;">
+                        {{ user.get_full_name }}</h5>
                     <p class="text-muted">{{ user.email }}</p>
                     {% if user.is_premium %}
-                        <span style="display: inline-block; background: rgba(212, 175, 55, 0.2); color: var(--accent-color); padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem;">Premium Member</span>
+                    <span
+                        style="display: inline-block; background: rgba(212, 175, 55, 0.2); color: var(--accent-color); padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem;">Premium
+                        Member</span>
                     {% else %}
-                        <span style="display: inline-block; background: var(--bg-secondary); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem;">Standard Member</span>
+                    <span
+                        style="display: inline-block; background: var(--bg-secondary); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem;">Standard
+                        Member</span>
                     {% endif %}
                 </div>
             </div>
@@ -214,7 +222,8 @@
                     <a href="{% url 'referrals' %}" class="list-group-item list-group-item-action px-3 py-3">
                         <i class="bi bi-share me-2"></i> Referrals
                     </a>
-                    <a href="{% url 'subscription_packages' %}" class="list-group-item list-group-item-action px-3 py-3 active">
+                    <a href="{% url 'subscription_packages' %}"
+                        class="list-group-item list-group-item-action px-3 py-3 active">
                         <i class="bi bi-gem me-2"></i> Subscription Packages
                     </a>
                     <a href="{% url 'activity_log' %}" class="list-group-item list-group-item-action px-3 py-3">
@@ -227,79 +236,87 @@
         <div class="col-lg-9">
             <div class="profile-card mb-4">
                 <div style="padding: 2rem 1.5rem; border-bottom: 1px solid var(--border-color);">
-                    <h5 style="color: var(--primary-color); font-weight: 600; font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 0;">Premium Subscription Plans</h5>
+                    <h5
+                        style="color: var(--primary-color); font-weight: 600; font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 0;">
+                        Premium Subscription Plans</h5>
                 </div>
                 <div style="padding: 2rem 1.5rem;">
                     {% if current_subscription %}
-                        <div class="subscription-status subscription-active mb-4">
-                            <h6 class="mb-1" style="font-weight: 600;"><i class="bi bi-check-circle-fill"></i> Current Active Subscription</h6>
-                            <p class="mb-0">{{ current_subscription.package.title }} — Valid until <strong>{{ current_subscription.expires_at|date:"M d, Y" }}</strong></p>
-                        </div>
+                    <div class="subscription-status subscription-active mb-4">
+                        <h6 class="mb-1" style="font-weight: 600;"><i class="bi bi-check-circle-fill"></i> Current
+                            Active Subscription</h6>
+                        <p class="mb-0">{{ current_subscription.package.title }} — Valid until <strong>{{
+                                current_subscription.expires_at|date:"M d, Y" }}</strong></p>
+                    </div>
                     {% else %}
-                        <div class="subscription-status subscription-none mb-4">
-                            <h6 class="mb-1" style="font-weight: 600;"><i class="bi bi-info-circle"></i> No Active Subscription</h6>
-                            <p class="mb-0">Upgrade to a premium package below to unlock exclusive features and benefits.</p>
-                        </div>
+                    <div class="subscription-status subscription-none mb-4">
+                        <h6 class="mb-1" style="font-weight: 600;"><i class="bi bi-info-circle"></i> No Active
+                            Subscription</h6>
+                        <p class="mb-0">Upgrade to a premium package below to unlock exclusive features and benefits.
+                        </p>
+                    </div>
                     {% endif %}
 
                     {% if packages %}
-                        <div class="row">
-                            {% for package in packages %}
-                                <div class="col-md-6 mb-4">
-                                    <div class="package-card">
-                                        <div class="package-card-header">
-                                            <div class="package-card-title">{{ package.title }}</div>
-                                            <span class="package-badge"><i class="bi bi-star-fill"></i> Premium</span>
+                    <div class="row">
+                        {% for package in packages %}
+                        <div class="col-md-6 mb-4">
+                            <div class="package-card">
+                                <div class="package-card-header">
+                                    <div class="package-card-title">{{ package.title }}</div>
+                                    <span class="package-badge"><i class="bi bi-star-fill"></i> Premium</span>
+                                </div>
+                                <div class="package-card-body">
+                                    <p class="package-description">{{ package.description }}</p>
+
+                                    <div class="package-features">
+                                        <div class="package-feature">
+                                            <i class="bi bi-check-lg"></i>
+                                            <span>Full access to all features</span>
                                         </div>
-                                        <div class="package-card-body">
-                                            <p class="package-description">{{ package.description }}</p>
-                                            
-                                            <div class="package-features">
-                                                <div class="package-feature">
-                                                    <i class="bi bi-check-lg"></i>
-                                                    <span>Full access to all features</span>
-                                                </div>
-                                                <div class="package-feature">
-                                                    <i class="bi bi-check-lg"></i>
-                                                    <span>Priority support</span>
-                                                </div>
-                                                <div class="package-feature">
-                                                    <i class="bi bi-check-lg"></i>
-                                                    <span>Exclusive offers</span>
-                                                </div>
-                                                <div class="package-feature">
-                                                    <i class="bi bi-check-lg"></i>
-                                                    <span>Early event access</span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="package-price">
-                                                {% if package.price %}
-                                                    ₦{{ package.price|stringformat:".0f" }}
-                                                {% else %}
-                                                    N/A
-                                                {% endif %}
-                                            </div>
-                                            <p class="package-validity"><i class="bi bi-calendar"></i> Valid for {{ package.duration_days }} days</p>
-                                            
-                                            <form method="post" action="{% url 'payments:start' %}" class="mt-auto">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="package_id" value="{{ package.id }}">
-                                                <input type="hidden" name="email" value="{{ user.email }}">
-                                                <button type="submit" class="btn btn-subscribe">
-                                                    <i class="bi bi-credit-card"></i> Subscribe Now
-                                                </button>
-                                            </form>
+                                        <div class="package-feature">
+                                            <i class="bi bi-check-lg"></i>
+                                            <span>Priority support</span>
+                                        </div>
+                                        <div class="package-feature">
+                                            <i class="bi bi-check-lg"></i>
+                                            <span>Exclusive offers</span>
+                                        </div>
+                                        <div class="package-feature">
+                                            <i class="bi bi-check-lg"></i>
+                                            <span>Early event access</span>
                                         </div>
                                     </div>
+
+                                    <div class="package-price">
+                                        {% if package.price %}
+                                        ₦{{ package.price|stringformat:".0f" }}
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </div>
+                                    <p class="package-validity"><i class="bi bi-calendar"></i> Valid for {{
+                                        package.duration_days }} days</p>
+
+                                    <form method="post" action="{% url 'payments:start' %}" class="mt-auto">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="package_id" value="{{ package.id }}">
+                                        <input type="hidden" name="email" value="{{ user.email }}">
+                                        <button type="submit" class="btn btn-subscribe">
+                                            <i class="bi bi-credit-card"></i> Subscribe Now
+                                        </button>
+                                    </form>
                                 </div>
-                            {% endfor %}
+                            </div>
                         </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <div style="text-align: center; padding: 3rem 1.5rem;">
-                            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-secondary); opacity: 0.5;"></i>
-                            <p class="text-muted mt-3">No subscription packages are available at the moment. Please check back later.</p>
-                        </div>
+                    <div style="text-align: center; padding: 3rem 1.5rem;">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-secondary); opacity: 0.5;"></i>
+                        <p class="text-muted mt-3">No subscription packages are available at the moment. Please check
+                            back later.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -314,18 +331,20 @@
             <div class="card">
                 <div class="card-body text-center">
                     {% if user.profile_picture %}
-                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-3"
+                        width="100" height="100" style="object-fit: cover;">
                     {% else %}
-                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
-                            <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
-                        </div>
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 100px; height: 100px;">
+                        <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                    </div>
                     {% endif %}
                     <h5>{{ user.get_full_name }}</h5>
                     <p class="text-muted">{{ user.email }}</p>
                     {% if user.is_premium %}
-                        <span class="badge bg-warning mb-2">Premium Member</span>
+                    <span class="badge bg-warning mb-2">Premium Member</span>
                     {% else %}
-                        <span class="badge bg-secondary mb-2">Standard Member</span>
+                    <span class="badge bg-secondary mb-2">Standard Member</span>
                     {% endif %}
                 </div>
             </div>
@@ -367,44 +386,47 @@
                 </div>
                 <div class="card-body">
                     {% if current_subscription %}
-                        <div class="alert alert-success">
-                            <h6 class="mb-1">Current Subscription</h6>
-                            <p class="mb-0">{{ current_subscription.package.title }} — expires on {{ current_subscription.expires_at|date:"M d, Y" }}</p>
-                        </div>
+                    <div class="alert alert-success">
+                        <h6 class="mb-1">Current Subscription</h6>
+                        <p class="mb-0">{{ current_subscription.package.title }} — expires on {{
+                            current_subscription.expires_at|date:"M d, Y" }}</p>
+                    </div>
                     {% else %}
-                        <div class="alert alert-info">
-                            <h6 class="mb-1">No active subscription</h6>
-                            <p class="mb-0">Choose a package below to upgrade your account.</p>
-                        </div>
+                    <div class="alert alert-info">
+                        <h6 class="mb-1">No active subscription</h6>
+                        <p class="mb-0">Choose a package below to upgrade your account.</p>
+                    </div>
                     {% endif %}
 
                     {% if packages %}
-                        <div class="row">
-                            {% for package in packages %}
-                                <div class="col-md-6 mb-4">
-                                    <div class="card h-100">
-                                        <div class="card-body d-flex flex-column">
-                                            <h5 class="card-title">{{ package.title }}</h5>
-                                            <p class="card-text text-muted">{{ package.description }}</p>
-                                            <p class="mb-1"><strong>Price:</strong> {{ package.price }}</p>
-                                            <p class="mb-3"><strong>Duration:</strong> {{ package.duration_days }} days</p>
-                                            <form method="post" action="{% url 'payments:start' %}" class="mt-auto">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="package_id" value="{{ package.id }}">
-                                                <input type="hidden" name="email" value="{{ user.email }}">
-                                                <button type="submit" class="btn btn-primary w-100">Subscribe</button>
-                                            </form>
-                                        </div>
-                                    </div>
+                    <div class="row">
+                        {% for package in packages %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ package.title }}</h5>
+                                    <p class="card-text text-muted">{{ package.description }}</p>
+                                    <p class="mb-1"><strong>Price:</strong> {{ package.price }}</p>
+                                    <p class="mb-3"><strong>Duration:</strong> {{ package.duration_days }} days</p>
+                                    <form method="post" action="{% url 'payments:start' %}" class="mt-auto">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="package_id" value="{{ package.id }}">
+                                        <input type="hidden" name="email" value="{{ user.email }}">
+                                        <button type="submit" class="btn btn-primary w-100">Subscribe</button>
+                                    </form>
                                 </div>
-                            {% endfor %}
+                            </div>
                         </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <p class="text-muted">No subscription packages are available at the moment. Please check back later.</p>
+                    <p class="text-muted">No subscription packages are available at the moment. Please check back later.
+                    </p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
