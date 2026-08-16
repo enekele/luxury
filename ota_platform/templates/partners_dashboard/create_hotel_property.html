@@ -11,7 +11,6 @@
         --luxury-light: #f7fafc;
         --luxury-border: #cbd5e0;
     }
-
     .page-header {
         background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-dark) 100%);
         color: white;
@@ -19,58 +18,40 @@
         margin-bottom: 2rem;
         border-bottom: 3px solid var(--luxury-gold);
     }
-
-    .page-header h2 {
-        font-size: 1.75rem;
-        font-weight: 600;
-        letter-spacing: -0.5px;
-    }
-
-    .page-header p {
-        opacity: 0.9;
-        font-size: 0.95rem;
-    }
-
+    .page-header h2 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.5px; }
+    .page-header p { opacity: 0.9; font-size: 0.95rem; }
     .form-card {
         border: 1px solid var(--luxury-border);
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
-
     .form-card .card-header {
         background-color: var(--luxury-light);
         border-bottom: 1px solid var(--luxury-border);
         padding: 1.25rem;
     }
-
     .form-card .card-header h5 {
         color: var(--luxury-navy);
         font-weight: 600;
         margin: 0;
         font-size: 1.1rem;
     }
-
     .form-label {
         color: var(--luxury-navy);
         font-weight: 600;
         font-size: 0.9rem;
         margin-bottom: 0.5rem;
     }
-
-    .form-control,
-    .form-select {
+    .form-control, .form-select {
         border: 1px solid var(--luxury-border);
         border-radius: 6px;
         padding: 0.625rem 0.875rem;
         font-size: 0.95rem;
     }
-
-    .form-control:focus,
-    .form-select:focus {
+    .form-control:focus, .form-select:focus {
         border-color: var(--luxury-gold);
         box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
     }
-
     .btn-primary {
         background-color: var(--luxury-navy);
         border-color: var(--luxury-navy);
@@ -79,13 +60,11 @@
         border-radius: 6px;
         transition: all 0.3s ease;
     }
-
     .btn-primary:hover {
         background-color: var(--luxury-dark);
         border-color: var(--luxury-dark);
         box-shadow: 0 4px 12px rgba(26, 54, 93, 0.25);
     }
-
     .btn-primary::before {
         content: '';
         display: inline-block;
@@ -94,22 +73,6 @@
         background-color: var(--luxury-gold);
         border-radius: 50%;
         margin-right: 0.5rem;
-    }
-
-    .section-divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--luxury-border), transparent);
-        margin: 1.5rem 0;
-    }
-
-    .form-section-title {
-        color: var(--luxury-navy);
-        font-weight: 700;
-        font-size: 1rem;
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid var(--luxury-gold);
     }
 </style>
 {% endblock %}
@@ -122,103 +85,143 @@
                 <h2>✨ Add hotel listing</h2>
                 <p class="mb-0">Create a new accommodation to expand your portfolio</p>
             </div>
-            <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-light">← Back to
-                properties</a>
+            <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-light">← Back to properties</a>
         </div>
     </div>
 </div>
 
 <div class="container py-4">
     <div class="card form-card">
-        <div class="card-header">
-            <h5>Basic Information</h5>
-        </div>
+        <div class="card-header"><h5>Basic Information</h5></div>
         <div class="card-body">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Hotel name</label>
-                        <input type="text" class="form-control" name="name" required>
+                        <label class="form-label" for="id_name">Hotel name</label>
+                        <input type="text" class="form-control" id="id_name" name="name" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Star rating</label>
-                        <select class="form-select" name="star_rating">
+                        <label class="form-label" for="id_star_rating">Star rating</label>
+                        <select class="form-select" id="id_star_rating" name="star_rating">
                             <option value="3">3</option>
                             <option value="4">4</option>
                             <option value="5">5</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Price per night</label>
+                        <label class="form-label" for="id_price_per_night">Price per night</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" name="price_per_night_0" value="0.00"
-                                required>
+                            <input type="number" min="0" step="0.01" class="form-control" id="id_price_per_night" name="price_per_night_0" value="0.00" required>
                             <span class="input-group-text">USD</span>
                         </div>
                         <input type="hidden" name="price_per_night_1" value="USD">
                     </div>
+
                     <div class="col-md-6">
-                        <label class="form-label">Country</label>
-                        <select class="form-select" name="country" required>
+                        <label class="form-label" for="id_country">Country</label>
+                        <select class="form-select" id="id_country" name="country" required>
                             <option value="">Select country</option>
                             {% for country in countries %}
-                            <option value="{{ country.id }}">{{ country.name }}</option>
+                                <option value="{{ country.id }}">{{ country.name }}</option>
                             {% empty %}
-                            <option disabled>No countries available</option>
+                                <option value="" disabled>No countries have been imported</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">City</label>
-                        <select class="form-select" name="city" required>
-                            <option value="">Select city</option>
-                            {% for city in cities %}
-                            <option value="{{ city.id }}">{{ city.name }}</option>
-                            {% empty %}
-                            <option disabled>No cities available</option>
-                            {% endfor %}
+                        <label class="form-label" for="id_city">City</label>
+                        <select class="form-select" id="id_city" name="city" data-cities-url="{% url 'partners_dashboard:cities_for_country' %}" required disabled>
+                            <option value="">Select a country first</option>
                         </select>
+                        <small id="city_help" class="text-muted" aria-live="polite"></small>
                     </div>
+
                     <div class="col-md-6">
-                        <label class="form-label">Address</label>
-                        <input type="text" class="form-control" name="address" required>
+                        <label class="form-label" for="id_address">Address</label>
+                        <input type="text" class="form-control" id="id_address" name="address" required>
                     </div>
-
                     <div class="col-12">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="4" required></textarea>
+                        <label class="form-label" for="id_description">Description</label>
+                        <textarea class="form-control" id="id_description" name="description" rows="4" required></textarea>
                     </div>
-
                     <div class="col-12">
-                        <label class="form-label">📸 Property Image</label>
-                        <input type="file" class="form-control" name="main_image" accept="image/*">
+                        <label class="form-label" for="id_main_image">📸 Property Image</label>
+                        <input type="file" class="form-control" id="id_main_image" name="main_image" accept="image/jpeg,image/png,image/webp">
                         <small class="text-muted">Upload a high-quality image of your hotel (JPG, PNG, WebP)</small>
                     </div>
-
                     <div class="col-md-6">
                         <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" name="is_available" checked>
-                            <label class="form-check-label">Available for bookings</label>
+                            <input class="form-check-input" id="id_is_available" type="checkbox" name="is_available" checked>
+                            <label class="form-check-label" for="id_is_available">Available for bookings</label>
                         </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" name="is_featured">
-                            <label class="form-check-label">Featured listing</label>
+                            <input class="form-check-input" id="id_is_featured" type="checkbox" name="is_featured">
+                            <label class="form-check-label" for="id_is_featured">Featured listing</label>
                         </div>
                     </div>
                 </div>
-
                 <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
-                    <a href="{% url 'partners_dashboard:manage_properties' %}"
-                        class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">✓ Create listing</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const countrySelect = document.getElementById('id_country');
+    const citySelect = document.getElementById('id_city');
+    const cityHelp = document.getElementById('city_help');
+    let requestController = null;
+
+    countrySelect.addEventListener('change', async () => {
+        const countryId = countrySelect.value;
+        requestController?.abort();
+        citySelect.disabled = true;
+        cityHelp.textContent = '';
+
+        if (!countryId) {
+            citySelect.innerHTML = '<option value="">Select a country first</option>';
+            return;
+        }
+
+        citySelect.innerHTML = '<option value="">Loading cities…</option>';
+        requestController = new AbortController();
+
+        try {
+            const url = new URL(citySelect.dataset.citiesUrl, window.location.origin);
+            url.searchParams.set('country_id', countryId);
+            const response = await fetch(url, {
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                signal: requestController.signal,
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const data = await response.json();
+            citySelect.innerHTML = '<option value="">Select city</option>';
+            for (const city of data.cities) {
+                citySelect.add(new Option(city.name, city.id));
+            }
+
+            if (data.cities.length === 0) {
+                citySelect.innerHTML = '<option value="">No cities available</option>';
+                cityHelp.textContent = 'No active cities have been imported for this country.';
+                return;
+            }
+            citySelect.disabled = false;
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            citySelect.innerHTML = '<option value="">Could not load cities</option>';
+            cityHelp.textContent = 'Please refresh the page or try again.';
+            console.error('City lookup failed:', error);
+        }
+    });
+});
+</script>
 {% endblock %}
