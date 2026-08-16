@@ -1,0 +1,235 @@
+{% extends "partners_dashboard/base_partners.html" %}
+
+{% block page_title %}Flight Checkout{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --luxury-navy: #1a365d;
+        --luxury-dark: #2d3748;
+        --luxury-gold: #d4af37;
+        --luxury-light: #f7fafc;
+        --luxury-border: #cbd5e0;
+    }
+    .page-header {
+        background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-dark) 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 3px solid var(--luxury-gold);
+    }
+    .page-header h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+    }
+    .property-card {
+        border: 1px solid var(--luxury-border);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+    .property-card .card-body {
+        padding: 1.75rem;
+    }
+    .property-title {
+        color: var(--luxury-navy);
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+    }
+    .property-subtitle {
+        color: var(--luxury-gold);
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+    .property-detail {
+        background-color: var(--luxury-light);
+        border: 1px solid var(--luxury-border);
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .property-detail-label {
+        color: var(--luxury-dark);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.8;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    .property-detail-value {
+        color: var(--luxury-navy);
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    .summary-card {
+        border: 1px solid var(--luxury-border);
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    .summary-card .card-header {
+        background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-dark) 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border: none;
+    }
+    .summary-card .card-header h5 {
+        font-weight: 700;
+        margin: 0;
+        font-size: 1rem;
+    }
+    .summary-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--luxury-border);
+    }
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+    .summary-item-label {
+        color: var(--luxury-dark);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    .summary-item-value {
+        color: var(--luxury-navy);
+        font-weight: 600;
+        text-align: right;
+    }
+    .summary-total {
+        padding: 1rem 0;
+        border-top: 2px solid var(--luxury-gold);
+        margin-top: 1rem;
+    }
+    .summary-total-label {
+        color: var(--luxury-navy);
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+    .summary-total-value {
+        color: var(--luxury-gold);
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+    .btn-checkout {
+        background-color: var(--luxury-gold);
+        color: var(--luxury-navy);
+        border: none;
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
+    }
+    .btn-checkout:hover {
+        background-color: #c9a72e;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
+        color: var(--luxury-navy);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2>💳 Checkout Review</h2>
+                <p class="mb-0">Finalize your flight listing</p>
+            </div>
+            <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-light">← Back to properties</a>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="h4 mb-1">Checkout</h2>
+            <p class="text-muted mb-0">Review the flight listing before final confirmation.</p>
+        </div>
+        <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Back to properties</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="property-card">
+                <div class="card-body">
+                    <h3 class="property-title">{{ property.airline.name }} {{ property.flight_number }}</h3>
+                    <p class="property-subtitle">{{ property.origin.name }} ({{ property.origin.code }}) → {{ property.destination.name }} ({{ property.destination.code }})</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="property-detail">
+                                <span class="property-detail-label">🛘 Departure</span>
+                                <span class="property-detail-value">{{ property.departure_time|date:"M d, Y H:i" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="property-detail">
+                                <span class="property-detail-label">🛙 Arrival</span>
+                                <span class="property-detail-value">{{ property.arrival_time|date:"M d, Y H:i" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="property-detail">
+                                <span class="property-detail-label">💵 Economy fare</span>
+                                <span class="property-detail-value">{{ property.economy_price }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="property-detail">
+                                <span class="property-detail-label">✅ Available seats</span>
+                                <span class="property-detail-value">{{ property.available_seats }} / {{ property.total_seats }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="mb-3" style="color: var(--luxury-navy); font-weight: 700;">Flight Summary</h6>
+                        <p class="mb-0" style="color: #555; line-height: 1.6;">Status: <strong>{{ property.status|title }}</strong> • Duration: <strong>{{ property.duration_hours|floatformat:1 }} hours</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="summary-card">
+                <div class="card-header">
+                    <h5>📑 Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="summary-item">
+                        <div class="d-flex justify-content-between">
+                            <span class="summary-item-label">Flight</span>
+                            <span class="summary-item-value">{{ property.flight_number }}</span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="d-flex justify-content-between">
+                            <span class="summary-item-label">Base fare</span>
+                            <span class="summary-item-value">{{ property.economy_price }}</span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="d-flex justify-content-between">
+                            <span class="summary-item-label">Taxes</span>
+                            <span class="summary-item-value">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="summary-total d-flex justify-content-between">
+                        <span class="summary-total-label">Total</span>
+                        <span class="summary-total-value">{{ property.economy_price }}</span>
+                    </div>
+                    <button class="btn btn-checkout w-100" type="button">✓ Confirm & Publish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

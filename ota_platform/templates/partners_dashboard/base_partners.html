@@ -198,6 +198,11 @@
 						<i class="fas fa-chart-line me-2"></i>Dashboard
 					</a>
 				</li>
+				<li class="nav-item">
+					<a class="nav-link {% if request.resolver_match.url_name == 'manage_properties' %}active{% endif %}" href="{% url 'partners_dashboard:manage_properties' %}">
+						<i class="fas fa-building me-2"></i>Manage Properties
+					</a>
+				</li>
 			</ul>
 			<ul class="navbar-nav ms-auto">
 				{% if user.is_authenticated %}

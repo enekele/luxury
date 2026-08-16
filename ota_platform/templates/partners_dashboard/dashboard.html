@@ -9,7 +9,17 @@
         <h2 class="h4 mb-0">Partner Dashboard</h2>
         <div>
             <a class="btn btn-outline-secondary btn-sm" href="#">Settings</a>
-            <a class="btn btn-primary btn-sm" href="#">Create Listing</a>
+            <a class="btn btn-primary btn-sm" href="{% url 'partners_dashboard:manage_properties' %}">Manage Properties</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h5 class="mb-1">Property management</h5>
+                <p class="text-muted mb-0">Update pricing, availability, and listing details for your owned properties.</p>
+            </div>
+            <a class="btn btn-primary" href="{% url 'partners_dashboard:manage_properties' %}">Open property manager</a>
         </div>
     </div>
 

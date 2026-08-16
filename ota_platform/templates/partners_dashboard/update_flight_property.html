@@ -1,0 +1,56 @@
+{% extends "partners_dashboard/base_partners.html" %}
+
+{% block page_title %}Update Flight{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="h4 mb-1">Update Flight</h2>
+            <p class="text-muted mb-0">Update {{ property.flight_number }} details.</p>
+        </div>
+        <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Back to properties</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Flight number</label>
+                        <input type="text" class="form-control" name="flight_number" value="{{ property.flight_number }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="scheduled" {% if property.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                            <option value="delayed" {% if property.status == 'delayed' %}selected{% endif %}>Delayed</option>
+                            <option value="cancelled" {% if property.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="departed" {% if property.status == 'departed' %}selected{% endif %}>Departed</option>
+                            <option value="arrived" {% if property.status == 'arrived' %}selected{% endif %}>Arrived</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Available seats</label>
+                        <input type="number" class="form-control" name="available_seats" value="{{ property.available_seats }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Economy price</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" name="economy_price_0" value="{{ property.economy_price.amount }}" required>
+                            <span class="input-group-text">{{ property.economy_price.currency }}</span>
+                        </div>
+                        <input type="hidden" name="economy_price_1" value="{{ property.economy_price.currency }}">
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

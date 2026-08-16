@@ -1,0 +1,212 @@
+{% extends "partners_dashboard/base_partners.html" %}
+
+{% block page_title %}Add Tour{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --luxury-navy: #1a365d;
+        --luxury-dark: #2d3748;
+        --luxury-gold: #d4af37;
+        --luxury-light: #f7fafc;
+        --luxury-border: #cbd5e0;
+    }
+    .page-header {
+        background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-dark) 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 3px solid var(--luxury-gold);
+    }
+    .page-header h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+    }
+    .page-header p {
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+    .form-card {
+        border: 1px solid var(--luxury-border);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    .form-card .card-header {
+        background-color: var(--luxury-light);
+        border-bottom: 1px solid var(--luxury-border);
+        padding: 1.25rem;
+    }
+    .form-card .card-header h5 {
+        color: var(--luxury-navy);
+        font-weight: 600;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    .form-label {
+        color: var(--luxury-navy);
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    .form-control, .form-select {
+        border: 1px solid var(--luxury-border);
+        border-radius: 6px;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.95rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--luxury-gold);
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    }
+    .btn-primary {
+        background-color: var(--luxury-navy);
+        border-color: var(--luxury-navy);
+        font-weight: 600;
+        padding: 0.625rem 1.5rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: var(--luxury-dark);
+        border-color: var(--luxury-dark);
+        box-shadow: 0 4px 12px rgba(26, 54, 93, 0.25);
+    }
+    .btn-primary::before {
+        content: '';
+        display: inline-block;
+        width: 2px;
+        height: 2px;
+        background-color: var(--luxury-gold);
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--luxury-border), transparent);
+        margin: 1.5rem 0;
+    }
+    .form-section-title {
+        color: var(--luxury-navy);
+        font-weight: 700;
+        font-size: 1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--luxury-gold);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2>🎯 Add tour listing</h2>
+                <p class="mb-0">Create a new premium experience</p>
+            </div>
+            <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-light">← Back to properties</a>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="card form-card">
+        <div class="card-header">
+            <h5>Experience Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tour name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Operator</label>
+                        <select class="form-select" name="operator" required>
+                            {% for operator in operators %}
+                                <option value="{{ operator.id }}">{{ operator.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="category" required>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Destination city</label>
+                        <select class="form-select" name="destination" required>
+                            {% for city in cities %}
+                                <option value="{{ city.id }}">{{ city.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Meeting point</label>
+                        <input type="text" class="form-control" name="meeting_point" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="4" required></textarea>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Price per person</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" name="price_per_person_0" value="0.00" required>
+                            <span class="input-group-text">USD</span>
+                        </div>
+                        <input type="hidden" name="price_per_person_1" value="USD">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Duration days</label>
+                        <input type="number" class="form-control" name="duration_days" value="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Duration hours</label>
+                        <input type="number" class="form-control" name="duration_hours" value="8">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Max participants</label>
+                        <input type="number" class="form-control" name="max_participants" value="15">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Meeting address</label>
+                        <input type="text" class="form-control" name="meeting_address" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Start time</label>
+                        <input type="time" class="form-control" name="start_time" value="08:00">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">End time</label>
+                        <input type="time" class="form-control" name="end_time" value="16:00">
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="is_available" checked>
+                            <label class="form-check-label">Available for bookings</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                    <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">✓ Create listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
