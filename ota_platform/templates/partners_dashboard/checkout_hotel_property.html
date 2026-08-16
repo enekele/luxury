@@ -166,6 +166,15 @@
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="property-card">
+                {% if property.main_image %}
+                <div style="width: 100%; height: 280px; background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-dark) 100%); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                    <img src="{{ property.main_image.url }}" alt="{{ property.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                {% else %}
+                <div style="width: 100%; height: 280px; background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-dark) 100%); display: flex; align-items: center; justify-content: center;">
+                    <span style="color: white; font-size: 3rem;">🏨</span>
+                </div>
+                {% endif %}
                 <div class="card-body">
                     <h3 class="property-title">{{ property.name }}</h3>
                     <p class="property-subtitle">{{ property.city.name }} — {{ property.address }}</p>

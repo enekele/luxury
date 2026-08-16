@@ -117,7 +117,7 @@
             <h5>Basic Information</h5>
         </div>
         <div class="card-body">
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -157,6 +157,12 @@
                     <div class="col-12">
                         <label class="form-label">Description</label>
                         <textarea class="form-control" name="description" rows="4" required></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">📸 Property Image</label>
+                        <input type="file" class="form-control" name="main_image" accept="image/*">
+                        <small class="text-muted">Upload a high-quality image of your hotel (JPG, PNG, WebP)</small>
                     </div>
 
                     <div class="col-md-6">

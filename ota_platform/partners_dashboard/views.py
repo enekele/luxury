@@ -228,7 +228,11 @@ def create_hotel_property(request):
         if price_amount:
             price_currency = request.POST.get('price_per_night_1', 'USD')
             hotel.price_per_night = Money(Decimal(str(price_amount)), price_currency)
-            hotel.save(update_fields=['price_per_night'])
+        # Handle image upload
+        if 'main_image' in request.FILES:
+            hotel.main_image = request.FILES['main_image']
+        hotel.save()
+        
         HotelPartner.objects.create(
             owner=request.user,
             hotel=hotel,
@@ -276,7 +280,10 @@ def create_flight_property(request):
         if price_amount:
             currency = request.POST.get('economy_price_1', 'USD')
             flight.economy_price = Money(Decimal(str(price_amount)), currency)
-            flight.save(update_fields=['economy_price'])
+        # Handle image upload
+        if 'main_image' in request.FILES:
+            flight.main_image = request.FILES['main_image']
+        flight.save()
         messages.success(request, f'{flight.flight_number} was added successfully.')
         return redirect('partners_dashboard:manage_properties')
 
@@ -320,6 +327,9 @@ def create_car_property(request):
         if deposit:
             deposit_currency = request.POST.get('security_deposit_1', 'USD')
             car.security_deposit = Money(Decimal(str(deposit)), deposit_currency)
+        # Handle image upload
+        if 'main_image' in request.FILES:
+            car.main_image = request.FILES['main_image']
         car.save()
         messages.success(request, f'{car.car_model} was added successfully.')
         return redirect('partners_dashboard:manage_properties')
@@ -367,7 +377,10 @@ def create_tour_property(request):
         if price_amount:
             currency = request.POST.get('price_per_person_1', 'USD')
             tour.price_per_person = Money(Decimal(str(price_amount)), currency)
-            tour.save(update_fields=['price_per_person'])
+        # Handle image upload
+        if 'main_image' in request.FILES:
+            tour.main_image = request.FILES['main_image']
+        tour.save()
         messages.success(request, f'{tour.name} was added successfully.')
         return redirect('partners_dashboard:manage_properties')
 

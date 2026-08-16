@@ -117,7 +117,7 @@
             <h5>Flight Details</h5>
         </div>
         <div class="card-body">
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -181,6 +181,12 @@
                     <div class="col-md-4">
                         <label class="form-label">Total seats</label>
                         <input type="number" class="form-control" name="total_seats" value="180" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">📸 Flight Image</label>
+                        <input type="file" class="form-control" name="main_image" accept="image/*">
+                        <small class="text-muted">Upload a high-quality image of the aircraft or route map (JPG, PNG, WebP)</small>
                     </div>
                 </div>
 
