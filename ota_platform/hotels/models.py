@@ -111,19 +111,26 @@ class RoomType(BaseModel):
 
 
 class HotelAvailability(models.Model):
-    """Hotel availability by date"""
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='availability')
+    room_type = models.ForeignKey(
+        RoomType,
+        on_delete=models.CASCADE,
+        related_name="availability",
+    )
     date = models.DateField()
-    available_rooms = models.IntegerField(default=0)
-    price_per_night = MoneyField(max_digits=10, decimal_places=2, default_currency='USD')
-    
-    class Meta:
-        unique_together = ('hotel', 'date')
-        ordering = ['date']
-    
-    def __str__(self):
-        return f"{self.hotel.name} - {self.date}"
+    available_rooms = models.PositiveIntegerField(default=0)
+    price_per_night = MoneyField(
+        max_digits=10,
+        decimal_places=2,
+        default_currency="USD",
+    )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["room_type", "date"],
+                name="unique_room_type_availability_date",
+            )
+        ]
 
 class HotelFacility(BaseModel):
     """Hotel facilities"""

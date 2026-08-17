@@ -1,5 +1,8 @@
 from datetime import datetime
+import logging
 
+import requests
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -18,6 +21,11 @@ from cars.models import CarRental
 from tours.models import Tour
 from reviews.models import Review
 from api.utils import validate_booking_dates, calculate_booking_total, generate_booking_reference
+
+
+logger = logging.getLogger(__name__)
+AI_HISTORY_LIMIT = 10
+OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses'
 
 
 def home(request):
@@ -152,6 +160,138 @@ def destination_detail(request, country_code):
     return render(request, 'core/destination_detail.html', context)
 
 
+def _money_text(value) -> str:
+    if value is None:
+        return 'price unavailable'
+    try:
+        return f'{value.currency} {value.amount}'
+    except (AttributeError, TypeError):
+        return str(value)
+
+
+def _travel_inventory_context() -> str:
+    """Return a small, current inventory snapshot for grounding AI answers."""
+    hotels = Hotel.objects.filter(
+        is_active=True,
+        is_available=True,
+    ).select_related('city', 'city__country').order_by('-is_featured', 'name')[:8]
+    flights = Flight.objects.filter(
+        is_active=True,
+        status='scheduled',
+        available_seats__gt=0,
+        departure_time__gt=timezone.now(),
+    ).select_related('airline', 'origin', 'destination').order_by('departure_time')[:8]
+    cars = CarRental.objects.filter(
+        is_active=True,
+        is_available=True,
+    ).select_related('car_model', 'car_model__brand', 'city').order_by('price_per_day')[:8]
+    tours = Tour.objects.filter(
+        is_active=True,
+        is_available=True,
+    ).select_related('destination', 'category', 'operator').order_by('-is_featured', 'name')[:8]
+
+    lines = ['CURRENT WEBSITE INVENTORY (only recommend items listed here):']
+    lines.extend(
+        f'Hotel ID {hotel.id}: {hotel.name}; {hotel.city.name}, '
+        f'{hotel.city.country.name}; {hotel.star_rating} stars; '
+        f'from {_money_text(hotel.price_per_night)} per night.'
+        for hotel in hotels
+    )
+    lines.extend(
+        f'Flight ID {flight.id}: {flight.airline.name} {flight.flight_number}; '
+        f'{flight.origin.code} to {flight.destination.code}; '
+        f'departs {flight.departure_time.isoformat()}; '
+        f'economy {_money_text(flight.economy_price)}; '
+        f'{flight.available_seats} seats shown available.'
+        for flight in flights
+    )
+    lines.extend(
+        f'Car ID {car.id}: {car.car_model}; {car.city.name}; {car.category}; '
+        f'{car.passengers} passengers; {_money_text(car.price_per_day)} per day.'
+        for car in cars
+    )
+    lines.extend(
+        f'Tour ID {tour.id}: {tour.name}; {tour.destination.name}; '
+        f'{tour.category.name}; {_money_text(tour.price_per_person)} per person; '
+        f'maximum {tour.max_participants} participants.'
+        for tour in tours
+    )
+    if len(lines) == 1:
+        lines.append('No active inventory is currently available.')
+    return '\n'.join(lines)
+
+
+def _get_ai_history(request, mode: str) -> list[dict]:
+    history = request.session.get(f'ai_history_{mode}', [])
+    return history if isinstance(history, list) else []
+
+
+def _save_ai_history(request, mode: str, query: str, answer: str) -> None:
+    history = _get_ai_history(request, mode)
+    history.extend([
+        {'role': 'user', 'content': query},
+        {'role': 'assistant', 'content': answer},
+    ])
+    request.session[f'ai_history_{mode}'] = history[-AI_HISTORY_LIMIT:]
+    request.session.modified = True
+
+
+def _extract_response_text(payload: dict) -> str:
+    for item in payload.get('output', []):
+        if item.get('type') != 'message':
+            continue
+        for content in item.get('content', []):
+            if content.get('type') == 'output_text' and content.get('text'):
+                return content['text'].strip()
+    return ''
+
+
+def _call_travel_ai(request, query: str, mode: str) -> str:
+    api_key = getattr(settings, 'OPENAI_API_KEY', '')
+    model = getattr(settings, 'OPENAI_MODEL', '')
+    if not api_key or not model:
+        raise RuntimeError('OPENAI_API_KEY and OPENAI_MODEL must be configured.')
+
+    if mode == 'concierge':
+        role = (
+            'You are the Luxorwyn concierge. Help customers search the supplied '
+            'website inventory, compare suitable options, and collect missing booking '
+            'details. Never claim that a booking or payment is complete. Give service '
+            'IDs only when they appear in the supplied inventory. Ask the customer to '
+            'review the price and proceed to checkout before confirmation.'
+        )
+    else:
+        role = (
+            'You are the Luxorwyn travel assistant. Give concise travel-planning help '
+            'and recommend only inventory contained in the supplied inventory snapshot. '
+            'Do not invent prices, schedules, availability, policies, or service IDs. '
+            'Ask a short follow-up question when essential trip details are missing.'
+        )
+
+    messages = _get_ai_history(request, mode)
+    messages.append({'role': 'user', 'content': query})
+    response = requests.post(
+        OPENAI_RESPONSES_URL,
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+        },
+        json={
+            'model': model,
+            'instructions': f'{role}\n\n{_travel_inventory_context()}',
+            'input': messages,
+            'store': False,
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+    answer = _extract_response_text(response.json())
+    if not answer:
+        raise RuntimeError('The AI response did not contain text.')
+    _save_ai_history(request, mode, query, answer)
+    return answer
+
+
 def _extract_concierge_intent(query: str) -> str:
     text = query.lower()
     if any(word in text for word in ['book', 'reserve', 'purchase', 'confirm']):
@@ -255,7 +395,13 @@ def concierge_chat(request):
         })
 
     intent = _extract_concierge_intent(query)
-    answer = _build_concierge_answer(request.user, query)
+    ai_powered = True
+    try:
+        answer = _call_travel_ai(request, query, mode='concierge')
+    except (requests.RequestException, RuntimeError, ValueError) as exc:
+        logger.warning('Concierge AI fallback used: %s', exc)
+        answer = _build_concierge_answer(request.user, query)
+        ai_powered = False
     concierge_request = _log_concierge_request(request, query, answer, intent)
 
     return JsonResponse({
@@ -263,6 +409,7 @@ def concierge_chat(request):
         'answer': answer,
         'intent': intent,
         'request_id': concierge_request.id,
+        'ai_powered': ai_powered,
     })
 
 
@@ -275,8 +422,15 @@ def concierge_book(request):
     booking_date = request.POST.get('booking_date', '').strip()
     check_in = request.POST.get('check_in', '').strip()
     check_out = request.POST.get('check_out', '').strip()
-    guests = int(request.POST.get('guests', '1') or 1)
-    contact_phone = request.POST.get('contact_phone', request.user.phone or '')
+    try:
+        guests = int(request.POST.get('guests', '1') or 1)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'message': 'Guests must be a whole number.'})
+    if guests < 1 or guests > 100:
+        return JsonResponse({'success': False, 'message': 'Guests must be between 1 and 100.'})
+
+    default_phone = getattr(request.user, 'phone', '') or ''
+    contact_phone = request.POST.get('contact_phone', default_phone).strip()
     special_requests = request.POST.get('special_requests', '').strip()
     query = request.POST.get('query', '').strip()
 
@@ -332,19 +486,20 @@ def concierge_book(request):
     if not booking_total:
         return JsonResponse({'success': False, 'message': 'Unable to calculate booking total.'})
 
-    booking = Booking.objects.create(
-        user=request.user,
-        content_type=content_type,
-        object_id=service_object.id,
-        booking_reference=generate_booking_reference(),
-        booking_date=datetime.strptime(booking_date_str, '%Y-%m-%d').date() if booking_date_str else None,
-        total_amount=booking_total['total'],
-        contact_name=request.user.get_full_name(),
-        contact_email=request.user.email,
-        contact_phone=contact_phone,
-        special_requests=special_requests,
-        status='confirmed'
-    )
+    with transaction.atomic():
+        booking = Booking.objects.create(
+            user=request.user,
+            content_type=content_type,
+            object_id=service_object.id,
+            booking_reference=generate_booking_reference(),
+            booking_date=datetime.strptime(booking_date_str, '%Y-%m-%d').date() if booking_date_str else None,
+            total_amount=booking_total['total'],
+            contact_name=request.user.get_full_name(),
+            contact_email=request.user.email,
+            contact_phone=contact_phone,
+            special_requests=special_requests,
+            status='pending'
+        )
 
     metadata = {
         'service_type': service_type,
@@ -354,11 +509,11 @@ def concierge_book(request):
         'booking_date': booking_date,
         'guests': guests,
     }
-    _log_concierge_request(request=request, query=query or 'Automated concierge booking', response='Booking created successfully.', intent='booking', metadata=metadata, booked=True, booking_reference=booking.booking_reference)
+    _log_concierge_request(request=request, query=query or 'Automated concierge booking', response='Pending booking created.', intent='booking', metadata=metadata, booked=True, booking_reference=booking.booking_reference)
 
     return JsonResponse({
         'success': True,
-        'message': f'Booking created successfully. Reference: {booking.booking_reference}',
+        'message': f'Pending booking created. Complete checkout to confirm it. Reference: {booking.booking_reference}',
         'booking_reference': booking.booking_reference,
         'booking_id': booking.id,
     })
@@ -446,13 +601,23 @@ def ajax_check_promotion(request):
 
 @require_POST
 def travel_assistant(request):
-    """Simple travel assistant endpoint."""
+    """AI-powered travel assistant with a deterministic fallback."""
     query = request.POST.get('query', '').strip()
     if not query:
         return JsonResponse({
             'success': False,
             'answer': 'Ask me anything about travel, bookings, destinations, or itinerary planning.'
         })
+
+    try:
+        answer = _call_travel_ai(request, query, mode='travel')
+        return JsonResponse({
+            'success': True,
+            'answer': answer,
+            'ai_powered': True,
+        })
+    except (requests.RequestException, RuntimeError, ValueError) as exc:
+        logger.warning('Travel assistant AI fallback used: %s', exc)
 
     text = query.lower()
     answer = 'I can help you find hotels, flights, tours, cars, or give travel tips. What would you like to know?'
@@ -496,6 +661,7 @@ def travel_assistant(request):
     return JsonResponse({
         'success': True,
         'answer': answer,
+        'ai_powered': False,
     })
 
 

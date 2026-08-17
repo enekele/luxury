@@ -227,6 +227,10 @@ PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
 PAYSTACK_BASE_URL = os.getenv('PAYSTACK_BASE_URL', default='https://api.paystack.co')
 
+# OpenAI keys
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", default="")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", default="")
+
 # API Keys
 AMADEUS_API_KEY = os.getenv('AMADEUS_API_KEY', default='')
 AMADEUS_API_SECRET = os.getenv('AMADEUS_API_SECRET', default='')

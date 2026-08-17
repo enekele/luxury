@@ -32,6 +32,23 @@ class Booking(BaseModel):
         ('completed', 'Completed'),
     ], default='pending')
     
+    # concierg_request 
+    check_in = models.DateField(null=True, blank=True)
+    check_out = models.DateField(null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("unpaid", "Unpaid"),
+            ("pending", "Payment Pending"),
+            ("paid", "Paid"),
+            ("refunded", "Refunded"),
+        ],
+        default="unpaid",
+    )
+
+    expires_at = models.DateTimeField(null=True, blank=True)
     # Contact information
     contact_name = models.CharField(max_length=100)
     contact_email = models.EmailField()
