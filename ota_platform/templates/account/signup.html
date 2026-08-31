@@ -302,54 +302,69 @@
                     {% endfor %}
                 {% endif %}
 
-                <form method="post">
+                <form method="post" action="{% url 'account_signup' %}" novalidate>
                     {% csrf_token %}
-                    {{ form.non_field_errors }}
                     {% for hidden in form.hidden_fields %}
                         {{ hidden }}
                     {% endfor %}
 
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Please correct the highlighted fields.</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label text-muted">First name</label>
-                            <input type="text" class="form-control" name="first_name" value="{{ form.first_name.value|default_if_none:'' }}" placeholder="Olivia" required>
+                            <input type="text" class="form-control{% if form.first_name.errors %} is-invalid{% endif %}" name="first_name" value="{{ form.first_name.value|default_if_none:'' }}" placeholder="Olivia" autocomplete="given-name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted">Last name</label>
-                            <input type="text" class="form-control" name="last_name" value="{{ form.last_name.value|default_if_none:'' }}" placeholder="Harrison" required>
+                            <input type="text" class="form-control{% if form.last_name.errors %} is-invalid{% endif %}" name="last_name" value="{{ form.last_name.value|default_if_none:'' }}" placeholder="Harrison" autocomplete="family-name" required>
                         </div>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label text-muted">Email address</label>
-                        <input type="email" class="form-control" name="email" value="{{ form.email.value|default_if_none:'' }}" placeholder="you@luxuryexample.com" required>
+                        <input type="email" class="form-control{% if form.email.errors %} is-invalid{% endif %}" name="email" value="{{ form.email.value|default_if_none:'' }}" placeholder="you@luxuryexample.com" autocomplete="email" required>
                     </div>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label text-muted">Password</label>
-                            <input type="password" class="form-control" name="password1" placeholder="Enter password" required>
+                            <input type="password" class="form-control{% if form.password1.errors %} is-invalid{% endif %}" name="password1" placeholder="Enter password" autocomplete="new-password" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted">Confirm password</label>
-                            <input type="password" class="form-control" name="password2" placeholder="Confirm password" required>
+                            <input type="password" class="form-control{% if form.password2.errors %} is-invalid{% endif %}" name="password2" placeholder="Confirm password" autocomplete="new-password" required>
                         </div>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label text-muted">Phone number</label>
-                        <input type="tel" class="form-control" name="phone" value="{{ form.phone.value|default_if_none:'' }}" placeholder="(123) 456-7890">
+                        <input type="tel" class="form-control{% if form.phone.errors %} is-invalid{% endif %}" name="phone" value="{{ form.phone.value|default_if_none:'' }}" placeholder="(123) 456-7890" autocomplete="tel">
                     </div>
 
                     <div class="mb-3 form-check text-muted">
-                        <input class="form-check-input" type="checkbox" id="terms" required>
+                        <input class="form-check-input{% if form.terms.errors %} is-invalid{% endif %}" type="checkbox" id="terms" name="terms"{% if form.terms.value %} checked{% endif %} required>
                         <label class="form-check-label" for="terms">
                             I agree to the <a href="{% url 'terms_of_service' %}" class="text-decoration-underline">Terms of Service</a> and <a href="{% url 'privacy_policy' %}" class="text-decoration-underline">Privacy Policy</a>.
                         </label>
                     </div>
 
                     <div class="mb-4 form-check text-muted">
-                        <input class="form-check-input" type="checkbox" id="newsletter">
+                        <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter"{% if form.newsletter.value %} checked{% endif %}>
                         <label class="form-check-label" for="newsletter">
                             Send me exclusive travel deals and event previews.
                         </label>

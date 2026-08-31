@@ -50,5 +50,9 @@ Add credentials for optional integrations in the Render service environment:
 - `AMADEUS_API_KEY` and `AMADEUS_API_SECRET`
 - SMTP settings if production email is required
 
+Email verification defaults to `none` so new users are not blocked when SMTP is
+unconfigured. After adding working SMTP credentials, set
+`ACCOUNT_EMAIL_VERIFICATION=mandatory` to require confirmation emails.
+
 Never commit secrets or production databases. Use environment variables in the
 hosting dashboard.

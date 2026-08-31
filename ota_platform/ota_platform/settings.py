@@ -212,7 +212,14 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = os.getenv('ACCOUNT_EMAIL_VERIFICATION', 'none').lower()
+if ACCOUNT_EMAIL_VERIFICATION not in {'mandatory', 'optional', 'none'}:
+    raise ImproperlyConfigured(
+        'ACCOUNT_EMAIL_VERIFICATION must be mandatory, optional, or none.'
+    )
+ACCOUNT_FORMS = {
+    'signup': 'users.forms.CustomSignupForm',
+}
 LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
