@@ -1,0 +1,26 @@
+databases:
+  - name: luxury-db
+    plan: free
+    databaseName: luxury
+    user: luxury
+
+services:
+  - type: web
+    name: luxury-travel
+    runtime: python
+    plan: free
+    rootDir: ota_platform
+    buildCommand: ./build.sh
+    startCommand: gunicorn ota_platform.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    healthCheckPath: /healthz/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: luxury-db
+          property: connectionString

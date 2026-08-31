@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.venv/
+venv/
+
+# Django runtime data
+*.sqlite3
+*.postgres
+logs/
+media/
+staticfiles/
+
+# Local configuration and operating-system files
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Editors
+.idea/
+.vscode/

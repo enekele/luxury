@@ -68,10 +68,14 @@ class RoomTypeAdmin(admin.ModelAdmin):
 
 @admin.register(HotelAvailability)
 class HotelAvailabilityAdmin(admin.ModelAdmin):
-    list_display = ('hotel', 'date', 'available_rooms', 'price_per_night')
-    list_filter = ('hotel', 'date')
-    search_fields = ('hotel__name',)
+    list_display = ('room_type', 'hotel', 'date', 'available_rooms', 'price_per_night')
+    list_filter = ('room_type__hotel', 'date')
+    search_fields = ('room_type__hotel__name', 'room_type__name')
     date_hierarchy = 'date'
+
+    @admin.display(ordering='room_type__hotel__name', description='Hotel')
+    def hotel(self, obj):
+        return obj.room_type.hotel
 
 
 @admin.register(HotelFacility)

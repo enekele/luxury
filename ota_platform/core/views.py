@@ -28,6 +28,11 @@ AI_HISTORY_LIMIT = 10
 OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses'
 
 
+def health_check(request):
+    """Lightweight endpoint used by the hosting platform."""
+    return JsonResponse({'status': 'ok'})
+
+
 def home(request):
     """Home page view"""
     # Track affiliate referral if present

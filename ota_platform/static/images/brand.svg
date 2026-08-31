@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">Luxury Travel</title>
+  <description id="description">Gold L monogram on a midnight background</description>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101726"/>
+      <stop offset="1" stop-color="#05070d"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6df9a"/>
+      <stop offset="0.5" stop-color="#d6ad50"/>
+      <stop offset="1" stop-color="#9a6d1f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#background)"/>
+  <path d="M168 104h80v232h128v72H168z" fill="url(#gold)"/>
+  <path d="M120 76h272" stroke="#d6ad50" stroke-width="8" stroke-linecap="round" opacity=".55"/>
+</svg>

@@ -22,7 +22,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:image"
-        content="{% block og_image %}{% load static %}{% static 'images/og-image.jpg' %}{% endblock %}">
+        content="{% block og_image %}{% load static %}{% static 'images/brand.svg' %}{% endblock %}">
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
@@ -31,11 +31,11 @@
     <meta name="twitter:description"
         content="{% block twitter_description %}{{ site_settings.site_description|default:'Book hotels, flights, cars, and tours with TravelHub' }}{% endblock %}">
     <meta name="twitter:image"
-        content="{% block twitter_image %}{% load static %}{% static 'images/og-image.jpg' %}{% endblock %}">
+        content="{% block twitter_image %}{% load static %}{% static 'images/brand.svg' %}{% endblock %}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{% load static %}{% static 'images/favicon.ico' %}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{% load static %}{% static 'images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/svg+xml" href="{% load static %}{% static 'images/brand.svg' %}">
+    <link rel="apple-touch-icon" href="{% load static %}{% static 'images/brand.svg' %}">
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

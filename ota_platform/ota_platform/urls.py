@@ -2,8 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from core.views import health_check
 
 urlpatterns = [
+    path('healthz/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
     path('admin-dashboard/', include('admin_dashboard.urls')),
     path('accounts/', include('allauth.urls')),

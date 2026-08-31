@@ -1,0 +1,54 @@
+# Luxury Travel Platform
+
+A Django travel marketplace for hotels, flights, cars, tours, events, bookings,
+partner inventory, affiliates, payments, and an AI-assisted concierge.
+
+## Run locally
+
+Requirements: Python 3.12 and Git.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r ota_platform/requirements.txt
+cp .env.example .env
+set -a && source .env && set +a
+python manage.py migrate
+python manage.py runserver
+```
+
+When `DATABASE_URL` is blank, local development uses SQLite. Open
+`http://127.0.0.1:8000/` after the server starts.
+
+Create an administrator with:
+
+```bash
+python manage.py createsuperuser
+```
+
+## Verify a change
+
+```bash
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test core
+python manage.py collectstatic --noinput
+```
+
+## Deploy to Render
+
+The repository includes a Render Blueprint in `render.yaml`. In Render, create
+a new Blueprint, select this repository, and apply it. The Blueprint provisions
+the web service and PostgreSQL database, generates a Django secret key, runs
+migrations, collects static assets, and configures the health check.
+
+Add credentials for optional integrations in the Render service environment:
+
+- `STRIPE_PUBLIC_KEY` and `STRIPE_SECRET_KEY`
+- `PAYSTACK_PUBLIC_KEY` and `PAYSTACK_SECRET_KEY`
+- `OPENAI_API_KEY` and `OPENAI_MODEL`
+- `AMADEUS_API_KEY` and `AMADEUS_API_SECRET`
+- SMTP settings if production email is required
+
+Never commit secrets or production databases. Use environment variables in the
+hosting dashboard.
