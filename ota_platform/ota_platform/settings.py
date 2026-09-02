@@ -220,6 +220,7 @@ if ACCOUNT_EMAIL_VERIFICATION not in {'mandatory', 'optional', 'none'}:
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
 }
+ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
 LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'

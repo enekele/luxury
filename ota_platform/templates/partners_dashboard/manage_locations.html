@@ -1,0 +1,231 @@
+{% extends 'partners_dashboard/base_partners.html' %}
+
+{% block page_title %}Countries & Cities{% endblock %}
+
+{% block extra_css %}
+<style>
+    .location-hero {
+        border: 0;
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, #0b3b69 0%, #0066cc 100%);
+        color: #fff;
+        box-shadow: var(--card-shadow);
+    }
+
+    .location-card {
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .location-card .card-header {
+        border-bottom: 1px solid var(--border-color);
+        background: #fff;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .location-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .errorlist {
+        margin: .4rem 0 0;
+        padding: 0;
+        list-style: none;
+        color: var(--danger);
+        font-size: .875rem;
+    }
+
+    .table thead th {
+        color: var(--text-muted);
+        font-size: .78rem;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="location-hero p-4 p-lg-5 mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div>
+            <p class="text-uppercase small fw-semibold mb-2 opacity-75">Partner tools</p>
+            <h1 class="h2 mb-2">Countries &amp; Cities</h1>
+            <p class="mb-0 opacity-75">Add the destinations required when creating hotels, cars, tours, and airports.</p>
+        </div>
+        <a class="btn btn-light" href="{% url 'partners_dashboard:manage_properties' %}">
+            <i class="fas fa-building me-2"></i>Manage properties
+        </a>
+    </div>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <section class="card location-card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1"><i class="fas fa-earth-africa text-primary me-2"></i>Add a country</h2>
+                <p class="text-muted mb-0 small">Create the country first, then add its cities.</p>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_country">
+                    {{ country_form.non_field_errors }}
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="form-label" for="{{ country_form.name.id_for_label }}">Country name</label>
+                            {{ country_form.name }}
+                            {{ country_form.name.errors }}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="{{ country_form.code.id_for_label }}">Country code</label>
+                            {{ country_form.code }}
+                            {{ country_form.code.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ country_form.currency.id_for_label }}">Currency (optional)</label>
+                            {{ country_form.currency }}
+                            {{ country_form.currency.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ country_form.timezone.id_for_label }}">Timezone</label>
+                            {{ country_form.timezone }}
+                            {{ country_form.timezone.errors }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ country_form.is_active }}
+                                <label class="form-check-label" for="{{ country_form.is_active.id_for_label }}">Active and available for properties</label>
+                            </div>
+                            {{ country_form.is_active.errors }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4">
+                        <i class="fas fa-plus me-2"></i>Add country
+                    </button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="card location-card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1"><i class="fas fa-city text-primary me-2"></i>Add a city</h2>
+                <p class="text-muted mb-0 small">Choose an active country and enter the city's details.</p>
+            </div>
+            <div class="card-body">
+                {% if has_active_countries %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_city">
+                        {{ city_form.non_field_errors }}
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ city_form.name.id_for_label }}">City name</label>
+                                {{ city_form.name }}
+                                {{ city_form.name.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ city_form.country.id_for_label }}">Country</label>
+                                {{ city_form.country }}
+                                {{ city_form.country.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ city_form.latitude.id_for_label }}">Latitude (optional)</label>
+                                {{ city_form.latitude }}
+                                {{ city_form.latitude.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ city_form.longitude.id_for_label }}">Longitude (optional)</label>
+                                {{ city_form.longitude }}
+                                {{ city_form.longitude.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ city_form.is_popular }}
+                                    <label class="form-check-label" for="{{ city_form.is_popular.id_for_label }}">Popular destination</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ city_form.is_active }}
+                                    <label class="form-check-label" for="{{ city_form.is_active.id_for_label }}">Active</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-4">
+                            <i class="fas fa-plus me-2"></i>Add city
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-info mb-0">Add a country before adding its cities.</div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <section class="card location-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Available countries</h2>
+                <span class="badge bg-primary rounded-pill">{{ countries|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Country</th><th>Timezone</th><th>Cities</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for country in countries %}
+                            <tr>
+                                <td><strong>{{ country.name }}</strong><br><span class="text-muted small">{{ country.code }}</span></td>
+                                <td>{{ country.timezone }}</td>
+                                <td>{{ country.city_count }}</td>
+                                <td>
+                                    {% if country.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">No countries have been added yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-6">
+        <section class="card location-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Available cities</h2>
+                <span class="badge bg-primary rounded-pill">{{ cities|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>City</th><th>Country</th><th>Popular</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for city in cities %}
+                            <tr>
+                                <td><strong>{{ city.name }}</strong></td>
+                                <td>{{ city.country.name }}</td>
+                                <td>{% if city.is_popular %}<i class="fas fa-star text-warning" aria-label="Popular"></i>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                                <td>
+                                    {% if city.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">No cities have been added yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

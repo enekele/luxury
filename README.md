@@ -26,6 +26,16 @@ Create an administrator with:
 python manage.py createsuperuser
 ```
 
+## Partner access
+
+Partner access is approval-based. In Django admin, create a normal user and a
+linked active `Partner` record. The partner can then sign in at `/accounts/login/`
+and is redirected to `/partners/` automatically.
+
+The partner dashboard includes property management and a protected
+`/partners/locations/` page for adding countries and cities. Users without an
+active `Partner` record cannot access these tools.
+
 ## Verify a change
 
 ```bash

@@ -6,7 +6,9 @@ from . import views
 app_name = "partners_dashboard"
 
 urlpatterns = [
-    path('partners/', views.partners_dashboard, name='partners_dashboard'),
+    path('', views.partners_dashboard, name='partners_dashboard'),
+    path('partners/', views.partners_dashboard, name='legacy_partners_dashboard'),
+    path('locations/', views.manage_locations, name='manage_locations'),
     path('properties/', views.manage_properties, name='manage_properties'),
     path('properties/hotels/create/', views.create_hotel_property, name='create_hotel_property'),
     path('properties/hotels/cities/', views.cities_for_country, name='cities_for_country'),

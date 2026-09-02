@@ -1,16 +1,14 @@
 from decimal import Decimal
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import redirect, render, get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta, datetime
-import logging
 import json
 
 from djmoney.money import Money
@@ -21,14 +19,12 @@ from bookings.models import Booking
 from cars.models import CarBrand, CarRental, CarModel, CarRentalCompany
 from flights.models import Flight, Airline, Airport
 from tours.models import Tour, TourCategory, TourOperator
-from core.models import Country
-from core.models import City
-from partners_dashboard.models import Partner
-
-logger = logging.getLogger(__name__)
+from core.models import City, Country
+from partners_dashboard.decorators import partner_required
+from partners_dashboard.forms import CityForm, CountryForm
 
 
-@login_required
+@partner_required
 def partners_dashboard(request):
     """
     Partner dashboard: shows partner's affiliate profile, facilities and recent reservations.
@@ -177,14 +173,10 @@ def partners_dashboard(request):
 
 
 def get_partner_profile_for_user(user):
-    partner = getattr(user, 'partner_profile', None)
-    if partner:
-        return partner
-    partner_name = user.get_full_name() or user.email.split('@')[0]
-    return Partner.objects.create(user=user, company_name=partner_name)
+    return user.partner_profile
 
 
-@login_required
+@partner_required
 def manage_properties(request):
     """List the partner's managed properties and allow quick updates."""
     hotels = Hotel.objects.filter(partner__owner=request.user).order_by('-updated_at')
@@ -210,7 +202,46 @@ def manage_properties(request):
     return render(request, 'partners_dashboard/manage_properties.html', context)
 
 
-@login_required
+@partner_required
+def manage_locations(request):
+    """Allow active partners to add countries and cities used by properties."""
+    country_form = CountryForm(prefix='country')
+    city_form = CityForm(prefix='city')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'add_country':
+            country_form = CountryForm(request.POST, prefix='country')
+            if country_form.is_valid():
+                country = country_form.save()
+                messages.success(request, f'{country.name} was added successfully.')
+                return redirect('partners_dashboard:manage_locations')
+        elif action == 'add_city':
+            city_form = CityForm(request.POST, prefix='city')
+            if city_form.is_valid():
+                city = city_form.save()
+                messages.success(request, f'{city} was added successfully.')
+                return redirect('partners_dashboard:manage_locations')
+        else:
+            messages.error(request, 'Choose whether you are adding a country or a city.')
+
+    countries = Country.objects.select_related('currency').annotate(
+        city_count=Count('cities')
+    ).order_by('name')
+    cities = City.objects.select_related('country').order_by('country__name', 'name')
+
+    context = {
+        'country_form': country_form,
+        'city_form': city_form,
+        'countries': countries,
+        'cities': cities,
+        'has_active_countries': Country.objects.filter(is_active=True).exists(),
+    }
+    return render(request, 'partners_dashboard/manage_locations.html', context)
+
+
+@partner_required
 def create_hotel_property(request):
     partner = get_partner_profile_for_user(request.user)
     if request.method == 'POST':
@@ -218,6 +249,8 @@ def create_hotel_property(request):
         city_id = request.POST.get('city')
         country = get_object_or_404(Country, id=country_id)
         city = get_object_or_404(City, id=city_id, country=country)
+        price_amount = request.POST.get('price_per_night_0') or '0'
+        price_currency = request.POST.get('price_per_night_1', 'USD')
 
         with transaction.atomic():
             hotel = Hotel.objects.create(
@@ -226,13 +259,10 @@ def create_hotel_property(request):
                 city=city,
                 address=request.POST.get('address', '').strip(),
                 star_rating=int(request.POST.get('star_rating', 3) or 3),
+                price_per_night=Money(Decimal(str(price_amount)), price_currency),
                 is_available=request.POST.get('is_available') == 'on',
                 is_featured=request.POST.get('is_featured') == 'on',
             )
-            price_amount = request.POST.get('price_per_night_0')
-            if price_amount:
-                price_currency = request.POST.get('price_per_night_1', 'USD')
-                hotel.price_per_night = Money(Decimal(str(price_amount)), price_currency)
             if 'main_image' in request.FILES:
                 hotel.main_image = request.FILES['main_image']
             hotel.save()
@@ -253,7 +283,7 @@ def create_hotel_property(request):
     return render(request, 'partners_dashboard/create_hotel_property.html', context)
 
 
-@login_required
+@partner_required
 def create_flight_property(request):
     partner = get_partner_profile_for_user(request.user)
     if request.method == 'POST':
@@ -298,7 +328,7 @@ def create_flight_property(request):
     return render(request, 'partners_dashboard/create_flight_property.html', {'airlines': airlines, 'airports': airports})
 
 
-@login_required
+@partner_required
 def create_car_property(request):
     partner = get_partner_profile_for_user(request.user)
     if request.method == 'POST':
@@ -346,7 +376,7 @@ def create_car_property(request):
     return render(request, 'partners_dashboard/create_car_property.html', {'cities': cities, 'car_models': car_models, 'companies': companies})
 
 
-@login_required
+@partner_required
 def create_tour_property(request):
     partner = get_partner_profile_for_user(request.user)
     if request.method == 'POST':
@@ -396,12 +426,13 @@ def create_tour_property(request):
     return render(request, 'partners_dashboard/create_tour_property.html', {'operators': operators, 'categories': categories, 'cities': cities})
 
 
-@login_required
+@partner_required
 def update_property(request, hotel_id):
     """Compatibility route for the legacy hotel update page."""
     return update_hotel_property(request, hotel_id)
 
-@login_required
+
+@partner_required
 def cities_for_country(request):
     country_id = request.GET.get('country_id')
 
@@ -416,7 +447,8 @@ def cities_for_country(request):
 
     return JsonResponse({'cities': list(cities)})
 
-@login_required
+
+@partner_required
 def update_hotel_property(request, hotel_id):
     """Update a partner-owned hotel property."""
     hotel = get_object_or_404(Hotel, id=hotel_id)
@@ -447,7 +479,7 @@ def update_hotel_property(request, hotel_id):
     return render(request, 'partners_dashboard/update_property.html', context)
 
 
-@login_required
+@partner_required
 def update_flight_property(request, flight_id):
     flight = get_object_or_404(Flight, id=flight_id)
     if flight.partner_profile is None or flight.partner_profile.user != request.user:
@@ -474,7 +506,7 @@ def update_flight_property(request, flight_id):
     return render(request, 'partners_dashboard/update_flight_property.html', context)
 
 
-@login_required
+@partner_required
 def update_car_property(request, car_id):
     car = get_object_or_404(CarRental, id=car_id)
     if car.partner_profile is None or car.partner_profile.user != request.user:
@@ -500,7 +532,7 @@ def update_car_property(request, car_id):
     return render(request, 'partners_dashboard/update_car_property.html', context)
 
 
-@login_required
+@partner_required
 def update_tour_property(request, tour_id):
     tour = get_object_or_404(Tour, id=tour_id)
     if tour.partner_profile is None or tour.partner_profile.user != request.user:
@@ -528,7 +560,7 @@ def update_tour_property(request, tour_id):
     return render(request, 'partners_dashboard/update_tour_property.html', context)
 
 
-@login_required
+@partner_required
 def checkout_hotel_property(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
     if getattr(hotel, 'partner', None) is None or hotel.partner.owner != request.user:
@@ -537,7 +569,7 @@ def checkout_hotel_property(request, hotel_id):
     return render(request, 'partners_dashboard/checkout_hotel_property.html', context)
 
 
-@login_required
+@partner_required
 def checkout_flight_property(request, flight_id):
     flight = get_object_or_404(Flight, id=flight_id)
     if flight.partner_profile is None or flight.partner_profile.user != request.user:
@@ -546,7 +578,7 @@ def checkout_flight_property(request, flight_id):
     return render(request, 'partners_dashboard/checkout_flight_property.html', context)
 
 
-@login_required
+@partner_required
 def checkout_car_property(request, car_id):
     car = get_object_or_404(CarRental, id=car_id)
     if car.partner_profile is None or car.partner_profile.user != request.user:
@@ -555,7 +587,7 @@ def checkout_car_property(request, car_id):
     return render(request, 'partners_dashboard/checkout_car_property.html', context)
 
 
-@login_required
+@partner_required
 def checkout_tour_property(request, tour_id):
     tour = get_object_or_404(Tour, id=tour_id)
     if tour.partner_profile is None or tour.partner_profile.user != request.user:
@@ -564,7 +596,7 @@ def checkout_tour_property(request, tour_id):
     return render(request, 'partners_dashboard/checkout_tour_property.html', context)
 
 
-@login_required
+@partner_required
 @require_POST
 def toggle_availability(request):
     hotel_id = request.POST.get('hotel_id')
@@ -587,7 +619,7 @@ def toggle_availability(request):
     })
 
 
-@login_required
+@partner_required
 @require_POST
 def confirm_reservation(request):
     booking_id = request.POST.get('booking_id')
