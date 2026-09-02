@@ -1,0 +1,90 @@
+{% extends 'partners_dashboard/base_partners.html' %}
+
+{% block page_title %}Reservation {{ booking.booking_reference }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .detail-label {
+        color: var(--text-muted);
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <a class="text-decoration-none small" href="{% url 'partners_dashboard:manage_reservations' %}"><i class="fas fa-arrow-left me-1"></i>Reservations</a>
+        <h1 class="h3 mt-2 mb-1">{{ booking.booking_reference }}</h1>
+        <p class="text-muted mb-0">Created {{ booking.created_at|date:'F j, Y \a\t g:i A' }}</p>
+    </div>
+    <span class="badge fs-6 {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'pending' %}bg-warning text-dark{% elif booking.status == 'completed' %}bg-primary{% else %}bg-secondary{% endif %}">{{ booking.get_status_display }}</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <section class="card detail-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Reservation details</h2></div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6"><div class="detail-label">Service</div><div class="fw-semibold">{{ booking.content_object|default:'Unavailable listing' }}</div><div class="text-muted text-uppercase small">{{ booking.content_type.model }}</div></div>
+                    <div class="col-md-3"><div class="detail-label">Quantity</div><div>{{ booking.quantity }}</div></div>
+                    <div class="col-md-3"><div class="detail-label">Total</div><div class="fw-semibold">{{ booking.total_amount }}</div></div>
+                    <div class="col-md-4"><div class="detail-label">Booking date</div><div>{{ booking.booking_date|date:'F j, Y'|default:'Not specified' }}</div></div>
+                    <div class="col-md-4"><div class="detail-label">Check in</div><div>{{ booking.check_in|date:'F j, Y'|default:'Not specified' }}</div></div>
+                    <div class="col-md-4"><div class="detail-label">Check out</div><div>{{ booking.check_out|date:'F j, Y'|default:'Not specified' }}</div></div>
+                    <div class="col-md-6"><div class="detail-label">Payment</div><div>{{ booking.get_payment_status_display }}</div></div>
+                    <div class="col-12"><div class="detail-label">Special requests</div><div class="mt-1">{{ booking.special_requests|default:'No special requests.'|linebreaksbr }}</div></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <section class="card detail-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Customer</h2></div>
+            <div class="card-body">
+                <div class="detail-label">Name</div><div class="mb-3">{{ booking.contact_name }}</div>
+                <div class="detail-label">Email</div><div class="mb-3"><a href="mailto:{{ booking.contact_email }}">{{ booking.contact_email }}</a></div>
+                <div class="detail-label">Phone</div><div>{{ booking.contact_phone|default:'Not provided' }}</div>
+            </div>
+        </section>
+
+        <section class="card detail-card">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Reservation actions</h2></div>
+            <div class="card-body d-grid gap-2">
+                {% if booking.status == 'pending' %}
+                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}" class="d-grid">
+                        {% csrf_token %}<input type="hidden" name="action" value="confirm">
+                        <button class="btn btn-success" type="submit">Confirm reservation</button>
+                    </form>
+                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}" class="d-grid">
+                        {% csrf_token %}<input type="hidden" name="action" value="cancel">
+                        <button class="btn btn-outline-danger" type="submit">Cancel reservation</button>
+                    </form>
+                {% elif booking.status == 'confirmed' %}
+                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}" class="d-grid">
+                        {% csrf_token %}<input type="hidden" name="action" value="complete">
+                        <button class="btn btn-primary" type="submit">Mark completed</button>
+                    </form>
+                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}" class="d-grid">
+                        {% csrf_token %}<input type="hidden" name="action" value="cancel">
+                        <button class="btn btn-outline-danger" type="submit">Cancel reservation</button>
+                    </form>
+                {% else %}
+                    <p class="text-muted mb-0">No further status actions are available.</p>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -191,10 +191,34 @@ def generate_booking_reference():
             return reference
 
 
+def service_is_bookable(service_object):
+    """Return whether a supported travel service is open for new bookings."""
+    from django.utils import timezone
+
+    if service_object is None or not getattr(service_object, 'is_active', False):
+        return False
+
+    model_name = service_object._meta.model_name
+    if model_name == 'flight':
+        return (
+            service_object.status == 'scheduled'
+            and service_object.available_seats > 0
+            and service_object.departure_time > timezone.now()
+        )
+
+    if model_name in {'hotel', 'carrental', 'tour'}:
+        return bool(service_object.is_available)
+
+    return False
+
+
 def check_service_availability(service_object, date, guests=1):
     """
     Check if service is available for given date and guests
     """
+    if not service_is_bookable(service_object):
+        return False
+
     if hasattr(service_object, 'availability'):
         availability = service_object.availability.filter(date=date).first()
         if availability:

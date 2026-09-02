@@ -1,9 +1,11 @@
 from decimal import Decimal
 
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from bookings.models import Booking
 from core.models import Country, City
 from flights.models import Airline, Airport, Flight
 from hotels.models import Hotel, HotelPartner
@@ -105,6 +107,31 @@ class PartnerPropertyManagementTests(TestCase):
             start_time='08:00:00',
             end_time='16:00:00',
             partner_profile=self.partner,
+        )
+
+    def create_booking(self, service=None, status='pending', email='guest@example.com'):
+        service = service or self.hotel
+        customer = User.objects.create_user(
+            email=email,
+            username=email.split('@')[0],
+            password='StrongPass123!',
+            first_name='Grace',
+            last_name='Guest',
+        )
+        return Booking.objects.create(
+            user=customer,
+            content_type=ContentType.objects.get_for_model(service),
+            object_id=service.id,
+            booking_date=timezone.now().date() + timezone.timedelta(days=7),
+            check_in=timezone.now().date() + timezone.timedelta(days=7),
+            check_out=timezone.now().date() + timezone.timedelta(days=9),
+            total_amount='450.00',
+            status=status,
+            payment_status='paid',
+            contact_name='Grace Guest',
+            contact_email=email,
+            contact_phone='+2348000000000',
+            special_requests='Late arrival requested.',
         )
 
     def test_partner_can_view_manage_properties_page(self):
@@ -216,6 +243,345 @@ class PartnerPropertyManagementTests(TestCase):
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.name, 'Nairobi Safari Escape Deluxe')
         self.assertTrue(self.tour.is_available)
+
+    def test_partner_can_view_and_filter_owned_reservations(self):
+        pending_booking = self.create_booking()
+        confirmed_booking = self.create_booking(
+            service=self.car,
+            status='confirmed',
+            email='confirmed@example.com',
+        )
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        list_response = self.client.get(
+            reverse('partners_dashboard:manage_reservations'),
+            {'status': 'pending', 'service': 'hotel', 'q': pending_booking.booking_reference},
+        )
+        detail_response = self.client.get(
+            reverse(
+                'partners_dashboard:reservation_detail',
+                args=[pending_booking.id],
+            )
+        )
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, pending_booking.booking_reference)
+        self.assertNotContains(list_response, confirmed_booking.booking_reference)
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(detail_response, 'Grace Guest')
+        self.assertContains(detail_response, 'Late arrival requested.')
+
+    def test_partner_can_confirm_and_complete_reservation(self):
+        booking = self.create_booking()
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        confirm_response = self.client.post(
+            reverse(
+                'partners_dashboard:update_reservation_status',
+                args=[booking.id],
+            ),
+            {'action': 'confirm'},
+        )
+        booking.refresh_from_db()
+
+        self.assertEqual(confirm_response.status_code, 302)
+        self.assertEqual(booking.status, 'confirmed')
+
+        complete_response = self.client.post(
+            reverse(
+                'partners_dashboard:update_reservation_status',
+                args=[booking.id],
+            ),
+            {'action': 'complete'},
+        )
+        booking.refresh_from_db()
+
+        self.assertEqual(complete_response.status_code, 302)
+        self.assertEqual(booking.status, 'completed')
+
+        invalid_response = self.client.post(
+            reverse(
+                'partners_dashboard:update_reservation_status',
+                args=[booking.id],
+            ),
+            {'action': 'confirm'},
+            follow=True,
+        )
+        booking.refresh_from_db()
+
+        self.assertEqual(booking.status, 'completed')
+        self.assertContains(
+            invalid_response,
+            'Completed reservations cannot be confirmed.',
+        )
+
+    def test_partner_can_manage_availability_for_all_service_types(self):
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+        services = [
+            ('hotel', self.hotel),
+            ('flight', self.flight),
+            ('car', self.car),
+            ('tour', self.tour),
+        ]
+
+        for service_type, service in services:
+            response = self.client.post(
+                reverse(
+                    'partners_dashboard:set_property_availability',
+                    args=[service_type, service.id],
+                ),
+                {'available': 'false'},
+            )
+            self.assertRedirects(
+                response,
+                reverse('partners_dashboard:manage_properties'),
+            )
+
+        self.hotel.refresh_from_db()
+        self.flight.refresh_from_db()
+        self.car.refresh_from_db()
+        self.tour.refresh_from_db()
+        self.assertFalse(self.hotel.is_available)
+        self.assertEqual(self.flight.status, 'cancelled')
+        self.assertFalse(self.car.is_available)
+        self.assertFalse(self.tour.is_available)
+
+        for service_type, service in [
+            ('hotel', self.hotel),
+            ('flight', self.flight),
+            ('car', self.car),
+            ('tour', self.tour),
+        ]:
+            self.client.post(
+                reverse(
+                    'partners_dashboard:set_property_availability',
+                    args=[service_type, service.id],
+                ),
+                {'available': 'true'},
+            )
+
+        self.hotel.refresh_from_db()
+        self.flight.refresh_from_db()
+        self.car.refresh_from_db()
+        self.tour.refresh_from_db()
+        self.assertTrue(self.hotel.is_available)
+        self.assertEqual(self.flight.status, 'scheduled')
+        self.assertTrue(self.car.is_available)
+        self.assertTrue(self.tour.is_available)
+
+    def test_flight_without_seats_cannot_be_reopened(self):
+        self.flight.status = 'cancelled'
+        self.flight.available_seats = 0
+        self.flight.save(update_fields=['status', 'available_seats'])
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        response = self.client.post(
+            reverse(
+                'partners_dashboard:set_property_availability',
+                args=['flight', self.flight.id],
+            ),
+            {'available': 'true'},
+            follow=True,
+        )
+        self.flight.refresh_from_db()
+
+        self.assertEqual(self.flight.status, 'cancelled')
+        self.assertContains(response, 'Add available seats before reopening this flight.')
+
+    def test_partner_cannot_manage_another_partners_inventory_or_booking(self):
+        other_user = User.objects.create_user(
+            email='otherpartner@example.com',
+            username='otherpartner',
+            password='StrongPass123!',
+            first_name='Other',
+            last_name='Partner',
+        )
+        other_partner = Partner.objects.create(
+            user=other_user,
+            company_name='Other Partner',
+        )
+        other_hotel = Hotel.objects.create(
+            name='Other Hotel',
+            description='Not owned by the signed-in partner',
+            city=self.city,
+            address='Nairobi',
+            price_per_night='99.00',
+        )
+        HotelPartner.objects.create(
+            owner=other_user,
+            hotel=other_hotel,
+            partner_name='Other Partner',
+            partner_id='OTHER-1',
+            partner_profile=other_partner,
+        )
+        other_booking = self.create_booking(
+            service=other_hotel,
+            email='otherguest@example.com',
+        )
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        detail_response = self.client.get(
+            reverse(
+                'partners_dashboard:reservation_detail',
+                args=[other_booking.id],
+            )
+        )
+        status_response = self.client.post(
+            reverse(
+                'partners_dashboard:update_reservation_status',
+                args=[other_booking.id],
+            ),
+            {'action': 'confirm'},
+        )
+        availability_response = self.client.post(
+            reverse(
+                'partners_dashboard:set_property_availability',
+                args=['hotel', other_hotel.id],
+            ),
+            {'available': 'false'},
+        )
+
+        self.assertEqual(detail_response.status_code, 404)
+        self.assertEqual(status_response.status_code, 404)
+        self.assertEqual(availability_response.status_code, 404)
+        other_booking.refresh_from_db()
+        other_hotel.refresh_from_db()
+        self.assertEqual(other_booking.status, 'pending')
+        self.assertTrue(other_hotel.is_available)
+
+    def test_reservation_export_contains_only_partner_records(self):
+        own_booking = self.create_booking()
+        other_user = User.objects.create_user(
+            email='exportpartner@example.com',
+            username='exportpartner',
+            password='StrongPass123!',
+            first_name='Export',
+            last_name='Partner',
+        )
+        other_partner = Partner.objects.create(user=other_user, company_name='Export Co')
+        other_tour = Tour.objects.create(
+            operator=self.operator,
+            category=self.category,
+            name='Other Tour',
+            description='Other partner tour',
+            destination=self.city,
+            meeting_point='Nairobi',
+            meeting_address='Nairobi',
+            price_per_person='80.00',
+            start_time='09:00:00',
+            end_time='12:00:00',
+            partner_profile=other_partner,
+        )
+        other_booking = self.create_booking(
+            service=other_tour,
+            email='exportguest@example.com',
+        )
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        response = self.client.get(reverse('partners_dashboard:export_reservations'))
+        csv_content = response.content.decode('utf-8')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+        self.assertIn(own_booking.booking_reference, csv_content)
+        self.assertNotIn(other_booking.booking_reference, csv_content)
+
+    def test_offline_inventory_is_hidden_and_cannot_be_booked(self):
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+        self.client.post(
+            reverse(
+                'partners_dashboard:set_property_availability',
+                args=['hotel', self.hotel.id],
+            ),
+            {'available': 'false'},
+        )
+        self.client.post(
+            reverse(
+                'partners_dashboard:set_property_availability',
+                args=['flight', self.flight.id],
+            ),
+            {'available': 'false'},
+        )
+        self.client.logout()
+
+        hotel_list_response = self.client.get(reverse('hotels:hotel_list'))
+        hotel_detail_response = self.client.get(
+            reverse('hotels:hotel_detail', args=[self.hotel.id])
+        )
+        flight_list_response = self.client.get(reverse('flights:flight_list'))
+        search_response = self.client.get(
+            reverse('search'),
+            {'q': 'Skyline', 'type': 'all'},
+        )
+        api_detail_response = self.client.get(f'/api/v1/hotels/{self.hotel.id}/')
+
+        self.assertNotContains(hotel_list_response, self.hotel.name)
+        self.assertEqual(hotel_detail_response.status_code, 404)
+        self.assertNotContains(flight_list_response, self.flight.flight_number)
+        self.assertNotIn(self.hotel, search_response.context['results']['hotels'])
+        self.assertEqual(api_detail_response.status_code, 404)
+
+        customer = User.objects.create_user(
+            email='offlineguest@example.com',
+            username='offlineguest',
+            password='StrongPass123!',
+            first_name='Offline',
+            last_name='Guest',
+        )
+        self.client.login(email=customer.email, password='StrongPass123!')
+        booking_response = self.client.post(
+            reverse('bookings:create_booking'),
+            {
+                'service_type': 'hotel',
+                'service_id': self.hotel.id,
+                'booking_date': (
+                    timezone.now().date() + timezone.timedelta(days=7)
+                ).isoformat(),
+                'check_in': (
+                    timezone.now().date() + timezone.timedelta(days=7)
+                ).isoformat(),
+                'check_out': (
+                    timezone.now().date() + timezone.timedelta(days=9)
+                ).isoformat(),
+                'guests': 2,
+                'contact_name': 'Offline Guest',
+                'contact_email': customer.email,
+            },
+        )
+
+        self.assertEqual(booking_response.status_code, 404)
+        self.assertFalse(Booking.objects.filter(user=customer).exists())
+
+    def test_customer_cannot_self_confirm_booking_through_api(self):
+        customer = User.objects.create_user(
+            email='apiguest@example.com',
+            username='apiguest',
+            password='StrongPass123!',
+            first_name='API',
+            last_name='Guest',
+        )
+        self.client.login(email=customer.email, password='StrongPass123!')
+
+        response = self.client.post(
+            '/api/v1/bookings/',
+            {
+                'content_type': ContentType.objects.get_for_model(self.hotel).id,
+                'object_id': self.hotel.id,
+                'booking_date': (
+                    timezone.now().date() + timezone.timedelta(days=7)
+                ).isoformat(),
+                'total_amount': '450.00',
+                'status': 'confirmed',
+                'contact_name': 'API Guest',
+                'contact_email': customer.email,
+                'contact_phone': '+2348000000001',
+                'special_requests': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        booking = Booking.objects.get(user=customer)
+        self.assertEqual(booking.status, 'pending')
 
 
 class PartnerAccessAndLocationTests(TestCase):

@@ -84,7 +84,12 @@ def hotel_list(request):
 
 def hotel_detail(request, hotel_id):
     """Hotel detail view"""
-    hotel = get_object_or_404(Hotel, id=hotel_id, is_active=True)
+    hotel = get_object_or_404(
+        Hotel,
+        id=hotel_id,
+        is_active=True,
+        is_available=True,
+    )
     
     # Get room types
     room_types = hotel.room_types.filter(is_active=True)
@@ -100,9 +105,10 @@ def hotel_detail(request, hotel_id):
     today = timezone.now().date()
     end_date = today + timedelta(days=30)
     availability = HotelAvailability.objects.filter(
-        hotel=hotel,
+        room_type__hotel=hotel,
+        room_type__is_active=True,
         date__range=[today, end_date]
-    ).order_by('date')
+    ).select_related('room_type').order_by('date', 'room_type__name')
     
     # Get nearby hotels
     nearby_hotels = Hotel.objects.filter(
@@ -159,14 +165,21 @@ def hotel_search(request):
                 # Filter by availability
                 available_hotels = []
                 for hotel in hotels:
-                    availability = HotelAvailability.objects.filter(
-                        hotel=hotel,
-                        date__range=[check_in_date, check_out_date],
-                        available_rooms__gt=0
-                    ).count()
-                    
                     days_needed = (check_out_date - check_in_date).days
-                    if availability == days_needed:
+                    room_type_available = hotel.room_types.filter(
+                        is_active=True,
+                        availability__date__gte=check_in_date,
+                        availability__date__lt=check_out_date,
+                        availability__available_rooms__gt=0,
+                    ).distinct()
+                    if any(
+                        room_type.availability.filter(
+                            date__gte=check_in_date,
+                            date__lt=check_out_date,
+                            available_rooms__gt=0,
+                        ).count() == days_needed
+                        for room_type in room_type_available
+                    ):
                         available_hotels.append(hotel.id)
                 
                 hotels = hotels.filter(id__in=available_hotels)
@@ -193,7 +206,12 @@ def hotel_search(request):
 
 def check_availability(request, hotel_id):
     """AJAX endpoint to check hotel availability"""
-    hotel = get_object_or_404(Hotel, id=hotel_id, is_active=True)
+    hotel = get_object_or_404(
+        Hotel,
+        id=hotel_id,
+        is_active=True,
+        is_available=True,
+    )
     
     check_in = request.GET.get('check_in')
     check_out = request.GET.get('check_out')
@@ -209,16 +227,26 @@ def check_availability(request, hotel_id):
             return JsonResponse({'error': 'Check-out date must be after check-in date'})
         
         # Check availability
-        availability = HotelAvailability.objects.filter(
-            hotel=hotel,
-            date__range=[check_in_date, check_out_date],
-            available_rooms__gt=0
-        )
-        
         days_needed = (check_out_date - check_in_date).days
-        available_days = availability.count()
-        
-        if available_days == days_needed:
+        available_room_type = next(
+            (
+                room_type
+                for room_type in hotel.room_types.filter(is_active=True)
+                if room_type.availability.filter(
+                    date__gte=check_in_date,
+                    date__lt=check_out_date,
+                    available_rooms__gt=0,
+                ).count() == days_needed
+            ),
+            None,
+        )
+
+        if available_room_type:
+            availability = available_room_type.availability.filter(
+                date__gte=check_in_date,
+                date__lt=check_out_date,
+                available_rooms__gt=0,
+            ).order_by('date')
             total_price = sum(av.price_per_night.amount for av in availability)
             return JsonResponse({
                 'available': True,

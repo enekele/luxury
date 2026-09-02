@@ -67,7 +67,11 @@ def home(request):
     )[:3]
     
     # Get featured hotels
-    featured_hotels = Hotel.objects.filter(is_featured=True, is_active=True)[:4]
+    featured_hotels = Hotel.objects.filter(
+        is_featured=True,
+        is_active=True,
+        is_available=True,
+    )[:4]
     
     context = {
         'popular_cities': popular_cities,
@@ -93,27 +97,70 @@ def search(request):
     }
     
     if query or destination:
-        search_filter = Q()
+        hotel_filter = Q()
+        flight_filter = Q()
+        car_filter = Q()
+        tour_filter = Q()
+
         if query:
-            search_filter |= Q(name__icontains=query) | Q(description__icontains=query)
+            hotel_filter &= Q(name__icontains=query) | Q(description__icontains=query)
+            flight_filter &= (
+                Q(flight_number__icontains=query)
+                | Q(airline__name__icontains=query)
+                | Q(origin__code__icontains=query)
+                | Q(destination__code__icontains=query)
+            )
+            car_filter &= (
+                Q(car_model__brand__name__icontains=query)
+                | Q(car_model__name__icontains=query)
+                | Q(company__name__icontains=query)
+                | Q(pickup_location__icontains=query)
+            )
+            tour_filter &= (
+                Q(name__icontains=query)
+                | Q(description__icontains=query)
+                | Q(highlights__icontains=query)
+            )
         if destination:
-            search_filter |= Q(city__name__icontains=destination)
+            hotel_filter &= Q(city__name__icontains=destination)
+            flight_filter &= (
+                Q(origin__city__name__icontains=destination)
+                | Q(destination__city__name__icontains=destination)
+                | Q(origin__code__icontains=destination)
+                | Q(destination__code__icontains=destination)
+            )
+            car_filter &= Q(city__name__icontains=destination)
+            tour_filter &= Q(destination__name__icontains=destination)
         
         if service_type in ['all', 'hotel']:
-            results['hotels'] = Hotel.objects.filter(search_filter, is_active=True)[:10]
+            results['hotels'] = Hotel.objects.filter(
+                hotel_filter,
+                is_active=True,
+                is_available=True,
+            )[:10]
         
         if service_type in ['all', 'flight']:
             results['flights'] = Flight.objects.filter(
-                Q(origin__name__icontains=destination) | 
-                Q(destination__name__icontains=destination) if destination else Q(),
-                is_active=True
+                flight_filter,
+                is_active=True,
+                status='scheduled',
+                available_seats__gt=0,
+                departure_time__gt=timezone.now(),
             )[:10]
         
         if service_type in ['all', 'car']:
-            results['cars'] = CarRental.objects.filter(search_filter, is_active=True)[:10]
+            results['cars'] = CarRental.objects.filter(
+                car_filter,
+                is_active=True,
+                is_available=True,
+            )[:10]
         
         if service_type in ['all', 'tour']:
-            results['tours'] = Tour.objects.filter(search_filter, is_active=True)[:10]
+            results['tours'] = Tour.objects.filter(
+                tour_filter,
+                is_active=True,
+                is_available=True,
+            )[:10]
     
     context = {
         'query': query,
@@ -152,8 +199,16 @@ def destination_detail(request, country_code):
     cities = country.cities.filter(is_active=True)
     
     # Get services available in this country
-    hotels = Hotel.objects.filter(city__country=country, is_active=True)[:6]
-    tours = Tour.objects.filter(destination__country=country, is_active=True)[:6]
+    hotels = Hotel.objects.filter(
+        city__country=country,
+        is_active=True,
+        is_available=True,
+    )[:6]
+    tours = Tour.objects.filter(
+        destination__country=country,
+        is_active=True,
+        is_available=True,
+    )[:6]
     
     context = {
         'country': country,
@@ -445,7 +500,12 @@ def concierge_book(request):
     service_object = None
     content_type = None
     if service_type == 'hotel':
-        service_object = get_object_or_404(Hotel, id=service_id, is_active=True)
+        service_object = get_object_or_404(
+            Hotel,
+            id=service_id,
+            is_active=True,
+            is_available=True,
+        )
         content_type = ContentType.objects.get_for_model(Hotel)
         if not check_in or not check_out:
             return JsonResponse({'success': False, 'message': 'Hotel bookings require check-in and check-out dates.'})
@@ -455,14 +515,26 @@ def concierge_book(request):
         total_keys = (check_in, check_out)
         booking_date_str = check_in
     elif service_type == 'flight':
-        service_object = get_object_or_404(Flight, id=service_id, is_active=True)
+        service_object = get_object_or_404(
+            Flight,
+            id=service_id,
+            is_active=True,
+            status='scheduled',
+            available_seats__gt=0,
+            departure_time__gt=timezone.now(),
+        )
         content_type = ContentType.objects.get_for_model(Flight)
         if not booking_date:
             return JsonResponse({'success': False, 'message': 'Flight bookings require a travel date.'})
         total_keys = (booking_date, booking_date)
         booking_date_str = booking_date
     elif service_type == 'car':
-        service_object = get_object_or_404(CarRental, id=service_id, is_active=True)
+        service_object = get_object_or_404(
+            CarRental,
+            id=service_id,
+            is_active=True,
+            is_available=True,
+        )
         content_type = ContentType.objects.get_for_model(CarRental)
         if not check_in or not check_out:
             return JsonResponse({'success': False, 'message': 'Car rentals require pickup and drop-off dates.'})
@@ -472,7 +544,12 @@ def concierge_book(request):
         total_keys = (check_in, check_out)
         booking_date_str = check_in
     elif service_type == 'tour':
-        service_object = get_object_or_404(Tour, id=service_id, is_active=True)
+        service_object = get_object_or_404(
+            Tour,
+            id=service_id,
+            is_active=True,
+            is_available=True,
+        )
         content_type = ContentType.objects.get_for_model(Tour)
         if not booking_date:
             return JsonResponse({'success': False, 'message': 'Tour bookings require a date.'})

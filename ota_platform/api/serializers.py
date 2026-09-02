@@ -8,12 +8,14 @@ from events.models import Event, EventCategory, EventVenue, TicketCategory, Even
 from bookings.models import Booking
 from reviews.models import Review
 from core.models import City, Country, Currency, Promotion
+from api.utils import service_is_bookable
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    country = serializers.CharField(required=False, allow_blank=True)
     
     class Meta:
         model = User
@@ -224,7 +226,37 @@ class BookingSerializer(serializers.ModelSerializer):
             'contact_name', 'contact_email', 'contact_phone', 'special_requests',
             'created_at'
         ]
-        read_only_fields = ['id', 'booking_reference', 'created_at']
+        read_only_fields = ['id', 'booking_reference', 'status', 'created_at']
+
+    def validate(self, attrs):
+        content_type = attrs.get(
+            'content_type',
+            getattr(self.instance, 'content_type', None),
+        )
+        object_id = attrs.get(
+            'object_id',
+            getattr(self.instance, 'object_id', None),
+        )
+        model_class = content_type.model_class() if content_type else None
+
+        if model_class not in {Hotel, Flight, CarRental, Tour}:
+            raise serializers.ValidationError(
+                {'content_type': 'Choose a supported travel service.'}
+            )
+
+        try:
+            service_object = model_class.objects.get(id=object_id)
+        except model_class.DoesNotExist:
+            raise serializers.ValidationError(
+                {'object_id': 'The selected travel service does not exist.'}
+            )
+
+        if not service_is_bookable(service_object):
+            raise serializers.ValidationError(
+                {'object_id': 'The selected travel service is not available.'}
+            )
+
+        return attrs
     
     def get_content_object_data(self, obj):
         if obj.content_type.model == 'hotel':

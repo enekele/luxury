@@ -34,16 +34,38 @@ def create_booking(request):
         content_type = None
         
         if service_type == 'hotel':
-            service_object = get_object_or_404(Hotel, id=service_id, is_active=True)
+            service_object = get_object_or_404(
+                Hotel,
+                id=service_id,
+                is_active=True,
+                is_available=True,
+            )
             content_type = ContentType.objects.get_for_model(Hotel)
         elif service_type == 'flight':
-            service_object = get_object_or_404(Flight, id=service_id, is_active=True)
+            service_object = get_object_or_404(
+                Flight,
+                id=service_id,
+                is_active=True,
+                status='scheduled',
+                available_seats__gt=0,
+                departure_time__gt=timezone.now(),
+            )
             content_type = ContentType.objects.get_for_model(Flight)
         elif service_type == 'car':
-            service_object = get_object_or_404(CarRental, id=service_id, is_active=True)
+            service_object = get_object_or_404(
+                CarRental,
+                id=service_id,
+                is_active=True,
+                is_available=True,
+            )
             content_type = ContentType.objects.get_for_model(CarRental)
         elif service_type == 'tour':
-            service_object = get_object_or_404(Tour, id=service_id, is_active=True)
+            service_object = get_object_or_404(
+                Tour,
+                id=service_id,
+                is_active=True,
+                is_available=True,
+            )
             content_type = ContentType.objects.get_for_model(Tour)
         else:
             messages.error(request, 'Invalid service type.')

@@ -1,0 +1,162 @@
+{% extends 'partners_dashboard/base_partners.html' %}
+
+{% block page_title %}Reservations{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reservation-hero {
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, #0b3b69 0%, #0066cc 100%);
+        color: #fff;
+        box-shadow: var(--card-shadow);
+    }
+
+    .metric-card, .reservation-card {
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .status-pending { background: #fff3cd; color: #664d03; }
+    .status-confirmed { background: #d1e7dd; color: #0f5132; }
+    .status-cancelled { background: #e2e3e5; color: #41464b; }
+    .status-completed { background: #cfe2ff; color: #084298; }
+
+    .reservation-actions form {
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="reservation-hero p-4 p-lg-5 mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <p class="text-uppercase small fw-semibold opacity-75 mb-2">Booking operations</p>
+            <h1 class="h2 mb-2">Reservations</h1>
+            <p class="mb-0 opacity-75">Review customer details and move reservations through valid operational statuses.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-light" href="{% url 'partners_dashboard:export_reservations' %}?status={{ selected_status|urlencode }}&amp;service={{ selected_service|urlencode }}&amp;q={{ search_query|urlencode }}">
+                <i class="fas fa-file-csv me-2"></i>Export CSV
+            </a>
+            <a class="btn btn-outline-light" href="{% url 'partners_dashboard:manage_properties' %}">
+                <i class="fas fa-building me-2"></i>Properties
+            </a>
+        </div>
+    </div>
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="card metric-card p-3"><span class="text-muted small">All reservations</span><strong class="h4 mb-0">{{ total_count }}</strong></div></div>
+    <div class="col-6 col-lg-3"><div class="card metric-card p-3"><span class="text-muted small">Pending</span><strong class="h4 mb-0 text-warning">{{ pending_count }}</strong></div></div>
+    <div class="col-6 col-lg-3"><div class="card metric-card p-3"><span class="text-muted small">Confirmed</span><strong class="h4 mb-0 text-success">{{ confirmed_count }}</strong></div></div>
+    <div class="col-6 col-lg-3"><div class="card metric-card p-3"><span class="text-muted small">Completed</span><strong class="h4 mb-0 text-primary">{{ completed_count }}</strong></div></div>
+</div>
+
+<section class="card reservation-card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-5">
+                <label for="reservation-search" class="form-label">Search</label>
+                <input id="reservation-search" class="form-control" type="search" name="q" value="{{ search_query }}" placeholder="Reference, customer, or email">
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <label for="reservation-status" class="form-label">Status</label>
+                <select id="reservation-status" class="form-select" name="status">
+                    <option value="">All statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <label for="reservation-service" class="form-label">Service</label>
+                <select id="reservation-service" class="form-select" name="service">
+                    <option value="">All services</option>
+                    <option value="hotel"{% if selected_service == 'hotel' %} selected{% endif %}>Hotels</option>
+                    <option value="flight"{% if selected_service == 'flight' %} selected{% endif %}>Flights</option>
+                    <option value="car"{% if selected_service == 'car' %} selected{% endif %}>Cars</option>
+                    <option value="tour"{% if selected_service == 'tour' %} selected{% endif %}>Tours</option>
+                </select>
+            </div>
+            <div class="col-md-4 col-lg-2 d-grid">
+                <button class="btn btn-primary" type="submit">Apply filters</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card reservation-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Reference</th>
+                    <th>Service</th>
+                    <th>Customer</th>
+                    <th>Dates</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                    <tr>
+                        <td class="ps-4"><strong>{{ booking.booking_reference }}</strong><br><small class="text-muted">{{ booking.created_at|date:'M d, Y' }}</small></td>
+                        <td>
+                            <strong>{{ booking.content_object|default:'Unavailable listing' }}</strong><br>
+                            <small class="text-muted text-uppercase">{{ booking.content_type.model }}</small>
+                        </td>
+                        <td>{{ booking.contact_name }}<br><small class="text-muted">{{ booking.contact_email }}</small></td>
+                        <td>
+                            {% if booking.check_in %}{{ booking.check_in|date:'M d' }}{% if booking.check_out %} – {{ booking.check_out|date:'M d, Y' }}{% endif %}
+                            {% elif booking.booking_date %}{{ booking.booking_date|date:'M d, Y' }}
+                            {% else %}<span class="text-muted">Not specified</span>{% endif %}
+                        </td>
+                        <td>{{ booking.total_amount }}<br><small class="text-muted">{{ booking.get_payment_status_display }}</small></td>
+                        <td><span class="badge status-{{ booking.status }}">{{ booking.get_status_display }}</span></td>
+                        <td class="text-end pe-4 reservation-actions">
+                            <div class="d-flex flex-wrap justify-content-end gap-1">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'partners_dashboard:reservation_detail' booking.id %}">View</a>
+                                {% if booking.status == 'pending' %}
+                                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}">
+                                        {% csrf_token %}<input type="hidden" name="action" value="confirm"><input type="hidden" name="return_to" value="reservations">
+                                        <button class="btn btn-sm btn-success" type="submit">Confirm</button>
+                                    </form>
+                                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}">
+                                        {% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="return_to" value="reservations">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
+                                    </form>
+                                {% elif booking.status == 'confirmed' %}
+                                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}">
+                                        {% csrf_token %}<input type="hidden" name="action" value="complete"><input type="hidden" name="return_to" value="reservations">
+                                        <button class="btn btn-sm btn-primary" type="submit">Complete</button>
+                                    </form>
+                                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}">
+                                        {% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="return_to" value="reservations">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5">No reservations match these filters.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <div class="btn-group">
+                {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?status={{ selected_status|urlencode }}&amp;service={{ selected_service|urlencode }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+                {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?status={{ selected_status|urlencode }}&amp;service={{ selected_service|urlencode }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

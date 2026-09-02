@@ -26,7 +26,7 @@ User = get_user_model()
 
 class HotelViewSet(viewsets.ReadOnlyModelViewSet):
     """Hotel API ViewSet"""
-    queryset = Hotel.objects.filter(is_active=True)
+    queryset = Hotel.objects.filter(is_active=True, is_available=True)
     serializer_class = HotelSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['city', 'star_rating', 'is_featured', 'is_available']
@@ -88,7 +88,12 @@ class HotelViewSet(viewsets.ReadOnlyModelViewSet):
 
 class FlightViewSet(viewsets.ReadOnlyModelViewSet):
     """Flight API ViewSet"""
-    queryset = Flight.objects.filter(is_active=True)
+    queryset = Flight.objects.filter(
+        is_active=True,
+        status='scheduled',
+        available_seats__gt=0,
+        departure_time__gt=timezone.now(),
+    )
     serializer_class = FlightSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['airline', 'origin', 'destination', 'status', 'is_direct']
@@ -414,32 +419,73 @@ class SearchViewSet(viewsets.ViewSet):
         }
         
         if query or destination:
-            search_filter = Q()
+            hotel_filter = Q()
+            flight_filter = Q()
+            car_filter = Q()
+            tour_filter = Q()
+
             if query:
-                search_filter |= Q(name__icontains=query) | Q(description__icontains=query)
+                hotel_filter &= Q(name__icontains=query) | Q(description__icontains=query)
+                flight_filter &= (
+                    Q(flight_number__icontains=query)
+                    | Q(airline__name__icontains=query)
+                    | Q(origin__code__icontains=query)
+                    | Q(destination__code__icontains=query)
+                )
+                car_filter &= (
+                    Q(car_model__brand__name__icontains=query)
+                    | Q(car_model__name__icontains=query)
+                    | Q(company__name__icontains=query)
+                    | Q(pickup_location__icontains=query)
+                )
+                tour_filter &= (
+                    Q(name__icontains=query)
+                    | Q(description__icontains=query)
+                    | Q(highlights__icontains=query)
+                )
             if destination:
-                search_filter |= Q(city__name__icontains=destination)
+                hotel_filter &= Q(city__name__icontains=destination)
+                flight_filter &= (
+                    Q(origin__city__name__icontains=destination)
+                    | Q(destination__city__name__icontains=destination)
+                    | Q(origin__code__icontains=destination)
+                    | Q(destination__code__icontains=destination)
+                )
+                car_filter &= Q(city__name__icontains=destination)
+                tour_filter &= Q(destination__name__icontains=destination)
             
             if service_type in ['all', 'hotel']:
-                hotels = Hotel.objects.filter(search_filter, is_active=True)[:10]
+                hotels = Hotel.objects.filter(
+                    hotel_filter,
+                    is_active=True,
+                    is_available=True,
+                )[:10]
                 results['hotels'] = HotelSerializer(hotels, many=True).data
             
             if service_type in ['all', 'flight']:
-                flight_filter = Q()
-                if destination:
-                    flight_filter = (
-                        Q(origin__city__name__icontains=destination) | 
-                        Q(destination__city__name__icontains=destination)
-                    )
-                flights = Flight.objects.filter(flight_filter, is_active=True)[:10]
+                flights = Flight.objects.filter(
+                    flight_filter,
+                    is_active=True,
+                    status='scheduled',
+                    available_seats__gt=0,
+                    departure_time__gt=timezone.now(),
+                )[:10]
                 results['flights'] = FlightSerializer(flights, many=True).data
             
             if service_type in ['all', 'car']:
-                cars = CarRental.objects.filter(search_filter, is_active=True)[:10]
+                cars = CarRental.objects.filter(
+                    car_filter,
+                    is_active=True,
+                    is_available=True,
+                )[:10]
                 results['cars'] = CarRentalSerializer(cars, many=True).data
             
             if service_type in ['all', 'tour']:
-                tours = Tour.objects.filter(search_filter, is_active=True)[:10]
+                tours = Tour.objects.filter(
+                    tour_filter,
+                    is_active=True,
+                    is_available=True,
+                )[:10]
                 results['tours'] = TourSerializer(tours, many=True).data
         
         return Response(results)

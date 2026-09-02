@@ -1,10 +1,17 @@
 from django.shortcuts import render
+from django.utils import timezone
+
 from .models import Flight
 
 
 def flight_list(request):
     """Flight listing view"""
-    flights = Flight.objects.filter(is_active=True).order_by('departure_time')
+    flights = Flight.objects.filter(
+        is_active=True,
+        status='scheduled',
+        available_seats__gt=0,
+        departure_time__gt=timezone.now(),
+    ).order_by('departure_time')
     
     context = {
         'flights': flights,

@@ -2,102 +2,175 @@
 
 {% block page_title %}Manage Properties{% endblock %}
 
+{% block extra_css %}
+<style>
+    .inventory-hero {
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, #0b3b69 0%, #0066cc 100%);
+        color: #fff;
+        box-shadow: var(--card-shadow);
+    }
+
+    .inventory-card {
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .inventory-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.1rem 1.25rem;
+    }
+
+    .property-name {
+        font-weight: 650;
+        color: var(--text-primary);
+    }
+
+    .property-meta {
+        color: var(--text-muted);
+        font-size: .85rem;
+    }
+
+    .property-actions {
+        min-width: 17rem;
+    }
+
+    @media (max-width: 767px) {
+        .property-actions {
+            min-width: 13rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+<section class="inventory-hero p-4 p-lg-5 mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
-            <h2 class="h4 mb-1">Manage Properties</h2>
-            <p class="text-muted mb-0">Manage your hotel, flight, car, and tour inventory from one place.</p>
+            <p class="text-uppercase small fw-semibold opacity-75 mb-2">Partner operations</p>
+            <h1 class="h2 mb-2">Property &amp; Inventory Manager</h1>
+            <p class="mb-0 opacity-75">Create listings, edit details, preview checkout, and control whether inventory is available for new reservations.</p>
         </div>
-        <a href="{% url 'partners_dashboard:partners_dashboard' %}" class="btn btn-outline-secondary">Back to dashboard</a>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'partners_dashboard:manage_reservations' %}" class="btn btn-light">
+                <i class="fas fa-calendar-check me-2"></i>Reservations
+            </a>
+            <a href="{% url 'partners_dashboard:manage_locations' %}" class="btn btn-outline-light">
+                <i class="fas fa-map-location-dot me-2"></i>Countries &amp; Cities
+            </a>
+        </div>
     </div>
+</section>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="row g-4">
-        {% for group in properties %}
-        <div class="col-12 col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-light border-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ group.label }}s</h5>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary rounded-pill">{{ group.items.count }}</span>
-                            <a href="{% url group.create_url %}" class="btn btn-sm btn-outline-primary">Add</a>
-                        </div>
+<div class="row g-4">
+    {% for group in properties %}
+        <div class="col-12">
+            <section class="card inventory-card">
+                <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <h2 class="h5 mb-1">{{ group.label }}s</h2>
+                        <span class="text-muted small">{{ group.available_count }} available of {{ group.items.count }}</span>
                     </div>
+                    <a href="{% url group.create_url %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add {{ group.label|lower }}
+                    </a>
                 </div>
-                <div class="card-body p-0">
-                    {% if group.items %}
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Status</th>
-                                        <th class="text-end">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for property in group.items %}
-                                    <tr>
-                                        <td>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Listing</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Management</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for property in group.items %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="property-name">
                                             {% if group.type == 'Hotel' %}
                                                 {{ property.name }}
                                             {% elif group.type == 'Flight' %}
-                                                {{ property.flight_number }}
+                                                {{ property.airline.code }}{{ property.flight_number }}
                                             {% elif group.type == 'Car' %}
                                                 {{ property.car_model }}
                                             {% else %}
                                                 {{ property.name }}
                                             {% endif %}
-                                        </td>
-                                        <td>
+                                        </div>
+                                        <div class="property-meta">
                                             {% if group.type == 'Hotel' %}
-                                                {% if property.is_available %}<span class="badge bg-success">Available</span>{% else %}<span class="badge bg-secondary">Offline</span>{% endif %}
+                                                {{ property.city.name }} · {{ property.price_per_night }} per night
                                             {% elif group.type == 'Flight' %}
-                                                <span class="badge bg-info text-dark">{{ property.status|title }}</span>
+                                                {{ property.origin.code }} → {{ property.destination.code }} · {{ property.available_seats }} seats
                                             {% elif group.type == 'Car' %}
-                                                {% if property.is_available %}<span class="badge bg-success">Available</span>{% else %}<span class="badge bg-secondary">Offline</span>{% endif %}
+                                                {{ property.city.name }} · {{ property.price_per_day }} per day
                                             {% else %}
-                                                {% if property.is_available %}<span class="badge bg-success">Available</span>{% else %}<span class="badge bg-secondary">Offline</span>{% endif %}
+                                                {{ property.destination.name }} · {{ property.price_per_person }} per person
                                             {% endif %}
-                                        </td>
-                                        <td class="text-end">
-                                            <div class="d-flex justify-content-end gap-2">
-                                                <a href="{% url group.link_name property.id %}" class="btn btn-sm btn-primary">Update</a>
-                                                {% if group.type == 'Hotel' %}
-                                                    <a href="{% url 'partners_dashboard:checkout_hotel_property' property.id %}" class="btn btn-sm btn-outline-secondary">Checkout</a>
-                                                {% elif group.type == 'Flight' %}
-                                                    <a href="{% url 'partners_dashboard:checkout_flight_property' property.id %}" class="btn btn-sm btn-outline-secondary">Checkout</a>
-                                                {% elif group.type == 'Car' %}
-                                                    <a href="{% url 'partners_dashboard:checkout_car_property' property.id %}" class="btn btn-sm btn-outline-secondary">Checkout</a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if group.type == 'Flight' %}
+                                            <span class="badge {% if property.is_available %}bg-success{% elif property.status == 'cancelled' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                                                {{ property.status|title }}
+                                            </span>
+                                        {% elif property.is_available %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Offline</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4 property-actions">
+                                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                                            {% if group.type == 'Flight' %}
+                                                {% if property.status == 'scheduled' %}
+                                                    <form method="post" action="{% url 'partners_dashboard:set_property_availability' group.slug property.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="available" value="false">
+                                                        <button class="btn btn-sm btn-outline-danger" type="submit">Close sales</button>
+                                                    </form>
+                                                {% elif property.status == 'cancelled' and property.available_seats > 0 %}
+                                                    <form method="post" action="{% url 'partners_dashboard:set_property_availability' group.slug property.id %}">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="available" value="true">
+                                                        <button class="btn btn-sm btn-outline-success" type="submit">Reopen sales</button>
+                                                    </form>
+                                                {% elif property.status == 'cancelled' %}
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" disabled>Add seats to reopen</button>
                                                 {% else %}
-                                                    <a href="{% url 'partners_dashboard:checkout_tour_property' property.id %}" class="btn btn-sm btn-outline-secondary">Checkout</a>
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" disabled>Managed by flight status</button>
                                                 {% endif %}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="p-4 text-center text-muted">
-                            No {{ group.label|lower }}s found.
-                        </div>
-                    {% endif %}
+                                            {% else %}
+                                                <form method="post" action="{% url 'partners_dashboard:set_property_availability' group.slug property.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="available" value="{% if property.is_available %}false{% else %}true{% endif %}">
+                                                    <button class="btn btn-sm {% if property.is_available %}btn-outline-danger{% else %}btn-outline-success{% endif %}" type="submit">
+                                                        {% if property.is_available %}Take offline{% else %}Put online{% endif %}
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+
+                                            <a href="{% url group.link_name property.id %}" class="btn btn-sm btn-primary">Edit</a>
+                                            <a href="{% url group.checkout_url property.id %}" class="btn btn-sm btn-outline-secondary">Preview</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-5">No {{ group.label|lower }}s have been added.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            </section>
         </div>
-        {% endfor %}
-    </div>
+    {% endfor %}
 </div>
 {% endblock %}

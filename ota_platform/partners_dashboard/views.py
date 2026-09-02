@@ -1,15 +1,23 @@
+import csv
+import json
 from decimal import Decimal
+from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import redirect, render, get_object_or_404
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
-from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.db.models import Count, Q
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    JsonResponse,
+)
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from datetime import timedelta, datetime
-import json
+from django.views.decorators.http import require_POST
 
 from djmoney.money import Money
 
@@ -24,6 +32,136 @@ from partners_dashboard.decorators import partner_required
 from partners_dashboard.forms import CityForm, CountryForm
 
 
+BOOKING_STATUS_ACTIONS = {
+    'pending': {
+        'confirm': 'confirmed',
+        'cancel': 'cancelled',
+    },
+    'confirmed': {
+        'complete': 'completed',
+        'cancel': 'cancelled',
+    },
+    'cancelled': {},
+    'completed': {},
+}
+
+
+def partner_inventory(request_user):
+    """Return the four inventory querysets owned by a partner user."""
+    return {
+        'hotels': Hotel.objects.filter(
+            partner__partner_profile__user=request_user
+        ),
+        'flights': Flight.objects.filter(partner_profile__user=request_user),
+        'cars': CarRental.objects.filter(partner_profile__user=request_user),
+        'tours': Tour.objects.filter(partner_profile__user=request_user),
+    }
+
+
+def partner_bookings(request_user):
+    """Return bookings whose generic service object belongs to the partner."""
+    inventory = partner_inventory(request_user)
+    content_types = ContentType.objects.get_for_models(
+        Hotel,
+        Flight,
+        CarRental,
+        Tour,
+    )
+
+    owned_services = (
+        Q(
+            content_type=content_types[Hotel],
+            object_id__in=inventory['hotels'].values('id'),
+        )
+        | Q(
+            content_type=content_types[Flight],
+            object_id__in=inventory['flights'].values('id'),
+        )
+        | Q(
+            content_type=content_types[CarRental],
+            object_id__in=inventory['cars'].values('id'),
+        )
+        | Q(
+            content_type=content_types[Tour],
+            object_id__in=inventory['tours'].values('id'),
+        )
+    )
+
+    return Booking.objects.filter(owned_services).select_related(
+        'user',
+        'content_type',
+    )
+
+
+def owned_property(request_user, service_type, property_id):
+    """Resolve one partner-owned service without exposing another partner's IDs."""
+    inventory = partner_inventory(request_user)
+    querysets = {
+        'hotel': inventory['hotels'],
+        'flight': inventory['flights'],
+        'car': inventory['cars'],
+        'tour': inventory['tours'],
+    }
+    queryset = querysets.get(service_type)
+    if queryset is None:
+        raise Http404('Unsupported property type.')
+    return get_object_or_404(queryset, id=property_id)
+
+
+def apply_booking_filters(queryset, request):
+    status = request.GET.get('status', '').strip()
+    service = request.GET.get('service', '').strip()
+    search_query = request.GET.get('q', '').strip()
+
+    valid_statuses = {choice[0] for choice in Booking._meta.get_field('status').choices}
+    service_models = {
+        'hotel': 'hotel',
+        'flight': 'flight',
+        'car': 'carrental',
+        'tour': 'tour',
+    }
+
+    if status in valid_statuses:
+        queryset = queryset.filter(status=status)
+    else:
+        status = ''
+
+    if service in service_models:
+        queryset = queryset.filter(content_type__model=service_models[service])
+    else:
+        service = ''
+
+    if search_query:
+        queryset = queryset.filter(
+            Q(booking_reference__icontains=search_query)
+            | Q(contact_name__icontains=search_query)
+            | Q(contact_email__icontains=search_query)
+            | Q(user__first_name__icontains=search_query)
+            | Q(user__last_name__icontains=search_query)
+            | Q(user__email__icontains=search_query)
+        )
+
+    return queryset, status, service, search_query
+
+
+def change_booking_status(booking, action):
+    target_status = BOOKING_STATUS_ACTIONS.get(booking.status, {}).get(action)
+    if target_status is None:
+        action_labels = {
+            'confirm': 'confirmed',
+            'cancel': 'cancelled',
+            'complete': 'completed',
+        }
+        action_label = action_labels.get(action, 'updated with that action')
+        return False, (
+            f'{booking.get_status_display()} reservations cannot be {action_label}.'
+        )
+
+    booking.status = target_status
+    booking.save(update_fields=['status', 'updated_at'])
+    return True, f'Reservation {booking.booking_reference} is now {booking.get_status_display().lower()}.'
+
+
 @partner_required
 def partners_dashboard(request):
     """
@@ -35,28 +173,12 @@ def partners_dashboard(request):
     except AffiliateProfile.DoesNotExist:
         affiliate_profile = None
 
-    # Determine hotels and other services linked to the current user's Partner account
-    hotels = Hotel.objects.filter(partner__partner_profile__user=request.user).order_by('-id')
-    flights = Flight.objects.filter(partner_profile__user=request.user).order_by('-id')
-    cars = CarRental.objects.filter(partner_profile__user=request.user).order_by('-id')
-    tours = Tour.objects.filter(partner_profile__user=request.user).order_by('-id')
-
-    hotel_ct = ContentType.objects.get_for_model(Hotel)
-    flight_ct = ContentType.objects.get_for_model(Flight)
-    car_ct = ContentType.objects.get_for_model(CarRental)
-    tour_ct = ContentType.objects.get_for_model(Tour)
-
-    hotel_ids = list(hotels.values_list('id', flat=True))
-    flight_ids = list(flights.values_list('id', flat=True))
-    car_ids = list(cars.values_list('id', flat=True))
-    tour_ids = list(tours.values_list('id', flat=True))
-
-    bookings_qs = Booking.objects.filter(
-        Q(content_type=hotel_ct, object_id__in=hotel_ids) |
-        Q(content_type=flight_ct, object_id__in=flight_ids) |
-        Q(content_type=car_ct, object_id__in=car_ids) |
-        Q(content_type=tour_ct, object_id__in=tour_ids)
-    )
+    inventory = partner_inventory(request.user)
+    hotels = inventory['hotels'].order_by('-id')
+    flights = inventory['flights'].order_by('-id')
+    cars = inventory['cars'].order_by('-id')
+    tours = inventory['tours'].order_by('-id')
+    bookings_qs = partner_bookings(request.user)
 
     bookings_count = bookings_qs.count()
     bookings = bookings_qs.order_by('-created_at')[:50]
@@ -79,67 +201,67 @@ def partners_dashboard(request):
     bookings_dates = list(daily_bookings.keys())
     bookings_counts = list(daily_bookings.values())
 
-    booking_amounts = [booking.total_amount.amount for booking in bookings_30days if booking.total_amount]
-    total_revenue = sum(booking_amounts)
+    revenue_bookings = bookings_30days.filter(status__in=['confirmed', 'completed'])
+    revenue_by_currency = {}
+    for booking in revenue_bookings:
+        if not booking.total_amount:
+            continue
+        currency = str(booking.total_amount.currency)
+        revenue_by_currency[currency] = (
+            revenue_by_currency.get(currency, Decimal('0'))
+            + booking.total_amount.amount
+        )
+
+    revenue_str = ' · '.join(
+        f'{currency} {amount:,.2f}'
+        for currency, amount in sorted(revenue_by_currency.items())
+    ) or 'USD 0.00'
     confirmed_bookings = bookings_qs.filter(status='confirmed').count()
     pending_bookings = bookings_qs.filter(status='pending').count()
     cancelled_bookings = bookings_qs.filter(status='cancelled').count()
-    active_hotels = hotels.filter(is_available=True).count()
-
-    room_capacity = sum(
-        room_type.total_rooms
-        for hotel in hotels
-        for room_type in hotel.room_types.all()
+    completed_bookings = bookings_qs.filter(status='completed').count()
+    active_properties = (
+        hotels.filter(is_available=True).count()
+        + flights.filter(status='scheduled', available_seats__gt=0).count()
+        + cars.filter(is_available=True).count()
+        + tours.filter(is_available=True).count()
     )
-    room_capacity = max(room_capacity, 1)
-
-    occupancy_rate = round(
-        min(100, (bookings_30days.count() / room_capacity) * 100),
-        1
-    ) if bookings_30days.count() else 0
-    adr = round(total_revenue / confirmed_bookings, 2) if confirmed_bookings else 0
-    revpar = round(total_revenue / room_capacity, 2) if room_capacity else 0
-
-    revenue_str = f"${total_revenue:,.2f}"
-    occupancy_rate_str = f"{occupancy_rate:.1f}%"
-    adr_str = f"${adr:,.2f}"
-    revpar_str = f"${revpar:,.2f}"
 
     module_sections = [
         {
             'title': 'Core Management Modules',
             'icon': 'fas fa-cubes',
             'items': [
-                'Real-time room allocation and seat mapping',
-                'Fleet tracking and bulk availability updates',
-                'Multi-currency pricing and tax configuration'
+                'Create and edit hotels, flights, cars, and tours',
+                'Open or close inventory for new reservations',
+                'Maintain country and city destination data'
             ],
         },
         {
             'title': 'Booking & Reservations',
             'icon': 'fas fa-calendar-check',
             'items': [
-                'Centralized booking feed and live confirmation statuses',
-                'Cancellation processing and modification logs',
-                'Instant alerts for overbooking risks'
+                'Review partner-owned reservations in one queue',
+                'Confirm, cancel, or complete valid reservations',
+                'View customer contact details and special requests'
             ],
         },
         {
             'title': 'Financial & Analytics',
             'icon': 'fas fa-chart-pie',
             'items': [
-                'Automated commission splitting and payout logs',
-                'Occupancy, ADR, RevPAR and conversion insights',
-                'Competitive market and forecasting benchmarks'
+                'Track confirmed revenue and booking volume',
+                'Monitor pending and cancelled reservations',
+                'Export reservation records as CSV'
             ],
         },
         {
             'title': 'Engagement & Support',
             'icon': 'fas fa-headset',
             'items': [
-                'Image uploads, amenity checklists and multilingual editors',
-                'Guest feedback streams and sentiment insights',
-                'Marketing campaigns, loyalty tools and helpdesk tickets'
+                'Preview partner listings before customer checkout',
+                'See inventory and booking status at a glance',
+                'Keep inactive partner accounts out of operations'
             ],
         },
     ]
@@ -156,17 +278,15 @@ def partners_dashboard(request):
         'flight_count': flights.count(),
         'car_count': cars.count(),
         'tour_count': tours.count(),
-        'active_hotels': active_hotels,
+        'active_properties': active_properties,
         'confirmed_bookings': confirmed_bookings,
         'pending_bookings': pending_bookings,
         'cancelled_bookings': cancelled_bookings,
+        'completed_bookings': completed_bookings,
+        'bookings_30days_count': bookings_30days.count(),
         'bookings_dates': json.dumps(bookings_dates),
         'bookings_counts': json.dumps(bookings_counts),
         'revenue': revenue_str,
-        'occupancy_rate': occupancy_rate_str,
-        'adr': adr_str,
-        'revpar': revpar_str,
-        'pending_issues': pending_bookings,
         'module_sections': module_sections,
     }
     return render(request, "partners_dashboard/dashboard.html", context)
@@ -179,16 +299,55 @@ def get_partner_profile_for_user(user):
 @partner_required
 def manage_properties(request):
     """List the partner's managed properties and allow quick updates."""
-    hotels = Hotel.objects.filter(partner__owner=request.user).order_by('-updated_at')
-    flights = Flight.objects.filter(partner_profile__user=request.user).order_by('-updated_at')
-    cars = CarRental.objects.filter(partner_profile__user=request.user).order_by('-updated_at')
-    tours = Tour.objects.filter(partner_profile__user=request.user).order_by('-updated_at')
+    inventory = partner_inventory(request.user)
+    hotels = inventory['hotels'].order_by('-updated_at')
+    flights = inventory['flights'].order_by('-updated_at')
+    cars = inventory['cars'].order_by('-updated_at')
+    tours = inventory['tours'].order_by('-updated_at')
 
     properties = [
-        {'type': 'Hotel', 'label': 'Hotel', 'items': hotels, 'link_name': 'partners_dashboard:update_hotel_property', 'create_url': 'partners_dashboard:create_hotel_property'},
-        {'type': 'Flight', 'label': 'Flight', 'items': flights, 'link_name': 'partners_dashboard:update_flight_property', 'create_url': 'partners_dashboard:create_flight_property'},
-        {'type': 'Car', 'label': 'Car rental', 'items': cars, 'link_name': 'partners_dashboard:update_car_property', 'create_url': 'partners_dashboard:create_car_property'},
-        {'type': 'Tour', 'label': 'Tour', 'items': tours, 'link_name': 'partners_dashboard:update_tour_property', 'create_url': 'partners_dashboard:create_tour_property'},
+        {
+            'type': 'Hotel',
+            'slug': 'hotel',
+            'label': 'Hotel',
+            'items': hotels,
+            'available_count': hotels.filter(is_available=True).count(),
+            'link_name': 'partners_dashboard:update_hotel_property',
+            'create_url': 'partners_dashboard:create_hotel_property',
+            'checkout_url': 'partners_dashboard:checkout_hotel_property',
+        },
+        {
+            'type': 'Flight',
+            'slug': 'flight',
+            'label': 'Flight',
+            'items': flights,
+            'available_count': flights.filter(
+                status='scheduled', available_seats__gt=0
+            ).count(),
+            'link_name': 'partners_dashboard:update_flight_property',
+            'create_url': 'partners_dashboard:create_flight_property',
+            'checkout_url': 'partners_dashboard:checkout_flight_property',
+        },
+        {
+            'type': 'Car',
+            'slug': 'car',
+            'label': 'Car rental',
+            'items': cars,
+            'available_count': cars.filter(is_available=True).count(),
+            'link_name': 'partners_dashboard:update_car_property',
+            'create_url': 'partners_dashboard:create_car_property',
+            'checkout_url': 'partners_dashboard:checkout_car_property',
+        },
+        {
+            'type': 'Tour',
+            'slug': 'tour',
+            'label': 'Tour',
+            'items': tours,
+            'available_count': tours.filter(is_available=True).count(),
+            'link_name': 'partners_dashboard:update_tour_property',
+            'create_url': 'partners_dashboard:create_tour_property',
+            'checkout_url': 'partners_dashboard:checkout_tour_property',
+        },
     ]
 
     context = {
@@ -200,6 +359,124 @@ def manage_properties(request):
         'property_count': sum(item['items'].count() for item in properties),
     }
     return render(request, 'partners_dashboard/manage_properties.html', context)
+
+
+@partner_required
+def manage_reservations(request):
+    """Search, filter, and manage reservations for the partner's inventory."""
+    base_queryset = partner_bookings(request.user)
+    filtered_queryset, status, service, search_query = apply_booking_filters(
+        base_queryset,
+        request,
+    )
+    paginator = Paginator(filtered_queryset.order_by('-created_at'), 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'bookings': page_obj,
+        'page_obj': page_obj,
+        'selected_status': status,
+        'selected_service': service,
+        'search_query': search_query,
+        'status_choices': Booking._meta.get_field('status').choices,
+        'total_count': base_queryset.count(),
+        'pending_count': base_queryset.filter(status='pending').count(),
+        'confirmed_count': base_queryset.filter(status='confirmed').count(),
+        'completed_count': base_queryset.filter(status='completed').count(),
+    }
+    return render(request, 'partners_dashboard/manage_reservations.html', context)
+
+
+@partner_required
+def reservation_detail(request, booking_id):
+    booking = get_object_or_404(partner_bookings(request.user), id=booking_id)
+    allowed_actions = BOOKING_STATUS_ACTIONS.get(booking.status, {})
+    return render(
+        request,
+        'partners_dashboard/reservation_detail.html',
+        {
+            'booking': booking,
+            'allowed_actions': allowed_actions,
+        },
+    )
+
+
+@partner_required
+@require_POST
+def update_reservation_status(request, booking_id):
+    action = request.POST.get('action', '').strip()
+
+    with transaction.atomic():
+        booking = get_object_or_404(
+            partner_bookings(request.user).select_for_update(),
+            id=booking_id,
+        )
+        changed, message = change_booking_status(booking, action)
+
+    if changed:
+        messages.success(request, message)
+    else:
+        messages.error(request, message)
+
+    if request.POST.get('return_to') == 'reservations':
+        return redirect('partners_dashboard:manage_reservations')
+    if request.POST.get('return_to') == 'dashboard':
+        return redirect('partners_dashboard:partners_dashboard')
+    return redirect('partners_dashboard:reservation_detail', booking_id=booking.id)
+
+
+@partner_required
+def export_reservations(request):
+    queryset, _, _, _ = apply_booking_filters(
+        partner_bookings(request.user).order_by('-created_at'),
+        request,
+    )
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = (
+        'attachment; filename="partner-reservations.csv"'
+    )
+
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            'Reference',
+            'Service type',
+            'Service',
+            'Customer',
+            'Customer email',
+            'Booking date',
+            'Check in',
+            'Check out',
+            'Quantity',
+            'Amount',
+            'Currency',
+            'Reservation status',
+            'Payment status',
+            'Created at',
+        ]
+    )
+    for booking in queryset:
+        service = booking.content_object
+        writer.writerow(
+            [
+                booking.booking_reference,
+                booking.content_type.model,
+                str(service) if service else '',
+                booking.contact_name,
+                booking.contact_email,
+                booking.booking_date.isoformat() if booking.booking_date else '',
+                booking.check_in.isoformat() if booking.check_in else '',
+                booking.check_out.isoformat() if booking.check_out else '',
+                booking.quantity,
+                booking.total_amount.amount,
+                booking.total_amount.currency,
+                booking.status,
+                booking.payment_status,
+                booking.created_at.isoformat(),
+            ]
+        )
+
+    return response
 
 
 @partner_required
@@ -598,52 +875,111 @@ def checkout_tour_property(request, tour_id):
 
 @partner_required
 @require_POST
+def set_property_availability(request, service_type, property_id):
+    desired_value = request.POST.get('available', '').lower()
+    if desired_value not in {'true', 'false'}:
+        return HttpResponseBadRequest('Availability must be true or false.')
+
+    desired_availability = desired_value == 'true'
+    property_object = owned_property(request.user, service_type, property_id)
+    changed = False
+    error_message = ''
+
+    if isinstance(property_object, Flight):
+        if property_object.status not in {'scheduled', 'cancelled'}:
+            error_message = (
+                f'{property_object.get_status_display()} flights cannot be opened or closed.'
+            )
+        elif desired_availability and property_object.available_seats <= 0:
+            error_message = 'Add available seats before reopening this flight.'
+        else:
+            target_status = 'scheduled' if desired_availability else 'cancelled'
+            if property_object.status != target_status:
+                property_object.status = target_status
+                property_object.save(update_fields=['status', 'updated_at'])
+                changed = True
+    else:
+        if property_object.is_available != desired_availability:
+            property_object.is_available = desired_availability
+            property_object.save(update_fields=['is_available', 'updated_at'])
+            changed = True
+
+    if error_message:
+        messages.error(request, error_message)
+    elif changed:
+        state = 'available' if desired_availability else 'offline'
+        messages.success(request, f'{property_object} is now {state}.')
+    else:
+        messages.info(request, 'Availability was already up to date.')
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if error_message:
+            return JsonResponse(
+                {'status': 'error', 'message': error_message},
+                status=400,
+            )
+        return JsonResponse(
+            {
+                'status': 'ok',
+                'is_available': desired_availability,
+                'property_id': property_object.id,
+                'service_type': service_type,
+            }
+        )
+
+    if request.POST.get('return_to') == 'dashboard':
+        return redirect('partners_dashboard:partners_dashboard')
+    return redirect('partners_dashboard:manage_properties')
+
+
+@partner_required
+@require_POST
 def toggle_availability(request):
+    """Compatibility endpoint for the earlier hotel-only dashboard action."""
     hotel_id = request.POST.get('hotel_id')
     if not hotel_id:
-        return HttpResponseBadRequest("Missing hotel_id")
+        return HttpResponseBadRequest('Missing hotel_id')
 
-    hotel = get_object_or_404(Hotel, id=hotel_id)
-
-    # authorization: only owner on the HotelPartner can toggle
-    partner = getattr(hotel, 'partner', None)
-    if not (partner and getattr(partner, 'owner', None) == request.user):
-        return HttpResponseForbidden("Not allowed")
-
-    hotel.is_available = not bool(hotel.is_available)
-    hotel.save(update_fields=['is_available'])
-    return JsonResponse({
-        'status': 'ok',
-        'is_available': hotel.is_available,
-        'hotel_id': hotel.id,
-    })
+    hotel = owned_property(request.user, 'hotel', hotel_id)
+    hotel.is_available = not hotel.is_available
+    hotel.save(update_fields=['is_available', 'updated_at'])
+    return JsonResponse(
+        {
+            'status': 'ok',
+            'is_available': hotel.is_available,
+            'is_active': hotel.is_available,
+            'hotel_id': hotel.id,
+        }
+    )
 
 
 @partner_required
 @require_POST
 def confirm_reservation(request):
+    """Compatibility endpoint for reservation actions from older clients."""
     booking_id = request.POST.get('booking_id')
     action = request.POST.get('action')
-    if not booking_id or action not in ('confirm', 'cancel'):
-        return HttpResponseBadRequest("Invalid params")
-
-    booking = get_object_or_404(Booking, id=booking_id)
-
-    hotel = getattr(booking, 'hotel', None)
-    partner = getattr(hotel, 'partner', None)
-    if not (hotel and partner and getattr(partner, 'owner', None) == request.user):
-        return HttpResponseForbidden("Not allowed")
+    if not booking_id or action not in ('confirm', 'cancel', 'complete'):
+        return HttpResponseBadRequest('Invalid params')
 
     with transaction.atomic():
-        if hasattr(booking, 'status'):
-            booking.status = 'confirmed' if action == 'confirm' else 'cancelled'
-        elif hasattr(booking, 'confirmed'):
-            booking.confirmed = (action == 'confirm')
-        else:
-            try:
-                booking.gateway_response = booking.gateway_response or {}
-                booking.gateway_response['partner_action'] = action
-            except Exception:
-                pass
-        booking.save()
-    return JsonResponse({'status': 'ok', 'booking_id': booking.id, 'action': action})
+        booking = get_object_or_404(
+            partner_bookings(request.user).select_for_update(),
+            id=booking_id,
+        )
+        changed, message = change_booking_status(booking, action)
+
+    if not changed:
+        return JsonResponse(
+            {'status': 'error', 'message': message},
+            status=409,
+        )
+    return JsonResponse(
+        {
+            'status': 'ok',
+            'booking_id': booking.id,
+            'action': action,
+            'status_value': booking.status,
+            'message': message,
+        }
+    )
