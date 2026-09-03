@@ -20,9 +20,15 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(PaymentTransaction)
 class PaymentTransactionAdmin(admin.ModelAdmin):
-    list_display = ("reference", "email", "amount", "currency", "status", "paid", "created_at")
+    list_display = ("reference", "booking", "email", "amount", "currency", "status", "paid", "created_at")
     list_filter = ("status", "paid", "currency", "created_at")
-    search_fields = ("reference", "email", "service_type", "service_id")
+    search_fields = (
+        "reference",
+        "booking__booking_reference",
+        "email",
+        "service_type",
+        "service_id",
+    )
     readonly_fields = ("created_at", "updated_at", "gateway_response")
     ordering = ("-created_at",)
     actions = ("action_mark_success", "action_mark_failed")

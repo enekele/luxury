@@ -66,10 +66,10 @@ a new Blueprint, select this repository, and apply it. The Blueprint provisions
 the web service and PostgreSQL database, generates a Django secret key, runs
 migrations, collects static assets, and configures the health check.
 
-Add credentials for optional integrations in the Render service environment:
+Add credentials for integrations in the Render service environment:
 
 - `STRIPE_PUBLIC_KEY` and `STRIPE_SECRET_KEY`
-- `PAYSTACK_PUBLIC_KEY` and `PAYSTACK_SECRET_KEY`
+- `PAYSTACK_PUBLIC_KEY` and `PAYSTACK_SECRET_KEY` (required for hotel checkout)
 - `OPENAI_API_KEY` and `OPENAI_MODEL`
 - `AMADEUS_API_KEY` and `AMADEUS_API_SECRET`
 - SMTP settings if production email is required
@@ -77,6 +77,14 @@ Add credentials for optional integrations in the Render service environment:
 Email verification defaults to `none` so new users are not blocked when SMTP is
 unconfigured. After adding working SMTP credentials, set
 `ACCOUNT_EMAIL_VERIFICATION=mandatory` to require confirmation emails.
+
+Hotel bookings use Paystack's hosted checkout. Add
+`https://<your-domain>/payments/webhook/` as the webhook URL in the Paystack
+dashboard so a successful payment still secures the reservation when the
+customer does not return through the browser callback. The application verifies
+the webhook signature and the transaction reference, amount, currency, booking,
+and payer before marking the reservation paid. Unpaid room inventory is held for
+15 minutes by default; customize this with `BOOKING_PAYMENT_HOLD_MINUTES`.
 
 Never commit secrets or production databases. Use environment variables in the
 hosting dashboard.

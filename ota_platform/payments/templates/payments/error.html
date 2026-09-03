@@ -9,9 +9,15 @@
             <div class="alert alert-danger">
                 <h4 class="alert-heading">Payment Error</h4>
                 <p>{{ message }}</p>
+                {% if booking %}<p class="mb-0"><strong>Booking reference:</strong> {{ booking.booking_reference }}</p>{% endif %}
             </div>
             <div class="d-flex gap-2">
-                <a href="{% url 'subscription_packages' %}" class="btn btn-primary">Return to subscriptions</a>
+                {% if booking %}
+                    <a href="{% url 'user_bookings' %}" class="btn btn-primary">View My Bookings</a>
+                    <a href="{% url 'contact' %}" class="btn btn-outline-danger">Contact Support</a>
+                {% else %}
+                    <a href="{% url 'subscription_packages' %}" class="btn btn-primary">Return to subscriptions</a>
+                {% endif %}
                 <a href="{% url 'home' %}" class="btn btn-outline-secondary">Back to home</a>
             </div>
         </div>

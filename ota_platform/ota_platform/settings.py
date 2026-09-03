@@ -286,6 +286,9 @@ STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
 PAYSTACK_BASE_URL = os.getenv('PAYSTACK_BASE_URL', default='https://api.paystack.co')
+BOOKING_PAYMENT_HOLD_MINUTES = int(
+    os.getenv('BOOKING_PAYMENT_HOLD_MINUTES', '15')
+)
 
 # OpenAI keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", default="")

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.db.models import Q
 from django.utils.html import format_html
 from hotels.inventory import release_booking_room_inventory
 from .models import Booking
@@ -8,8 +9,8 @@ from .models import Booking
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('booking_reference', 'user', 'content_object_display', 'room_type', 'booking_date', 'total_amount', 'status', 'created_at')
-    list_filter = ('status', 'content_type', 'booking_date', 'created_at')
+    list_display = ('booking_reference', 'user', 'content_object_display', 'room_type', 'booking_date', 'total_amount', 'payment_status', 'status', 'created_at')
+    list_filter = ('status', 'payment_status', 'content_type', 'booking_date', 'created_at')
     search_fields = ('booking_reference', 'user__email', 'user__first_name', 'user__last_name', 'contact_name', 'contact_email')
     readonly_fields = ('booking_reference', 'created_at', 'updated_at')
     date_hierarchy = 'created_at'
@@ -25,7 +26,7 @@ class BookingAdmin(admin.ModelAdmin):
             'fields': ('total_amount',)
         }),
         ('Status', {
-            'fields': ('status',)
+            'fields': ('status', 'payment_status', 'expires_at')
         }),
         ('Additional Information', {
             'fields': ('special_requests',)
@@ -60,9 +61,18 @@ class BookingAdmin(admin.ModelAdmin):
     content_object_display.admin_order_field = 'content_type'
     
     def confirm_bookings(self, request, queryset):
-        """Bulk confirm bookings"""
-        updated = queryset.filter(status='pending').update(status='confirmed')
-        self.message_user(request, f'{updated} bookings confirmed successfully.')
+        """Bulk confirm bookings, requiring verified payment for hotels."""
+        pending = queryset.filter(status='pending')
+        eligible = pending.filter(
+            Q(payment_status='paid') | ~Q(content_type__model='hotel')
+        )
+        pending_count = pending.count()
+        updated = eligible.update(status='confirmed')
+        skipped = pending_count - updated
+        message = f'{updated} bookings confirmed successfully.'
+        if skipped:
+            message += f' {skipped} unpaid hotel booking(s) were skipped.'
+        self.message_user(request, message)
     confirm_bookings.short_description = "Confirm selected bookings"
     
     def cancel_bookings(self, request, queryset):

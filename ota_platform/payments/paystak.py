@@ -53,6 +53,7 @@ class PaystakClient:
         callback_url: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         reference: Optional[str] = None,
+        currency: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Initialize a transaction. `amount` should be an integer in the smallest currency unit (kobo/cents).
@@ -69,6 +70,8 @@ class PaystakClient:
             payload["callback_url"] = callback_url
         if metadata:
             payload["metadata"] = metadata
+        if currency:
+            payload["currency"] = currency.upper()
 
         url = f"{self.base_url.rstrip('/')}/transaction/initialize"
         try:
@@ -131,5 +134,4 @@ class PaystakClient:
         except Exception:
             logger.exception("Error verifying Paystack webhook signature")
             return False
-
 

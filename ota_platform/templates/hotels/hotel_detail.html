@@ -406,6 +406,14 @@
                         <h6 class="mb-1">{{ hotel.name }}</h6>
                         <div class="text-primary fw-semibold" id="modalRoomName">Select a room category</div>
                     </div>
+
+                    <div class="alert alert-info d-flex gap-2 align-items-start" role="alert">
+                        <i class="bi bi-shield-check fs-5"></i>
+                        <div>
+                            <strong>Payment secures your room.</strong>
+                            We hold the selected inventory for 15 minutes while you complete secure checkout. The hotel partner confirms the reservation after payment is verified.
+                        </div>
+                    </div>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -452,7 +460,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Reserve Room</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-lock me-1"></i>Pay &amp; Secure Room</button>
                 </div>
             </form>
         </div>

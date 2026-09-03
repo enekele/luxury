@@ -1,25 +1,39 @@
 {% extends 'base.html' %}
 
-{% block title %}Payment Success - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
+{% block title %}{% if booking %}Room Secured{% else %}Payment Success{% endif %} - {{ site_settings.site_name|default:"TravelHub" }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5 pt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="alert alert-success">
-                <h4 class="alert-heading">Payment Successful</h4>
-                <p>Your payment has been confirmed successfully.</p>
+                <h4 class="alert-heading">{% if booking %}Payment verified — room secured{% else %}Payment successful{% endif %}</h4>
+                {% if booking %}
+                    <p>Your room is secured and the hotel partner can now confirm your reservation.</p>
+                {% else %}
+                    <p>Your payment has been confirmed successfully.</p>
+                {% endif %}
                 <hr>
-                <p><strong>Reference:</strong> {{ data.reference }}</p>
-                <p><strong>Amount:</strong> {{ data.amount|floatformat:0 }}</p>
+                <p><strong>Payment reference:</strong> {{ data.reference }}</p>
+                {% if booking %}
+                    <p><strong>Booking reference:</strong> {{ booking.booking_reference }}</p>
+                    <p><strong>Room:</strong> {{ booking.room_type.name }} · {{ booking.quantity }} room{{ booking.quantity|pluralize }}</p>
+                    <p><strong>Stay:</strong> {{ booking.check_in|date:'M d, Y' }} – {{ booking.check_out|date:'M d, Y' }}</p>
+                    <p class="mb-0"><strong>Paid:</strong> {{ booking.total_amount }}</p>
+                {% endif %}
                 {% if package %}
                     <p><strong>Package:</strong> {{ package.title }}</p>
                     <p><strong>Subscription duration:</strong> {{ package.duration_days }} days</p>
                 {% endif %}
             </div>
             <div class="d-flex gap-2">
-                <a href="{% url 'subscription_packages' %}" class="btn btn-primary">View Subscriptions</a>
-                <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Go to Profile</a>
+                {% if booking %}
+                    <a href="{% url 'user_bookings' %}" class="btn btn-primary">View My Bookings</a>
+                    <a href="{% url 'hotels:hotel_detail' booking.object_id %}" class="btn btn-outline-secondary">Back to Hotel</a>
+                {% else %}
+                    <a href="{% url 'subscription_packages' %}" class="btn btn-primary">View Subscriptions</a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Go to Profile</a>
+                {% endif %}
             </div>
         </div>
     </div>

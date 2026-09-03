@@ -508,6 +508,31 @@ class PartnerPropertyManagementTests(TestCase):
             'Completed reservations cannot be confirmed.',
         )
 
+    def test_partner_cannot_confirm_unpaid_hotel_reservation(self):
+        booking = self.create_booking()
+        booking.payment_status = 'pending'
+        booking.save(update_fields=['payment_status'])
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        response = self.client.post(
+            reverse(
+                'partners_dashboard:update_reservation_status',
+                args=[booking.id],
+            ),
+            {'action': 'confirm'},
+            follow=True,
+        )
+        booking.refresh_from_db()
+
+        self.assertEqual(booking.status, 'pending')
+        self.assertContains(response, 'cannot be confirmed until the customer payment is verified')
+
+        detail_response = self.client.get(
+            reverse('partners_dashboard:reservation_detail', args=[booking.id])
+        )
+        self.assertContains(detail_response, 'Awaiting verified payment')
+        self.assertNotContains(detail_response, '>Confirm reservation</button>')
+
     def test_partner_cancellation_releases_reserved_room_inventory(self):
         room_type = RoomType.objects.create(
             hotel=self.hotel,

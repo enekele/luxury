@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container mt-5 pt-4">
+    <form class="d-none">{% csrf_token %}</form>
     <div class="row">
         <!-- Profile Sidebar -->
         <div class="col-lg-3 mb-4">
@@ -114,9 +115,20 @@
                                                     <i class="bi bi-calendar-range"></i> {{ booking.check_in|date:"M d, Y" }} – {{ booking.check_out|date:"M d, Y" }}
                                                 </p>
                                             {% endif %}
+
+                                            <p class="mb-2">
+                                                <i class="bi bi-credit-card"></i>
+                                                Payment:
+                                                <span class="badge {% if booking.payment_status == 'paid' %}bg-success{% elif booking.payment_status == 'pending' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ booking.get_payment_status_display }}</span>
+                                                {% if booking.status == 'pending' and booking.payment_status == 'paid' %}
+                                                    <small class="text-muted ms-1">Awaiting hotel confirmation</small>
+                                                {% elif booking.payment_status == 'pending' %}
+                                                    <small class="text-muted ms-1">Room hold expires if checkout is not completed</small>
+                                                {% endif %}
+                                            </p>
                                             
                                             <p class="text-muted mb-0">
-                                                <i class="bi bi-receipt"></i> Booking ID: #{{ booking.id }}
+                                                <i class="bi bi-receipt"></i> Booking reference: {{ booking.booking_reference }}
                                             </p>
                                         </div>
                                         
@@ -127,8 +139,8 @@
                                             
                                             <div class="d-grid gap-2">
                                                 <button class="btn btn-outline-primary btn-sm">View Details</button>
-                                                {% if booking.status == 'confirmed' %}
-                                                    <button class="btn btn-outline-danger btn-sm" onclick="cancelBooking('{{ booking.id }}')">Cancel Booking</button>
+                                                {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                                                    <button class="btn btn-outline-danger btn-sm" onclick="cancelBooking('{{ booking.id }}')">{% if booking.payment_status == 'pending' %}Cancel Hold{% else %}Cancel Booking{% endif %}</button>
                                                 {% endif %}
                                                 {% if booking.status == 'completed' %}
                                                     <button class="btn btn-outline-success btn-sm">Write Review</button>

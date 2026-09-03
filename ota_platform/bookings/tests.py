@@ -1,4 +1,5 @@
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -12,6 +13,14 @@ from users.models import User
 
 class HotelRoomBookingTests(TestCase):
     def setUp(self):
+        self.checkout_url = 'https://checkout.paystack.test/booking-session'
+        payment_patcher = patch(
+            'bookings.views.initialize_booking_payment',
+            return_value=self.checkout_url,
+        )
+        self.initialize_payment = payment_patcher.start()
+        self.addCleanup(payment_patcher.stop)
+
         country = Country.objects.create(name='Kenya', code='KE')
         city = City.objects.create(name='Nairobi', country=country)
         self.hotel = Hotel.objects.create(
@@ -69,6 +78,7 @@ class HotelRoomBookingTests(TestCase):
             f'data-room-id="{self.room_type.id}"',
         )
         self.assertContains(response, 'Select Room')
+        self.assertContains(response, 'Pay &amp; Secure Room')
 
     def test_availability_uses_selected_room_and_date_rates(self):
         HotelAvailability.objects.create(
@@ -107,14 +117,17 @@ class HotelRoomBookingTests(TestCase):
             self.booking_payload(),
         )
 
-        self.assertRedirects(response, reverse('user_bookings'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.checkout_url)
         booking = Booking.objects.get(user=self.user)
         self.assertEqual(booking.room_type, self.room_type)
         self.assertEqual(booking.check_in, self.check_in)
         self.assertEqual(booking.check_out, self.check_out)
         self.assertEqual(booking.quantity, 2)
         self.assertTrue(booking.inventory_reserved)
+        self.assertEqual(booking.payment_status, 'pending')
         self.assertEqual(booking.total_amount.amount, Decimal('800.00'))
+        self.initialize_payment.assert_called_once_with(response.wsgi_request, booking)
         inventory = HotelAvailability.objects.filter(
             room_type=self.room_type,
             date__gte=self.check_in,

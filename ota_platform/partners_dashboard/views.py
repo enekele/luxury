@@ -152,6 +152,16 @@ def apply_booking_filters(queryset, request):
 
 
 def change_booking_status(booking, action):
+    if (
+        action == 'confirm'
+        and booking.content_type.model == 'hotel'
+        and booking.payment_status != 'paid'
+    ):
+        return False, (
+            f'Reservation {booking.booking_reference} cannot be confirmed until '
+            'the customer payment is verified.'
+        )
+
     target_status = BOOKING_STATUS_ACTIONS.get(booking.status, {}).get(action)
     if target_status is None:
         action_labels = {

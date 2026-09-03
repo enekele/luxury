@@ -122,10 +122,14 @@
                             <div class="d-flex flex-wrap justify-content-end gap-1">
                                 <a class="btn btn-sm btn-outline-primary" href="{% url 'partners_dashboard:reservation_detail' booking.id %}">View</a>
                                 {% if booking.status == 'pending' %}
-                                    <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}">
-                                        {% csrf_token %}<input type="hidden" name="action" value="confirm"><input type="hidden" name="return_to" value="reservations">
-                                        <button class="btn btn-sm btn-success" type="submit">Confirm</button>
-                                    </form>
+                                    {% if booking.content_type.model == 'hotel' and booking.payment_status != 'paid' %}
+                                        <button class="btn btn-sm btn-secondary" type="button" disabled title="Customer payment has not been verified">Awaiting payment</button>
+                                    {% else %}
+                                        <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}">
+                                            {% csrf_token %}<input type="hidden" name="action" value="confirm"><input type="hidden" name="return_to" value="reservations">
+                                            <button class="btn btn-sm btn-success" type="submit">Confirm</button>
+                                        </form>
+                                    {% endif %}
                                     <form method="post" action="{% url 'partners_dashboard:update_reservation_status' booking.id %}">
                                         {% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="return_to" value="reservations">
                                         <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>

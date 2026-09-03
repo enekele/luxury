@@ -24,3 +24,9 @@ services:
         fromDatabase:
           name: luxury-db
           property: connectionString
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: BOOKING_PAYMENT_HOLD_MINUTES
+        value: "15"

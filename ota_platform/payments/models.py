@@ -16,6 +16,13 @@ class PaymentTransaction(models.Model):
     ]
 
     reference = models.CharField(max_length=128, unique=True, db_index=True)
+    booking = models.ForeignKey(
+        'bookings.Booking',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='payment_transactions',
+    )
     email = models.EmailField(blank=True)
     amount = models.BigIntegerField(help_text="Amount in smallest currency unit (e.g. kobo/cents)")
     currency = models.CharField(max_length=8, default="NGN")
@@ -50,9 +57,12 @@ class PaymentTransaction(models.Model):
 
     def mark_failed(self, response: dict | None = None) -> None:
         self.status = "failed"
+        self.paid = False
         if response is not None:
             self.gateway_response = response
-        self.save(update_fields=["status", "gateway_response", "updated_at"])
+        self.save(
+            update_fields=["status", "paid", "gateway_response", "updated_at"]
+        )
 
 
 class SubscriptionPackage(models.Model):

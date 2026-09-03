@@ -21,6 +21,11 @@ from flights.models import Flight
 from cars.models import CarRental
 from tours.models import Tour, TourAvailability
 from api.utils import validate_booking_dates, calculate_booking_total, generate_booking_reference
+from payments.services import (
+    BookingPaymentError,
+    expire_unpaid_booking_holds,
+    initialize_booking_payment,
+)
 
 
 def _booking_error(request, message, *, status=400):
@@ -83,6 +88,10 @@ def create_booking(request):
         room_type_id = request.POST.get('room_type')
         if not room_type_id:
             return _booking_error(request, 'Select a room category to continue.')
+        try:
+            room_type_id = int(room_type_id)
+        except (TypeError, ValueError):
+            return _booking_error(request, 'Select a valid room category.')
         if not check_in or not check_out:
             return _booking_error(
                 request,
@@ -94,6 +103,7 @@ def create_booking(request):
             return _booking_error(request, date_errors[0])
         check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
         check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
+        expire_unpaid_booking_holds(room_type_id=room_type_id)
 
         with transaction.atomic():
             room_type = get_object_or_404(
@@ -131,14 +141,20 @@ def create_booking(request):
                 contact_phone=contact_phone,
                 special_requests=special_requests,
                 status='pending',
+                payment_status='pending',
             )
             reserve_room_inventory(quote)
 
-        messages.success(
-            request,
-            f'Booking created successfully! Reference: {booking.booking_reference}',
-        )
-        return redirect('user_bookings')
+        try:
+            checkout_url = initialize_booking_payment(request, booking)
+        except BookingPaymentError:
+            return _booking_error(
+                request,
+                'Secure checkout could not be started. No charge was made and '
+                'the room hold was released. Please try again.',
+                status=502,
+            )
+        return redirect(checkout_url)
 
     service_object = None
     content_type = None
@@ -249,7 +265,14 @@ def cancel_booking(request, booking_id):
         booking.status = 'cancelled'
         booking.save(update_fields=['status', 'updated_at'])
     
-    messages.success(request, 'Booking cancelled successfully.')
+    if booking.payment_status == 'paid':
+        messages.warning(
+            request,
+            'Booking cancelled. Your payment is still recorded; contact support '
+            'to review any applicable refund.',
+        )
+    else:
+        messages.success(request, 'Booking cancelled successfully.')
     
     if (
         request.headers.get('Content-Type') == 'application/json'
@@ -314,7 +337,15 @@ def check_availability(request):
                     'success': False,
                     'message': 'Select a room category.',
                 })
+            try:
+                room_type_id = int(room_type_id)
+            except (TypeError, ValueError):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Select a valid room category.',
+                })
 
+            expire_unpaid_booking_holds(room_type_id=room_type_id)
             room_type = get_object_or_404(
                 RoomType.objects.select_related('hotel'),
                 id=room_type_id,
