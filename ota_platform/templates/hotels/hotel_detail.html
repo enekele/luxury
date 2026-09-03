@@ -57,30 +57,42 @@
                     <h5 class="mb-0">Book Your Stay</h5>
                 </div>
                 <div class="card-body">
-                    <form id="bookingForm">
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Check-in</label>
-                                <input type="date" class="form-control" id="checkIn" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Check-out</label>
-                                <input type="date" class="form-control" id="checkOut" required>
-                            </div>
-                        </div>
+                    <form id="hotelAvailabilityForm">
                         <div class="mb-3">
-                            <label class="form-label">Guests</label>
-                            <select class="form-select" id="guests">
-                                <option value="1">1 Guest</option>
-                                <option value="2" selected>2 Guests</option>
-                                <option value="3">3 Guests</option>
-                                <option value="4">4 Guests</option>
-                                <option value="5">5+ Guests</option>
+                            <label class="form-label" for="roomCategory">Room category</label>
+                            <select class="form-select" id="roomCategory" name="room_type" {% if room_types %}required{% else %}disabled{% endif %}>
+                                {% for room_type in room_types %}
+                                    <option value="{{ room_type.id }}">{{ room_type.name }} — {{ room_type.price_per_night }}/night</option>
+                                {% empty %}
+                                    <option value="">No rooms available</option>
+                                {% endfor %}
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 mb-2">Check Availability</button>
-                        <button type="button" class="btn btn-outline-primary w-100" onclick="addToWishlist('{{ hotel.id }}')">                            <i class="bi bi-heart"></i> Add to Wishlist
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="checkIn">Check-in</label>
+                                <input type="date" class="form-control" id="checkIn" name="check_in" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="checkOut">Check-out</label>
+                                <input type="date" class="form-control" id="checkOut" name="check_out" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="roomsRequested">Rooms</label>
+                                <input type="number" class="form-control" id="roomsRequested" name="rooms" min="1" value="1" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="guests">Guests</label>
+                                <input type="number" class="form-control" id="guests" name="guests" min="1" value="2" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-2" {% if not room_types %}disabled{% endif %}>Check Availability</button>
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="addToWishlist('hotel', '{{ hotel.id }}', event)">
+                            <i class="bi bi-heart"></i> Add to Wishlist
                         </button>
+                        <div id="hotelAvailabilityResult" class="mt-3" aria-live="polite"></div>
                     </form>
                 </div>
             </div>
@@ -203,8 +215,17 @@
                                                 <span class="text-primary fw-bold h5">${{ room_type.price_per_night.amount }}</span>
                                                 <small class="text-muted d-block">/night</small>
                                             </div>
-                                            <p class="text-success mb-2">{{ room_type.available_rooms }} rooms left</p>
-                                            <button class="btn btn-primary btn-sm w-100 w-md-auto">Select Room</button>
+                                            {% if room_type.available_rooms > 0 %}
+                                                <p class="text-success mb-2">{{ room_type.available_rooms }} rooms available by default</p>
+                                            {% else %}
+                                                <p class="text-muted mb-2">Check dates for availability</p>
+                                            {% endif %}
+                                            <button
+                                                type="button"
+                                                class="btn btn-primary btn-sm w-100 w-md-auto"
+                                                data-room-id="{{ room_type.id }}"
+                                                onclick="selectHotelRoom(this)"
+                                            >Select Room</button>
                                         </div>
                                     </div>
                                 </div>
@@ -374,14 +395,16 @@
                 <h5 class="modal-title">Complete Your Booking</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{% url 'bookings:create_booking' %}" method="post">
+            <form id="hotelBookingForm" action="{% url 'bookings:create_booking' %}" method="post">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <input type="hidden" id="modalServiceType" name="service_type">
-                    <input type="hidden" id="modalServiceId" name="service_id">
+                    <input type="hidden" name="service_type" value="hotel">
+                    <input type="hidden" name="service_id" value="{{ hotel.id }}">
+                    <input type="hidden" id="modalRoomType" name="room_type">
                     
                     <div class="mb-3">
-                        <h6>Service: <span id="modalServiceName"></span></h6>
+                        <h6 class="mb-1">{{ hotel.name }}</h6>
+                        <div class="text-primary fw-semibold" id="modalRoomName">Select a room category</div>
                     </div>
                     
                     <div class="row mb-3">
@@ -397,14 +420,12 @@
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Number of Guests</label>
-                            <select class="form-select" id="modalGuests" name="guests">
-                                <option value="1">1 Guest</option>
-                                <option value="2" selected>2 Guests</option>
-                                <option value="3">3 Guests</option>
-                                <option value="4">4 Guests</option>
-                                <option value="5">5+ Guests</option>
-                            </select>
+                            <label class="form-label" for="modalRooms">Number of Rooms</label>
+                            <input type="number" class="form-control" id="modalRooms" name="rooms" min="1" value="1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="modalGuests">Number of Guests</label>
+                            <input type="number" class="form-control" id="modalGuests" name="guests" min="1" value="2" required>
                         </div>
                     </div>
                     
@@ -431,7 +452,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Complete Booking</button>
+                    <button type="submit" class="btn btn-primary">Reserve Room</button>
                 </div>
             </form>
         </div>
@@ -506,20 +527,134 @@
 
 {% block extra_js %}
 <script>
-function addToWishlist(hotelId) {
-    // Add to wishlist functionality
-    alert('Added to wishlist!');
-}
+document.addEventListener('DOMContentLoaded', function () {
+    const availabilityForm = document.getElementById('hotelAvailabilityForm');
+    const availabilityResult = document.getElementById('hotelAvailabilityResult');
+    const roomSelect = document.getElementById('roomCategory');
+    const checkIn = document.getElementById('checkIn');
+    const checkOut = document.getElementById('checkOut');
+    const rooms = document.getElementById('roomsRequested');
+    const guests = document.getElementById('guests');
+    const modalRoomType = document.getElementById('modalRoomType');
+    const modalRoomName = document.getElementById('modalRoomName');
+    const modalCheckIn = document.getElementById('modalCheckIn');
+    const modalCheckOut = document.getElementById('modalCheckOut');
+    const modalRooms = document.getElementById('modalRooms');
+    const modalGuests = document.getElementById('modalGuests');
+    const today = new Date().toISOString().split('T')[0];
+    const isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
 
-// Set minimum date to today
-document.getElementById('checkIn').min = new Date().toISOString().split('T')[0];
-document.getElementById('checkOut').min = new Date().toISOString().split('T')[0];
+    function updateCheckoutMinimum(source, target) {
+        if (!source.value) {
+            target.min = today;
+            return;
+        }
+        const nextDay = new Date(source.value + 'T00:00:00');
+        nextDay.setDate(nextDay.getDate() + 1);
+        target.min = nextDay.toISOString().split('T')[0];
+        if (target.value && target.value < target.min) {
+            target.value = '';
+        }
+    }
 
-// Update checkout minimum date when checkin changes
-document.getElementById('checkIn').addEventListener('change', function() {
-    const checkInDate = new Date(this.value);
-    checkInDate.setDate(checkInDate.getDate() + 1);
-    document.getElementById('checkOut').min = checkInDate.toISOString().split('T')[0];
+    function prepareBookingModal() {
+        if (!roomSelect || !roomSelect.value) {
+            showNotification('Select a room category first.', 'warning');
+            return false;
+        }
+        if (!isAuthenticated) {
+            window.location.href = '{% url "account_login" %}?next={{ request.path|urlencode }}';
+            return false;
+        }
+
+        modalRoomType.value = roomSelect.value;
+        modalRoomName.textContent = roomSelect.options[roomSelect.selectedIndex].text;
+        modalCheckIn.value = checkIn.value;
+        modalCheckOut.value = checkOut.value;
+        modalRooms.value = rooms.value || '1';
+        modalGuests.value = guests.value || '1';
+        updateCheckoutMinimum(modalCheckIn, modalCheckOut);
+        return true;
+    }
+
+    window.openHotelBookingModal = function () {
+        if (!prepareBookingModal()) return;
+        bootstrap.Modal.getOrCreateInstance(
+            document.getElementById('bookingModal')
+        ).show();
+    };
+
+    window.selectHotelRoom = function (button) {
+        roomSelect.value = button.dataset.roomId;
+        window.openHotelBookingModal();
+    };
+
+    function showAvailability(data) {
+        availabilityResult.replaceChildren();
+        const alert = document.createElement('div');
+        alert.className = data.success && data.available
+            ? 'alert alert-success mb-0'
+            : 'alert alert-warning mb-0';
+
+        const message = document.createElement('div');
+        if (data.success && data.available) {
+            message.textContent = `${data.room_type.name} is available — ${data.currency} ${data.total_price} for ${data.nights} night${data.nights === 1 ? '' : 's'}.`;
+            alert.appendChild(message);
+            const bookButton = document.createElement('button');
+            bookButton.type = 'button';
+            bookButton.className = 'btn btn-success btn-sm mt-2';
+            bookButton.textContent = 'Book this room';
+            bookButton.addEventListener('click', window.openHotelBookingModal);
+            alert.appendChild(bookButton);
+        } else {
+            message.textContent = data.message || 'This room is not available for those dates.';
+            alert.appendChild(message);
+        }
+        availabilityResult.appendChild(alert);
+    }
+
+    availabilityForm?.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        if (!availabilityForm.reportValidity()) return;
+
+        const submitButton = availabilityForm.querySelector('[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Checking…';
+
+        const params = new URLSearchParams(new FormData(availabilityForm));
+        params.set('service_type', 'hotel');
+        params.set('service_id', '{{ hotel.id }}');
+
+        try {
+            const response = await fetch(
+                `{% url 'bookings:check_availability' %}?${params.toString()}`,
+                {headers: {'X-Requested-With': 'XMLHttpRequest'}}
+            );
+            const data = await response.json();
+            showAvailability(data);
+        } catch (error) {
+            showAvailability({
+                success: false,
+                message: 'Could not check availability. Please try again.',
+            });
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+            hideLoading();
+        }
+    });
+
+    checkIn.min = today;
+    checkOut.min = today;
+    modalCheckIn.min = today;
+    modalCheckOut.min = today;
+    checkIn.addEventListener('change', function () {
+        updateCheckoutMinimum(checkIn, checkOut);
+    });
+    modalCheckIn.addEventListener('change', function () {
+        updateCheckoutMinimum(modalCheckIn, modalCheckOut);
+    });
 });
 </script>
 {% endblock %}

@@ -312,7 +312,7 @@ class PartnerPropertyManagementTests(TestCase):
         )
         self.assertEqual(public_response.status_code, 200)
         self.assertContains(public_response, 'Deluxe King')
-        self.assertContains(public_response, '6 rooms left')
+        self.assertContains(public_response, '6 rooms available by default')
 
     def test_room_category_rejects_more_available_than_total(self):
         self.client.login(email='partner@example.com', password='StrongPass123!')
@@ -507,6 +507,46 @@ class PartnerPropertyManagementTests(TestCase):
             invalid_response,
             'Completed reservations cannot be confirmed.',
         )
+
+    def test_partner_cancellation_releases_reserved_room_inventory(self):
+        room_type = RoomType.objects.create(
+            hotel=self.hotel,
+            name='Partner Managed Suite',
+            description='Suite with held inventory.',
+            max_occupancy=2,
+            price_per_night='220.00',
+            total_rooms=4,
+            available_rooms=4,
+        )
+        booking = self.create_booking()
+        booking.room_type = room_type
+        booking.quantity = 1
+        booking.inventory_reserved = True
+        booking.save(
+            update_fields=['room_type', 'quantity', 'inventory_reserved']
+        )
+        availability = HotelAvailability.objects.create(
+            room_type=room_type,
+            date=booking.check_in,
+            available_rooms=2,
+            price_per_night='220.00',
+        )
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        response = self.client.post(
+            reverse(
+                'partners_dashboard:update_reservation_status',
+                args=[booking.id],
+            ),
+            {'action': 'cancel'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        booking.refresh_from_db()
+        availability.refresh_from_db()
+        self.assertEqual(booking.status, 'cancelled')
+        self.assertFalse(booking.inventory_reserved)
+        self.assertEqual(availability.available_rooms, 3)
 
     def test_partner_can_manage_availability_for_all_service_types(self):
         self.client.login(email='partner@example.com', password='StrongPass123!')

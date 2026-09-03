@@ -16,6 +16,14 @@ class Booking(BaseModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+
+    room_type = models.ForeignKey(
+        'hotels.RoomType',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='bookings',
+    )
     
     # Booking details
     booking_reference = models.CharField(max_length=20, unique=True, blank=True)
@@ -36,6 +44,7 @@ class Booking(BaseModel):
     check_in = models.DateField(null=True, blank=True)
     check_out = models.DateField(null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
+    inventory_reserved = models.BooleanField(default=False)
 
     payment_status = models.CharField(
         max_length=20,

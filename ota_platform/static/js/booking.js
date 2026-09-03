@@ -168,16 +168,29 @@ class BookingManager {
             
             const response = await fetch(form.action, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
-            
+
+            const contentType = response.headers.get('content-type') || '';
+            const data = contentType.includes('application/json')
+                ? await response.json()
+                : null;
+
             if (response.ok) {
                 this.showNotification('Booking created successfully!', 'success');
                 setTimeout(() => {
-                    window.location.href = '/users/bookings/';
+                    window.location.href = response.redirected
+                        ? response.url
+                        : '/users/bookings/';
                 }, 1500);
             } else {
-                this.showNotification('Error creating booking. Please try again.', 'error');
+                this.showNotification(
+                    data?.message || 'Error creating booking. Please try again.',
+                    'error'
+                );
             }
             
         } catch (error) {

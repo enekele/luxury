@@ -22,6 +22,7 @@ from django.views.decorators.http import require_POST
 from djmoney.money import Money
 
 from affiliates.models import AffiliateProfile 
+from hotels.inventory import release_booking_room_inventory
 from hotels.models import Hotel, HotelAvailability, HotelPartner, RoomType
 from bookings.models import Booking
 from cars.models import CarBrand, CarRental, CarModel, CarRentalCompany
@@ -95,6 +96,7 @@ def partner_bookings(request_user):
     return Booking.objects.filter(owned_services).select_related(
         'user',
         'content_type',
+        'room_type',
     )
 
 
@@ -162,6 +164,8 @@ def change_booking_status(booking, action):
             f'{booking.get_status_display()} reservations cannot be {action_label}.'
         )
 
+    if target_status == 'cancelled':
+        release_booking_room_inventory(booking)
     booking.status = target_status
     booking.save(update_fields=['status', 'updated_at'])
     return True, f'Reservation {booking.booking_reference} is now {booking.get_status_display().lower()}.'
@@ -583,6 +587,7 @@ def export_reservations(request):
             'Reference',
             'Service type',
             'Service',
+            'Room category',
             'Customer',
             'Customer email',
             'Booking date',
@@ -603,6 +608,7 @@ def export_reservations(request):
                 booking.booking_reference,
                 booking.content_type.model,
                 str(service) if service else '',
+                booking.room_type.name if booking.room_type else '',
                 booking.contact_name,
                 booking.contact_email,
                 booking.booking_date.isoformat() if booking.booking_date else '',

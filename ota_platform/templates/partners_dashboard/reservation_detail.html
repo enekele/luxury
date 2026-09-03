@@ -37,8 +37,9 @@
             <div class="card-body">
                 <div class="row g-4">
                     <div class="col-md-6"><div class="detail-label">Service</div><div class="fw-semibold">{{ booking.content_object|default:'Unavailable listing' }}</div><div class="text-muted text-uppercase small">{{ booking.content_type.model }}</div></div>
-                    <div class="col-md-3"><div class="detail-label">Quantity</div><div>{{ booking.quantity }}</div></div>
+                    <div class="col-md-3"><div class="detail-label">{% if booking.room_type %}Rooms{% else %}Quantity{% endif %}</div><div>{{ booking.quantity }}</div></div>
                     <div class="col-md-3"><div class="detail-label">Total</div><div class="fw-semibold">{{ booking.total_amount }}</div></div>
+                    {% if booking.room_type %}<div class="col-md-6"><div class="detail-label">Room category</div><div class="fw-semibold">{{ booking.room_type.name }}</div></div>{% endif %}
                     <div class="col-md-4"><div class="detail-label">Booking date</div><div>{{ booking.booking_date|date:'F j, Y'|default:'Not specified' }}</div></div>
                     <div class="col-md-4"><div class="detail-label">Check in</div><div>{{ booking.check_in|date:'F j, Y'|default:'Not specified' }}</div></div>
                     <div class="col-md-4"><div class="detail-label">Check out</div><div>{{ booking.check_out|date:'F j, Y'|default:'Not specified' }}</div></div>

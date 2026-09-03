@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from hotels.models import Hotel, HotelImage, RoomType, HotelAvailability
 from flights.models import Flight, Airline, Airport, FlightClass, FlightSearch
 from cars.models import CarRental, CarBrand, CarModel, CarRentalCompany
@@ -65,16 +66,21 @@ class RoomTypeSerializer(serializers.ModelSerializer):
 
 
 class HotelAvailabilitySerializer(serializers.ModelSerializer):
+    room_type_name = serializers.CharField(source='room_type.name', read_only=True)
+
     class Meta:
         model = HotelAvailability
-        fields = ['date', 'available_rooms', 'price_per_night']
+        fields = [
+            'room_type', 'room_type_name', 'date', 'available_rooms',
+            'price_per_night',
+        ]
 
 
 class HotelSerializer(serializers.ModelSerializer):
     city = CitySerializer(read_only=True)
     images = HotelImageSerializer(many=True, read_only=True)
     room_types = RoomTypeSerializer(many=True, read_only=True)
-    availability = HotelAvailabilitySerializer(many=True, read_only=True)
+    availability = serializers.SerializerMethodField()
     average_rating = serializers.ReadOnlyField()
     total_reviews = serializers.ReadOnlyField()
     
@@ -87,6 +93,14 @@ class HotelSerializer(serializers.ModelSerializer):
             'check_out_time', 'latitude', 'longitude', 'images', 'room_types',
             'availability', 'average_rating', 'total_reviews'
         ]
+
+    def get_availability(self, obj):
+        records = HotelAvailability.objects.filter(
+            room_type__hotel=obj,
+            room_type__is_active=True,
+            date__gte=timezone.localdate(),
+        ).select_related('room_type').order_by('date', 'room_type__name')[:90]
+        return HotelAvailabilitySerializer(records, many=True).data
 
 
 class AirlineSerializer(serializers.ModelSerializer):
@@ -222,11 +236,14 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             'id', 'user', 'content_type', 'object_id', 'content_object_data',
-            'booking_reference', 'booking_date', 'total_amount', 'status',
+            'booking_reference', 'booking_date', 'room_type', 'check_in',
+            'check_out', 'quantity', 'total_amount', 'status',
             'contact_name', 'contact_email', 'contact_phone', 'special_requests',
             'created_at'
         ]
-        read_only_fields = ['id', 'booking_reference', 'status', 'created_at']
+        read_only_fields = [
+            'id', 'booking_reference', 'room_type', 'status', 'created_at'
+        ]
 
     def validate(self, attrs):
         content_type = attrs.get(

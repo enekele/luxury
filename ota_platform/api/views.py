@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
 from django.db.models import Q, Avg
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -12,7 +13,8 @@ from .serializers import (
     BookingSerializer, ReviewSerializer, UserSerializer, CitySerializer,
     CountrySerializer, PromotionSerializer, FlightSearchSerializer
 )
-from hotels.models import Hotel
+from hotels.inventory import release_booking_room_inventory
+from hotels.models import Hotel, HotelAvailability
 from flights.models import Flight, FlightSearch
 from cars.models import CarRental
 from tours.models import Tour
@@ -71,10 +73,13 @@ class HotelViewSet(viewsets.ReadOnlyModelViewSet):
             check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
             check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
             
-            availability = hotel.availability.filter(
-                date__range=[check_in_date, check_out_date],
+            availability = HotelAvailability.objects.filter(
+                room_type__hotel=hotel,
+                room_type__is_active=True,
+                date__gte=check_in_date,
+                date__lt=check_out_date,
                 available_rooms__gt=0
-            )
+            ).select_related('room_type').order_by('date', 'room_type__name')
             
             serializer = HotelAvailabilitySerializer(availability, many=True)
             return Response(serializer.data)
@@ -271,15 +276,18 @@ class BookingViewSet(viewsets.ModelViewSet):
     def cancel(self, request, pk=None):
         """Cancel a booking"""
         booking = self.get_object()
-        
-        if booking.status not in ['pending', 'confirmed']:
-            return Response(
-                {'error': 'Booking cannot be cancelled'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        booking.status = 'cancelled'
-        booking.save()
+
+        with transaction.atomic():
+            booking = Booking.objects.select_for_update().get(pk=booking.pk)
+            if booking.status not in ['pending', 'confirmed']:
+                return Response(
+                    {'error': 'Booking cannot be cancelled'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            release_booking_room_inventory(booking)
+            booking.status = 'cancelled'
+            booking.save(update_fields=['status', 'updated_at'])
         
         serializer = self.get_serializer(booking)
         return Response(serializer.data)

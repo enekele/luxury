@@ -6,6 +6,7 @@ from django.db.models import Q, Avg
 from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import Hotel, RoomType, HotelAvailability
+from .inventory import RoomInventoryError, quote_room_stay
 from core.models import City, Country
 from reviews.models import Review
 
@@ -164,23 +165,23 @@ def hotel_search(request):
                 
                 # Filter by availability
                 available_hotels = []
+                try:
+                    guest_count = max(int(guests), 1)
+                except (TypeError, ValueError):
+                    guest_count = 1
                 for hotel in hotels:
-                    days_needed = (check_out_date - check_in_date).days
-                    room_type_available = hotel.room_types.filter(
-                        is_active=True,
-                        availability__date__gte=check_in_date,
-                        availability__date__lt=check_out_date,
-                        availability__available_rooms__gt=0,
-                    ).distinct()
-                    if any(
-                        room_type.availability.filter(
-                            date__gte=check_in_date,
-                            date__lt=check_out_date,
-                            available_rooms__gt=0,
-                        ).count() == days_needed
-                        for room_type in room_type_available
-                    ):
+                    for room_type in hotel.room_types.filter(is_active=True):
+                        try:
+                            quote_room_stay(
+                                room_type,
+                                check_in_date,
+                                check_out_date,
+                                guests=guest_count,
+                            )
+                        except RoomInventoryError:
+                            continue
                         available_hotels.append(hotel.id)
+                        break
                 
                 hotels = hotels.filter(id__in=available_hotels)
             except ValueError:
@@ -222,43 +223,57 @@ def check_availability(request, hotel_id):
     try:
         check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
         check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
-        
+        if check_in_date < timezone.localdate():
+            return JsonResponse({'error': 'Check-in date cannot be in the past'})
         if check_in_date >= check_out_date:
             return JsonResponse({'error': 'Check-out date must be after check-in date'})
-        
-        # Check availability
-        days_needed = (check_out_date - check_in_date).days
-        available_room_type = next(
-            (
-                room_type
-                for room_type in hotel.room_types.filter(is_active=True)
-                if room_type.availability.filter(
-                    date__gte=check_in_date,
-                    date__lt=check_out_date,
-                    available_rooms__gt=0,
-                ).count() == days_needed
-            ),
-            None,
-        )
 
-        if available_room_type:
-            availability = available_room_type.availability.filter(
-                date__gte=check_in_date,
-                date__lt=check_out_date,
-                available_rooms__gt=0,
-            ).order_by('date')
-            total_price = sum(av.price_per_night.amount for av in availability)
+        try:
+            guests = max(int(request.GET.get('guests', 1)), 1)
+            rooms = max(int(request.GET.get('rooms', 1)), 1)
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'Guests and rooms must be whole numbers'})
+
+        room_types = hotel.room_types.filter(is_active=True).select_related('hotel')
+        room_type_id = request.GET.get('room_type')
+        if room_type_id:
+            room_types = room_types.filter(id=room_type_id)
+
+        last_error = 'No active room category is available for the selected dates.'
+        for room_type in room_types:
+            try:
+                quote = quote_room_stay(
+                    room_type,
+                    check_in_date,
+                    check_out_date,
+                    rooms=rooms,
+                    guests=guests,
+                )
+            except RoomInventoryError as error:
+                last_error = str(error)
+                continue
+
             return JsonResponse({
+                'success': True,
                 'available': True,
-                'total_price': total_price,
-                'nights': days_needed,
-                'price_per_night': total_price / days_needed if days_needed > 0 else 0,
+                'room_type': {
+                    'id': room_type.id,
+                    'name': room_type.name,
+                },
+                'total_price': f'{quote["total"].amount:.2f}',
+                'currency': str(quote['total'].currency),
+                'nights': quote['nights'],
+                'rooms': rooms,
+                'price_per_night': (
+                    f'{quote["average_nightly_rate"].amount:.2f}'
+                ),
             })
-        else:
-            return JsonResponse({
-                'available': False,
-                'message': 'Hotel is not available for the selected dates'
-            })
+
+        return JsonResponse({
+            'success': True,
+            'available': False,
+            'message': last_error,
+        })
     
     except ValueError:
         return JsonResponse({'error': 'Invalid date format'})

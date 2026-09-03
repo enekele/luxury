@@ -107,6 +107,7 @@
                         <td class="ps-4"><strong>{{ booking.booking_reference }}</strong><br><small class="text-muted">{{ booking.created_at|date:'M d, Y' }}</small></td>
                         <td>
                             <strong>{{ booking.content_object|default:'Unavailable listing' }}</strong><br>
+                            {% if booking.room_type %}<small class="text-primary">{{ booking.room_type.name }} · {{ booking.quantity }} room{{ booking.quantity|pluralize }}</small><br>{% endif %}
                             <small class="text-muted text-uppercase">{{ booking.content_type.model }}</small>
                         </td>
                         <td>{{ booking.contact_name }}<br><small class="text-muted">{{ booking.contact_email }}</small></td>

@@ -105,6 +105,15 @@
                                                     <i class="bi bi-calendar-event"></i> Service Date: {{ booking.booking_date|date:"M d, Y" }}
                                                 </p>
                                             {% endif %}
+
+                                            {% if booking.room_type %}
+                                                <p class="text-muted mb-2">
+                                                    <i class="bi bi-door-open"></i> {{ booking.room_type.name }} · {{ booking.quantity }} room{{ booking.quantity|pluralize }}
+                                                </p>
+                                                <p class="text-muted mb-2">
+                                                    <i class="bi bi-calendar-range"></i> {{ booking.check_in|date:"M d, Y" }} – {{ booking.check_out|date:"M d, Y" }}
+                                                </p>
+                                            {% endif %}
                                             
                                             <p class="text-muted mb-0">
                                                 <i class="bi bi-receipt"></i> Booking ID: #{{ booking.id }}

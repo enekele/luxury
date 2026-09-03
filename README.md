@@ -38,6 +38,8 @@ The partner dashboard includes protected tools for:
 - creating hotel room categories with capacity, room counts, amenities, and
   category-level pricing;
 - publishing date-based hotel room availability and nightly-rate overrides;
+- letting customers select a room category, check live date availability, and
+  reserve inventory at the category's date-aware rate;
 - opening or closing owned inventory for new reservations;
 - searching, filtering, reviewing, and exporting owned reservations;
 - confirming, cancelling, or completing reservations through valid status

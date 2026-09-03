@@ -1,12 +1,14 @@
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.utils.html import format_html
+from hotels.inventory import release_booking_room_inventory
 from .models import Booking
 
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('booking_reference', 'user', 'content_object_display', 'booking_date', 'total_amount', 'status', 'created_at')
+    list_display = ('booking_reference', 'user', 'content_object_display', 'room_type', 'booking_date', 'total_amount', 'status', 'created_at')
     list_filter = ('status', 'content_type', 'booking_date', 'created_at')
     search_fields = ('booking_reference', 'user__email', 'user__first_name', 'user__last_name', 'contact_name', 'contact_email')
     readonly_fields = ('booking_reference', 'created_at', 'updated_at')
@@ -14,7 +16,7 @@ class BookingAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Booking Information', {
-            'fields': ('user', 'booking_reference', 'content_type', 'object_id', 'booking_date')
+            'fields': ('user', 'booking_reference', 'content_type', 'object_id', 'room_type', 'booking_date', 'check_in', 'check_out', 'quantity', 'inventory_reserved')
         }),
         ('Contact Information', {
             'fields': ('contact_name', 'contact_email', 'contact_phone')
@@ -64,8 +66,17 @@ class BookingAdmin(admin.ModelAdmin):
     confirm_bookings.short_description = "Confirm selected bookings"
     
     def cancel_bookings(self, request, queryset):
-        """Bulk cancel bookings"""
-        updated = queryset.filter(status__in=['pending', 'confirmed']).update(status='cancelled')
+        """Bulk cancel bookings and return any held room inventory."""
+        updated = 0
+        with transaction.atomic():
+            bookings = queryset.select_for_update().filter(
+                status__in=['pending', 'confirmed']
+            )
+            for booking in bookings:
+                release_booking_room_inventory(booking)
+                booking.status = 'cancelled'
+                booking.save(update_fields=['status', 'updated_at'])
+                updated += 1
         self.message_user(request, f'{updated} bookings cancelled.')
     cancel_bookings.short_description = "Cancel selected bookings"
     
@@ -78,5 +89,5 @@ class BookingAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """Optimize queryset with select_related"""
         return super().get_queryset(request).select_related(
-            'user', 'content_type'
+            'user', 'content_type', 'room_type'
         ).prefetch_related('content_object')

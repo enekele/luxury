@@ -1146,11 +1146,11 @@
             event.stopPropagation();
 
             // Check if user is authenticated (Django template check)
-            { if not user.is_authenticated }
+            {% if not user.is_authenticated %}
             alert('Please login to add items to your wishlist.');
             window.location.href = '{% url "account_login" %}';
             return;
-            { endif }
+            {% endif %}
 
             // Input validation
             if (!serviceType || !serviceId) {
@@ -1213,11 +1213,11 @@
         }
 
         function bookService(serviceType, serviceId) {
-            { if  not user.is_authenticated }
+            {% if not user.is_authenticated %}
             alert('Please login to make a booking.');
             window.location.href = '{% url "account_login" %}';
             return;
-            { endif }
+            {% endif %}
 
 
             // Open booking modal or redirect to booking page
