@@ -206,7 +206,7 @@
 					</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link {% if request.resolver_match.url_name == 'manage_properties' %}active{% endif %}" href="{% url 'partners_dashboard:manage_properties' %}">
+					<a class="nav-link {% if request.resolver_match.url_name == 'manage_properties' or request.resolver_match.url_name == 'manage_hotel_rooms' %}active{% endif %}" href="{% url 'partners_dashboard:manage_properties' %}">
 						<i class="fas fa-building me-2"></i>Manage Properties
 					</a>
 				</li>

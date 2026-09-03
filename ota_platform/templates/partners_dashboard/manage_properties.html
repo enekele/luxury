@@ -52,7 +52,7 @@
         <div>
             <p class="text-uppercase small fw-semibold opacity-75 mb-2">Partner operations</p>
             <h1 class="h2 mb-2">Property &amp; Inventory Manager</h1>
-            <p class="mb-0 opacity-75">Create listings, edit details, preview checkout, and control whether inventory is available for new reservations.</p>
+            <p class="mb-0 opacity-75">Create listings, manage hotel room categories, edit details, and control whether inventory is available for new reservations.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a href="{% url 'partners_dashboard:manage_reservations' %}" class="btn btn-light">
@@ -105,7 +105,8 @@
                                         </div>
                                         <div class="property-meta">
                                             {% if group.type == 'Hotel' %}
-                                                {{ property.city.name }} · {{ property.price_per_night }} per night
+                                                {{ property.city.name }} · {{ property.price_per_night }} per night<br>
+                                                {{ property.room_category_count }} categor{{ property.room_category_count|pluralize:'y,ies' }} · {{ property.available_room_count|default:0 }} rooms available
                                             {% elif group.type == 'Flight' %}
                                                 {{ property.origin.code }} → {{ property.destination.code }} · {{ property.available_seats }} seats
                                             {% elif group.type == 'Car' %}
@@ -120,6 +121,9 @@
                                             <span class="badge {% if property.is_available %}bg-success{% elif property.status == 'cancelled' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
                                                 {{ property.status|title }}
                                             </span>
+                                        {% elif group.type == 'Hotel' and property.is_available %}
+                                            <span class="badge bg-success">Available</span>
+                                            {% if not property.active_room_category_count %}<span class="badge bg-warning text-dark mt-1">Add rooms</span>{% endif %}
                                         {% elif property.is_available %}
                                             <span class="badge bg-success">Available</span>
                                         {% else %}
@@ -156,6 +160,9 @@
                                                 </form>
                                             {% endif %}
 
+                                            {% if group.type == 'Hotel' %}
+                                                <a href="{% url 'partners_dashboard:manage_hotel_rooms' property.id %}" class="btn btn-sm btn-outline-primary">Rooms</a>
+                                            {% endif %}
                                             <a href="{% url group.link_name property.id %}" class="btn btn-sm btn-primary">Edit</a>
                                             <a href="{% url group.checkout_url property.id %}" class="btn btn-sm btn-outline-secondary">Preview</a>
                                         </div>

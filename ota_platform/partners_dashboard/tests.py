@@ -8,7 +8,7 @@ from django.utils import timezone
 from bookings.models import Booking
 from core.models import Country, City
 from flights.models import Airline, Airport, Flight
-from hotels.models import Hotel, HotelPartner
+from hotels.models import Hotel, HotelAvailability, HotelPartner, RoomType
 from partners_dashboard.models import Partner
 from tours.models import TourCategory, TourOperator, Tour
 from cars.models import CarBrand, CarModel, CarRentalCompany, CarRental
@@ -243,6 +243,199 @@ class PartnerPropertyManagementTests(TestCase):
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.name, 'Nairobi Safari Escape Deluxe')
         self.assertTrue(self.tour.is_available)
+
+    def test_partner_can_add_and_edit_room_category(self):
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+        rooms_url = reverse(
+            'partners_dashboard:manage_hotel_rooms',
+            args=[self.hotel.id],
+        )
+
+        create_response = self.client.post(
+            rooms_url,
+            {
+                'action': 'save_room_type',
+                'room-name': 'Deluxe King',
+                'room-description': 'Large room with a city view.',
+                'room-price_amount': '240.00',
+                'room-currency': 'USD',
+                'room-max_occupancy': 3,
+                'room-total_rooms': 12,
+                'room-available_rooms': 8,
+                'room-size_sqm': 42,
+                'room-bed_type': 'King bed',
+                'room-amenities': 'Wi-Fi\nBreakfast, Balcony',
+                'room-is_active': 'on',
+            },
+        )
+
+        self.assertRedirects(create_response, rooms_url)
+        room_type = RoomType.objects.get(hotel=self.hotel, name='Deluxe King')
+        self.assertEqual(room_type.total_rooms, 12)
+        self.assertEqual(room_type.available_rooms, 8)
+        self.assertEqual(room_type.amenities, ['Wi-Fi', 'Breakfast', 'Balcony'])
+        self.assertEqual(room_type.price_per_night.amount, Decimal('240.00'))
+
+        edit_response = self.client.post(
+            rooms_url,
+            {
+                'action': 'save_room_type',
+                'room_type_id': room_type.id,
+                'room-name': 'Deluxe King',
+                'room-description': 'Renovated room with a city view.',
+                'room-price_amount': '265.00',
+                'room-currency': 'USD',
+                'room-max_occupancy': 4,
+                'room-total_rooms': 10,
+                'room-available_rooms': 6,
+                'room-size_sqm': 45,
+                'room-bed_type': 'King bed',
+                'room-amenities': 'Wi-Fi\nBreakfast',
+                'room-is_active': 'on',
+            },
+        )
+        room_type.refresh_from_db()
+
+        self.assertRedirects(edit_response, rooms_url)
+        self.assertEqual(room_type.max_occupancy, 4)
+        self.assertEqual(room_type.total_rooms, 10)
+        self.assertEqual(room_type.available_rooms, 6)
+        self.assertEqual(room_type.price_per_night.amount, Decimal('265.00'))
+
+        page_response = self.client.get(rooms_url)
+        self.assertContains(page_response, 'Deluxe King')
+        self.assertContains(page_response, '6 / 10 rooms')
+
+        self.client.logout()
+        public_response = self.client.get(
+            reverse('hotels:hotel_detail', args=[self.hotel.id])
+        )
+        self.assertEqual(public_response.status_code, 200)
+        self.assertContains(public_response, 'Deluxe King')
+        self.assertContains(public_response, '6 rooms left')
+
+    def test_room_category_rejects_more_available_than_total(self):
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+        response = self.client.post(
+            reverse(
+                'partners_dashboard:manage_hotel_rooms',
+                args=[self.hotel.id],
+            ),
+            {
+                'action': 'save_room_type',
+                'room-name': 'Impossible Room',
+                'room-description': 'Invalid capacity test.',
+                'room-price_amount': '100.00',
+                'room-currency': 'USD',
+                'room-max_occupancy': 2,
+                'room-total_rooms': 2,
+                'room-available_rooms': 3,
+                'room-size_sqm': '',
+                'room-bed_type': '',
+                'room-amenities': '',
+                'room-is_active': 'on',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Available rooms cannot exceed the total number of rooms.',
+        )
+        self.assertFalse(RoomType.objects.filter(name='Impossible Room').exists())
+
+    def test_partner_can_publish_date_based_room_availability(self):
+        room_type = RoomType.objects.create(
+            hotel=self.hotel,
+            name='Executive Suite',
+            description='Suite inventory',
+            max_occupancy=4,
+            total_rooms=5,
+            available_rooms=4,
+            price_per_night='300.00',
+        )
+        start_date = timezone.localdate() + timezone.timedelta(days=5)
+        end_date = start_date + timezone.timedelta(days=2)
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        response = self.client.post(
+            reverse(
+                'partners_dashboard:manage_hotel_rooms',
+                args=[self.hotel.id],
+            ),
+            {
+                'action': 'set_room_availability',
+                'availability-room_type': room_type.id,
+                'availability-start_date': start_date.isoformat(),
+                'availability-end_date': end_date.isoformat(),
+                'availability-available_rooms': 3,
+                'availability-price_amount': '325.00',
+                'availability-currency': 'USD',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        records = HotelAvailability.objects.filter(
+            room_type=room_type,
+            date__range=(start_date, end_date),
+        ).order_by('date')
+        self.assertEqual(records.count(), 3)
+        self.assertTrue(all(record.available_rooms == 3 for record in records))
+        self.assertTrue(
+            all(record.price_per_night.amount == Decimal('325.00') for record in records)
+        )
+
+        self.client.logout()
+        availability_response = self.client.get(
+            reverse('hotels:check_availability', args=[self.hotel.id]),
+            {
+                'check_in': start_date.isoformat(),
+                'check_out': (end_date + timezone.timedelta(days=1)).isoformat(),
+            },
+        )
+        availability_payload = availability_response.json()
+        self.assertTrue(availability_payload['available'])
+        self.assertEqual(
+            Decimal(str(availability_payload['total_price'])),
+            Decimal('975.00'),
+        )
+
+    def test_partner_cannot_manage_another_partners_rooms(self):
+        other_user = User.objects.create_user(
+            email='roomowner@example.com',
+            username='roomowner',
+            password='StrongPass123!',
+            first_name='Room',
+            last_name='Owner',
+        )
+        other_partner = Partner.objects.create(
+            user=other_user,
+            company_name='Room Owner Co',
+        )
+        other_hotel = Hotel.objects.create(
+            name='Private Rooms Hotel',
+            description='Another partner hotel',
+            city=self.city,
+            address='Nairobi',
+            price_per_night='180.00',
+        )
+        HotelPartner.objects.create(
+            owner=other_user,
+            hotel=other_hotel,
+            partner_name='Room Owner Co',
+            partner_id='ROOM-OWNER-1',
+            partner_profile=other_partner,
+        )
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        response = self.client.get(
+            reverse(
+                'partners_dashboard:manage_hotel_rooms',
+                args=[other_hotel.id],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_partner_can_view_and_filter_owned_reservations(self):
         pending_booking = self.create_booking()

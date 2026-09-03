@@ -35,6 +35,9 @@ and is redirected to `/partners/` automatically.
 The partner dashboard includes protected tools for:
 
 - creating and editing hotel, flight, car, and tour listings;
+- creating hotel room categories with capacity, room counts, amenities, and
+  category-level pricing;
+- publishing date-based hotel room availability and nightly-rate overrides;
 - opening or closing owned inventory for new reservations;
 - searching, filtering, reviewing, and exporting owned reservations;
 - confirming, cancelling, or completing reservations through valid status

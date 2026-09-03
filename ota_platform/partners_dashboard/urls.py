@@ -21,6 +21,7 @@ urlpatterns = [
     path('properties/tours/create/', views.create_tour_property, name='create_tour_property'),
     path('properties/<int:hotel_id>/update/', views.update_property, name='update_property'),
     path('properties/hotels/<int:hotel_id>/update/', views.update_hotel_property, name='update_hotel_property'),
+    path('properties/hotels/<int:hotel_id>/rooms/', views.manage_hotel_rooms, name='manage_hotel_rooms'),
     path('properties/flights/<int:flight_id>/update/', views.update_flight_property, name='update_flight_property'),
     path('properties/cars/<int:car_id>/update/', views.update_car_property, name='update_car_property'),
     path('properties/tours/<int:tour_id>/update/', views.update_tour_property, name='update_tour_property'),

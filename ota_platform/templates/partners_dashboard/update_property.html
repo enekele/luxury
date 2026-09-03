@@ -9,7 +9,10 @@
             <h2 class="h4 mb-1">Update Property</h2>
             <p class="text-muted mb-0">Update listing details for {{ property.name }}.</p>
         </div>
-        <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Back to properties</a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'partners_dashboard:manage_hotel_rooms' property.id %}" class="btn btn-outline-primary">Manage rooms</a>
+            <a href="{% url 'partners_dashboard:manage_properties' %}" class="btn btn-outline-secondary">Back to properties</a>
+        </div>
     </div>
 
     <div class="card shadow-sm border-0">

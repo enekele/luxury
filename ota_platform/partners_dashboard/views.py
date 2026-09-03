@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.http import (
     Http404,
     HttpResponse,
@@ -22,14 +22,19 @@ from django.views.decorators.http import require_POST
 from djmoney.money import Money
 
 from affiliates.models import AffiliateProfile 
-from hotels.models import Hotel, HotelPartner
+from hotels.models import Hotel, HotelAvailability, HotelPartner, RoomType
 from bookings.models import Booking
 from cars.models import CarBrand, CarRental, CarModel, CarRentalCompany
 from flights.models import Flight, Airline, Airport
 from tours.models import Tour, TourCategory, TourOperator
 from core.models import City, Country
 from partners_dashboard.decorators import partner_required
-from partners_dashboard.forms import CityForm, CountryForm
+from partners_dashboard.forms import (
+    CityForm,
+    CountryForm,
+    RoomAvailabilityForm,
+    RoomTypeForm,
+)
 
 
 BOOKING_STATUS_ACTIONS = {
@@ -233,6 +238,7 @@ def partners_dashboard(request):
             'icon': 'fas fa-cubes',
             'items': [
                 'Create and edit hotels, flights, cars, and tours',
+                'Manage hotel room categories and date-based room inventory',
                 'Open or close inventory for new reservations',
                 'Maintain country and city destination data'
             ],
@@ -300,7 +306,18 @@ def get_partner_profile_for_user(user):
 def manage_properties(request):
     """List the partner's managed properties and allow quick updates."""
     inventory = partner_inventory(request.user)
-    hotels = inventory['hotels'].order_by('-updated_at')
+    hotels = inventory['hotels'].annotate(
+        room_category_count=Count('room_types', distinct=True),
+        active_room_category_count=Count(
+            'room_types',
+            filter=Q(room_types__is_active=True),
+            distinct=True,
+        ),
+        available_room_count=Sum(
+            'room_types__available_rooms',
+            filter=Q(room_types__is_active=True),
+        ),
+    ).order_by('-updated_at')
     flights = inventory['flights'].order_by('-updated_at')
     cars = inventory['cars'].order_by('-updated_at')
     tours = inventory['tours'].order_by('-updated_at')
@@ -359,6 +376,130 @@ def manage_properties(request):
         'property_count': sum(item['items'].count() for item in properties),
     }
     return render(request, 'partners_dashboard/manage_properties.html', context)
+
+
+@partner_required
+def manage_hotel_rooms(request, hotel_id):
+    """Create room categories and maintain date-based hotel room inventory."""
+    hotel = owned_property(request.user, 'hotel', hotel_id)
+    edit_room = None
+    requested_room_id = (
+        request.POST.get('room_type_id')
+        if request.method == 'POST'
+        else request.GET.get('edit_room')
+    )
+    if requested_room_id:
+        try:
+            requested_room_id = int(requested_room_id)
+        except (TypeError, ValueError):
+            raise Http404('Room category not found.')
+        edit_room = get_object_or_404(
+            RoomType,
+            id=requested_room_id,
+            hotel=hotel,
+        )
+
+    room_form = RoomTypeForm(
+        hotel=hotel,
+        instance=edit_room,
+        prefix='room',
+    )
+    availability_form = RoomAvailabilityForm(
+        hotel=hotel,
+        prefix='availability',
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'save_room_type':
+            room_form = RoomTypeForm(
+                request.POST,
+                hotel=hotel,
+                instance=edit_room,
+                prefix='room',
+            )
+            if room_form.is_valid():
+                with transaction.atomic():
+                    room_type = room_form.save()
+                    HotelAvailability.objects.filter(
+                        room_type=room_type,
+                        available_rooms__gt=room_type.total_rooms,
+                    ).update(available_rooms=room_type.total_rooms)
+                verb = 'updated' if edit_room else 'added'
+                messages.success(
+                    request,
+                    f'{room_type.name} was {verb} successfully.',
+                )
+                return redirect(
+                    'partners_dashboard:manage_hotel_rooms',
+                    hotel_id=hotel.id,
+                )
+        elif action == 'set_room_availability':
+            availability_form = RoomAvailabilityForm(
+                request.POST,
+                hotel=hotel,
+                prefix='availability',
+            )
+            if availability_form.is_valid():
+                room_type = availability_form.cleaned_data['room_type']
+                start_date = availability_form.cleaned_data['start_date']
+                end_date = availability_form.cleaned_data['end_date']
+                available_rooms = availability_form.cleaned_data['available_rooms']
+                rate = Money(
+                    availability_form.cleaned_data['price_amount'],
+                    availability_form.cleaned_data['currency'],
+                )
+                day_count = (end_date - start_date).days + 1
+
+                with transaction.atomic():
+                    for offset in range(day_count):
+                        inventory_date = start_date + timedelta(days=offset)
+                        HotelAvailability.objects.update_or_create(
+                            room_type=room_type,
+                            date=inventory_date,
+                            defaults={
+                                'available_rooms': available_rooms,
+                                'price_per_night': rate,
+                            },
+                        )
+
+                messages.success(
+                    request,
+                    f'Updated {room_type.name} inventory for {day_count} day'
+                    f'{"s" if day_count != 1 else ""}.',
+                )
+                return redirect(
+                    'partners_dashboard:manage_hotel_rooms',
+                    hotel_id=hotel.id,
+                )
+        else:
+            messages.error(request, 'Choose a room inventory action.')
+
+    room_types = hotel.room_types.all().order_by('price_per_night', 'name')
+    availability_records = HotelAvailability.objects.filter(
+        room_type__hotel=hotel,
+        date__gte=timezone.localdate(),
+    ).select_related('room_type').order_by('date', 'room_type__name')[:180]
+
+    context = {
+        'hotel': hotel,
+        'room_types': room_types,
+        'room_form': room_form,
+        'availability_form': availability_form,
+        'availability_records': availability_records,
+        'edit_room': edit_room,
+        'room_category_count': room_types.count(),
+        'has_active_room_types': room_types.filter(is_active=True).exists(),
+        'total_room_count': sum(room.total_rooms for room in room_types),
+        'available_room_count': sum(
+            room.available_rooms for room in room_types if room.is_active
+        ),
+    }
+    return render(
+        request,
+        'partners_dashboard/manage_hotel_rooms.html',
+        context,
+    )
 
 
 @partner_required
@@ -552,7 +693,11 @@ def create_hotel_property(request):
                 partner_profile=partner,
             )
         messages.success(request, f'{hotel.name} was added successfully.')
-        return redirect('partners_dashboard:manage_properties')
+        messages.info(request, 'Add at least one room category and its availability.')
+        return redirect(
+            'partners_dashboard:manage_hotel_rooms',
+            hotel_id=hotel.id,
+        )
 
     countries = Country.objects.all().order_by('name')
     cities = City.objects.filter(is_active=True).select_related('country').order_by('name')

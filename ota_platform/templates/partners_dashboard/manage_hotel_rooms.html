@@ -1,0 +1,295 @@
+{% extends 'partners_dashboard/base_partners.html' %}
+
+{% block page_title %}Rooms — {{ hotel.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rooms-hero {
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, #0b3b69 0%, #0066cc 100%);
+        color: #fff;
+        box-shadow: var(--card-shadow);
+    }
+
+    .inventory-card, .metric-card {
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .field-error {
+        color: var(--danger);
+        font-size: .82rem;
+        margin-top: .25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="rooms-hero p-4 p-lg-5 mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <p class="text-uppercase small fw-semibold opacity-75 mb-2">Hotel room inventory</p>
+            <h1 class="h2 mb-2">{{ hotel.name }}</h1>
+            <p class="mb-0 opacity-75">Create room categories, set room counts and rates, and publish date-based availability.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-light" href="{% url 'partners_dashboard:update_hotel_property' hotel.id %}">
+                <i class="fas fa-pen me-2"></i>Edit hotel
+            </a>
+            <a class="btn btn-outline-light" href="{% url 'partners_dashboard:manage_properties' %}">
+                <i class="fas fa-arrow-left me-2"></i>Properties
+            </a>
+        </div>
+    </div>
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-4">
+        <div class="card metric-card p-3 h-100">
+            <span class="text-muted small">Room categories</span>
+            <strong class="h4 mb-0">{{ room_category_count }}</strong>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card metric-card p-3 h-100">
+            <span class="text-muted small">Total rooms</span>
+            <strong class="h4 mb-0">{{ total_room_count }}</strong>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card metric-card p-3 h-100">
+            <span class="text-muted small">Available now</span>
+            <strong class="h4 mb-0 text-success">{{ available_room_count }}</strong>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-7">
+        <section class="card inventory-card overflow-hidden h-100">
+            <div class="card-header bg-white py-3">
+                <h2 class="h5 mb-1">Room categories</h2>
+                <p class="text-muted small mb-0">Examples include Standard, Deluxe, Suite, or Family Room.</p>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Category</th>
+                            <th>Capacity</th>
+                            <th>Rate</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in room_types %}
+                            <tr>
+                                <td class="ps-4">
+                                    <strong>{{ room.name }}</strong><br>
+                                    <small class="text-muted">Up to {{ room.max_occupancy }} guest{{ room.max_occupancy|pluralize }}{% if room.bed_type %} · {{ room.bed_type }}{% endif %}</small>
+                                </td>
+                                <td>{{ room.available_rooms }} / {{ room.total_rooms }} rooms</td>
+                                <td>{{ room.price_per_night }}</td>
+                                <td>
+                                    {% if room.is_active and room.available_rooms > 0 %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% elif room.is_active %}
+                                        <span class="badge bg-warning text-dark">Sold out</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Hidden</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a class="btn btn-sm btn-outline-primary" href="?edit_room={{ room.id }}">Edit</a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="fas fa-bed fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">No room categories yet. Add the first category using the form.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-5">
+        <section class="card inventory-card">
+            <div class="card-header bg-white py-3">
+                <h2 class="h5 mb-1">{% if edit_room %}Edit {{ edit_room.name }}{% else %}Add room category{% endif %}</h2>
+                <p class="text-muted small mb-0">The default room count and rate apply when no date override exists.</p>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_room_type">
+                    {% if edit_room %}<input type="hidden" name="room_type_id" value="{{ edit_room.id }}">{% endif %}
+
+                    {% if room_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ room_form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="{{ room_form.name.id_for_label }}">Category name</label>
+                            {{ room_form.name }}
+                            {% for error in room_form.name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ room_form.description.id_for_label }}">Description</label>
+                            {{ room_form.description }}
+                            {% for error in room_form.description.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label" for="{{ room_form.price_amount.id_for_label }}">Price per night</label>
+                            {{ room_form.price_amount }}
+                            {% for error in room_form.price_amount.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label" for="{{ room_form.currency.id_for_label }}">Currency</label>
+                            {{ room_form.currency }}
+                            {% for error in room_form.currency.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ room_form.max_occupancy.id_for_label }}">Max guests</label>
+                            {{ room_form.max_occupancy }}
+                            {% for error in room_form.max_occupancy.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ room_form.total_rooms.id_for_label }}">Total rooms</label>
+                            {{ room_form.total_rooms }}
+                            {% for error in room_form.total_rooms.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ room_form.available_rooms.id_for_label }}">Available</label>
+                            {{ room_form.available_rooms }}
+                            {% for error in room_form.available_rooms.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ room_form.size_sqm.id_for_label }}">Room size (m²)</label>
+                            {{ room_form.size_sqm }}
+                            {% for error in room_form.size_sqm.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ room_form.bed_type.id_for_label }}">Bed type</label>
+                            {{ room_form.bed_type }}
+                            {% for error in room_form.bed_type.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ room_form.amenities.id_for_label }}">Room amenities</label>
+                            {{ room_form.amenities }}
+                            <div class="form-text">{{ room_form.amenities.help_text }}</div>
+                            {% for error in room_form.amenities.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ room_form.is_active }}
+                                <label class="form-check-label" for="{{ room_form.is_active.id_for_label }}">Category available to customers</label>
+                            </div>
+                            {% for error in room_form.is_active.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-primary" type="submit">{% if edit_room %}Save category{% else %}Add category{% endif %}</button>
+                        {% if edit_room %}<a class="btn btn-outline-secondary" href="{% url 'partners_dashboard:manage_hotel_rooms' hotel.id %}">Cancel edit</a>{% endif %}
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="card inventory-card mb-4">
+    <div class="card-header bg-white py-3">
+        <h2 class="h5 mb-1">Date-based availability</h2>
+        <p class="text-muted small mb-0">Apply the same room count and nightly rate to one date or a range of dates. Existing dates are updated.</p>
+    </div>
+    <div class="card-body">
+        {% if has_active_room_types %}
+            <form method="post" class="row g-3 align-items-end" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="set_room_availability">
+                <div class="col-md-6 col-xl-3">
+                    <label class="form-label" for="{{ availability_form.room_type.id_for_label }}">Room category</label>
+                    {{ availability_form.room_type }}
+                    {% for error in availability_form.room_type.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-3 col-xl-2">
+                    <label class="form-label" for="{{ availability_form.start_date.id_for_label }}">Start date</label>
+                    {{ availability_form.start_date }}
+                    {% for error in availability_form.start_date.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-3 col-xl-2">
+                    <label class="form-label" for="{{ availability_form.end_date.id_for_label }}">End date</label>
+                    {{ availability_form.end_date }}
+                    {% for error in availability_form.end_date.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4 col-xl-2">
+                    <label class="form-label" for="{{ availability_form.available_rooms.id_for_label }}">Rooms per day</label>
+                    {{ availability_form.available_rooms }}
+                    {% for error in availability_form.available_rooms.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-5 col-xl-2">
+                    <label class="form-label" for="{{ availability_form.price_amount.id_for_label }}">Nightly rate</label>
+                    {{ availability_form.price_amount }}
+                    {% for error in availability_form.price_amount.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-3 col-xl-1">
+                    <label class="form-label" for="{{ availability_form.currency.id_for_label }}">Currency</label>
+                    {{ availability_form.currency }}
+                    {% for error in availability_form.currency.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button class="btn btn-primary" type="submit">Update availability</button>
+                </div>
+            </form>
+        {% else %}
+            <div class="alert alert-info mb-0">Add an active room category before setting date-based availability.</div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card inventory-card overflow-hidden">
+    <div class="card-header bg-white py-3">
+        <h2 class="h5 mb-1">Upcoming inventory</h2>
+        <p class="text-muted small mb-0">The next 180 category-date entries are shown.</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Date</th>
+                    <th>Room category</th>
+                    <th>Available rooms</th>
+                    <th class="pe-4">Nightly rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inventory in availability_records %}
+                    <tr>
+                        <td class="ps-4">{{ inventory.date|date:'D, M j, Y' }}</td>
+                        <td>{{ inventory.room_type.name }}</td>
+                        <td>
+                            {% if inventory.available_rooms > 0 %}
+                                <span class="text-success fw-semibold">{{ inventory.available_rooms }}</span>
+                            {% else %}
+                                <span class="text-danger fw-semibold">Sold out</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4">{{ inventory.price_per_night }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-5">No date-specific availability has been published yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
