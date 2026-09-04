@@ -13,6 +13,9 @@ if not SECRET_KEY:
         SECRET_KEY = 'django-insecure-local-development-only-change-me'
     else:
         raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is disabled.')
+# PAYSTACK
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY','').strip()
+PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIKC_KEY','').strip()
 
 ALLOWED_HOSTS = [
     host.strip()
