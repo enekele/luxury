@@ -109,13 +109,41 @@ class PaystakClient:
         }
         url = f"{self.base_url.rstrip('/')}/transaction/charge_authorization"
         try:
-            res = requests.post(url, headers=self.headers, json=payload, timeout=self.timeout)
-            res.raise_for_status()
-            return res.json()
-        except requests.RequestException as e:
-            logger.exception("Paystack charge_authorization failed")
-            return {"status": False, "message": str(e)}
+    res = requests.post(
+        url,
+        headers=self.headers,
+        json=payload,
+        timeout=self.timeout,
+    )
 
+    logger.info(
+        "Paystack initialize: HTTP %s | %s",
+        res.status_code,
+        res.text,
+    )
+
+    try:
+        data = res.json()
+    except ValueError:
+        data = {
+            "status": False,
+            "message": res.text or "Invalid response from Paystack",
+        }
+
+    if not res.ok:
+        logger.error(
+            "Paystack rejected transaction: %s",
+            data,
+        )
+
+    return data
+
+except requests.RequestException as e:
+    logger.exception("Paystack initialize_payment failed")
+    return {
+        "status": False,
+        "message": str(e),
+    }
     def verify_webhook_signature(self, request) -> bool:
         """
         Verify webhook signature. Paystack sends X-Paystack-Signature header (HMAC-SHA512).
