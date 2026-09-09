@@ -17,6 +17,18 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+On Windows PowerShell, create `.env` from `.env.example`, then run:
+
+```powershell
+Copy-Item .env.example .env
+python manage.py migrate
+python manage.py runserver
+```
+
+The application loads `.env` automatically. Replace the example Paystack
+credentials with active credentials from your Paystack dashboard before using
+hotel checkout.
+
 When `DATABASE_URL` is blank, local development uses SQLite. Open
 `http://127.0.0.1:8000/` after the server starts.
 

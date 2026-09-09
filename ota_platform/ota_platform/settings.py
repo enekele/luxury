@@ -2,21 +2,23 @@ import os
 import sys
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
+from decouple import AutoConfig
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+config = AutoConfig(search_path=BASE_DIR.parent)
 
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-SECRET_KEY = os.getenv('SECRET_KEY', '').strip()
+SECRET_KEY = config('SECRET_KEY', default='').strip()
 if not SECRET_KEY:
     if DEBUG:
         SECRET_KEY = 'django-insecure-local-development-only-change-me'
     else:
         raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is disabled.')
 # PAYSTACK
-PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '').strip()
-PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '').strip()
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='').strip()
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='').strip()
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -292,11 +294,14 @@ STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 
 # Paystack settings
-PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
-PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
-PAYSTACK_BASE_URL = os.getenv('PAYSTACK_BASE_URL', default='https://api.paystack.co')
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
+PAYSTACK_BASE_URL = config(
+    'PAYSTACK_BASE_URL',
+    default='https://api.paystack.co',
+)
 BOOKING_PAYMENT_HOLD_MINUTES = int(
-    os.getenv('BOOKING_PAYMENT_HOLD_MINUTES', '15')
+    config('BOOKING_PAYMENT_HOLD_MINUTES', default='15')
 )
 
 # OpenAI keys
