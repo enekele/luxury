@@ -193,13 +193,18 @@ def initialize_booking_payment(
         _release_failed_booking_hold(booking.pk)
         if isinstance(exc, BookingPaymentError):
             raise
+        if isinstance(exc, RuntimeError) and 'PAYSTACK_SECRET_KEY' in str(exc):
+            raise BookingPaymentError(
+                'PAYSTACK_SECRET_KEY is not configured. Add an active Paystack '
+                'secret key to .env or the deployment environment.'
+            ) from exc
         logger.exception(
             'Unexpected error starting payment for booking %s',
             booking.booking_reference,
         )
         raise BookingPaymentError(
             'Secure checkout is temporarily unavailable. Verify the Paystack '
-            'secret key and gateway configuration. No charge was made.'
+            'secret key and gateway configuration.'
         ) from exc
 
 

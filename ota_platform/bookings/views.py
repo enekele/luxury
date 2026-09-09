@@ -151,7 +151,7 @@ def create_booking(request):
             return _booking_error(
                 request,
                 f'Secure checkout could not be started: {error} '
-                'No charge was made and the room hold was released.',
+                'No charge was made; the room hold was released.',
                 status=502,
             )
         return redirect(checkout_url)
