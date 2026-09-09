@@ -17,7 +17,8 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-On Windows PowerShell, create `.env` from `.env.example`, then run:
+On Windows PowerShell, create `.env` from `.env.example` in either the
+repository root or `ota_platform`, then run:
 
 ```powershell
 Copy-Item .env.example .env

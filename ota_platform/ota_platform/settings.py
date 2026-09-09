@@ -6,7 +6,20 @@ from decouple import AutoConfig
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-config = AutoConfig(search_path=BASE_DIR.parent)
+_env_directories = [
+    Path.cwd(),
+    BASE_DIR,
+    BASE_DIR.parent,
+]
+_env_directory = next(
+    (
+        directory
+        for directory in _env_directories
+        if (directory / '.env').is_file()
+    ),
+    BASE_DIR.parent,
+)
+config = AutoConfig(search_path=_env_directory)
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
