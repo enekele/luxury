@@ -198,7 +198,8 @@ def initialize_booking_payment(
             booking.booking_reference,
         )
         raise BookingPaymentError(
-            'Secure checkout is temporarily unavailable. No charge was made.'
+            'Secure checkout is temporarily unavailable. Verify the Paystack '
+            'secret key and gateway configuration. No charge was made.'
         ) from exc
 
 

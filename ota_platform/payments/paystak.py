@@ -76,8 +76,19 @@ class PaystakClient:
         url = f"{self.base_url.rstrip('/')}/transaction/initialize"
         try:
             res = requests.post(url, headers=self.headers, json=payload, timeout=self.timeout)
-            res.raise_for_status()
-            return res.json()
+            try:
+                data = res.json()
+            except ValueError:
+                data = {
+                    "status": False,
+                    "message": res.text or "Invalid response from Paystack",
+                }
+            if not res.ok:
+                logger.error(
+                    "Paystack rejected transaction initialization: %s",
+                    data,
+                )
+            return data
         except requests.RequestException as e:
             logger.exception("Paystack initialize_payment failed")
             return {"status": False, "message": str(e)}
@@ -157,4 +168,3 @@ class PaystakClient:
         except Exception:
             logger.exception("Error verifying Paystack webhook signature")
             return False
-
