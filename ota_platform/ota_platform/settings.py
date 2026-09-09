@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
@@ -14,8 +15,8 @@ if not SECRET_KEY:
     else:
         raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is disabled.')
 # PAYSTACK
-PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY','').strip()
-PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIKC_KEY','').strip()
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '').strip()
+PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '').strip()
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -182,12 +183,17 @@ LANGUAGES = [
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+USE_TEST_STATICFILES = 'test' in sys.argv or DEBUG
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        'BACKEND': (
+            'django.contrib.staticfiles.storage.StaticFilesStorage'
+            if USE_TEST_STATICFILES
+            else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+        ),
     },
 }
 
