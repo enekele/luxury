@@ -224,9 +224,9 @@
 			<ul class="navbar-nav ms-auto">
 				{% if user.is_authenticated %}
 					<li class="nav-item">
-						<a class="nav-link user-profile" href="#">
+						<a class="nav-link user-profile {% if request.resolver_match.url_name == 'partner_profile' %}active{% endif %}" href="{% url 'partners_dashboard:partner_profile' %}">
 							<i class="fas fa-user-circle"></i>
-							<span>{{ user.get_full_name|default:user.username }}</span>
+							<span>{{ request.partner.company_name|default:user.get_full_name|default:user.username }}</span>
 						</a>
 					</li>
 					<li class="nav-item">

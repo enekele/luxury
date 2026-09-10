@@ -142,6 +142,42 @@ class PartnerPropertyManagementTests(TestCase):
         self.assertContains(response, 'KQ101')
         self.assertContains(response, 'Nairobi Safari Escape')
 
+    def test_partner_has_a_separate_profile_and_cannot_use_end_user_profile(self):
+        self.client.login(email='partner@example.com', password='StrongPass123!')
+
+        partner_profile = self.client.get(
+            reverse('partners_dashboard:partner_profile')
+        )
+        self.assertEqual(partner_profile.status_code, 200)
+        self.assertContains(partner_profile, 'Partner account')
+        self.assertContains(partner_profile, 'Blue Pearl Travel')
+
+        end_user_profile = self.client.get(reverse('profile'))
+        self.assertRedirects(
+            end_user_profile,
+            reverse('partners_dashboard:partner_profile'),
+        )
+
+        response = self.client.post(
+            reverse('partners_dashboard:partner_profile'),
+            {
+                'company_name': 'Blue Pearl Adventures',
+                'website': 'https://bluepearl.example',
+                'first_name': 'Janet',
+                'last_name': 'Partner',
+                'phone': '+254700000000',
+            },
+        )
+        self.assertRedirects(
+            response,
+            reverse('partners_dashboard:partner_profile'),
+        )
+        self.partner.refresh_from_db()
+        self.user.refresh_from_db()
+        self.assertEqual(self.partner.company_name, 'Blue Pearl Adventures')
+        self.assertEqual(self.partner.website, 'https://bluepearl.example')
+        self.assertEqual(self.user.first_name, 'Janet')
+
     def test_partner_can_create_hotel_property(self):
         self.client.login(email='partner@example.com', password='StrongPass123!')
         response = self.client.post(

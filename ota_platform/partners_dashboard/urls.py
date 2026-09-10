@@ -8,6 +8,7 @@ app_name = "partners_dashboard"
 urlpatterns = [
     path('', views.partners_dashboard, name='partners_dashboard'),
     path('partners/', views.partners_dashboard, name='legacy_partners_dashboard'),
+    path('profile/', views.partner_profile, name='partner_profile'),
     path('locations/', views.manage_locations, name='manage_locations'),
     path('reservations/', views.manage_reservations, name='manage_reservations'),
     path('reservations/export/', views.export_reservations, name='export_reservations'),

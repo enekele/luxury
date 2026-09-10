@@ -317,6 +317,48 @@ def get_partner_profile_for_user(user):
 
 
 @partner_required
+def partner_profile(request):
+    """Display and update the authenticated partner's business profile."""
+    partner = request.partner
+
+    if request.method == 'POST':
+        partner.company_name = request.POST.get(
+            'company_name',
+            partner.company_name,
+        ).strip()
+        partner.website = request.POST.get('website', partner.website).strip()
+        request.user.first_name = request.POST.get(
+            'first_name',
+            request.user.first_name,
+        ).strip()
+        request.user.last_name = request.POST.get(
+            'last_name',
+            request.user.last_name,
+        ).strip()
+        request.user.phone = request.POST.get(
+            'phone',
+            request.user.phone,
+        ).strip()
+        request.user.save(update_fields=['first_name', 'last_name', 'phone'])
+        partner.save(update_fields=['company_name', 'website'])
+        messages.success(request, 'Partner profile updated successfully.')
+        return redirect('partners_dashboard:partner_profile')
+
+    inventory = partner_inventory(request.user)
+    context = {
+        'partner': partner,
+        'partner_user': request.user,
+        'property_counts': {
+            'hotels': inventory['hotels'].count(),
+            'flights': inventory['flights'].count(),
+            'cars': inventory['cars'].count(),
+            'tours': inventory['tours'].count(),
+        },
+    }
+    return render(request, 'partners_dashboard/profile.html', context)
+
+
+@partner_required
 def manage_properties(request):
     """List the partner's managed properties and allow quick updates."""
     inventory = partner_inventory(request.user)

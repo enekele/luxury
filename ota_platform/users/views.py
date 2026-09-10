@@ -17,6 +17,9 @@ User = get_user_model()
 @login_required
 def profile(request):
     """User profile view"""
+    partner = getattr(request.user, 'partner_profile', None)
+    if partner is not None and partner.is_active:
+        return redirect('partners_dashboard:partner_profile')
     user = request.user
     
     # Get user statistics
@@ -42,6 +45,9 @@ def profile(request):
 @login_required
 def edit_profile(request):
     """Edit user profile"""
+    partner = getattr(request.user, 'partner_profile', None)
+    if partner is not None and partner.is_active:
+        return redirect('partners_dashboard:partner_profile')
     user = request.user
     
     if request.method == 'POST':
