@@ -21,7 +21,7 @@ _env_directory = next(
 )
 config = AutoConfig(search_path=_env_directory)
 
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 SECRET_KEY = config('SECRET_KEY', default='').strip()
 if not SECRET_KEY:
