@@ -13,6 +13,11 @@ class Partner(models.Model):
 	def __str__(self):
 		return self.company_name or str(self.user)
 
+	@property
+	def owner(self):
+		"""The user who owns and manages this partner's properties."""
+		return self.user
+
 
 Partnergit = Partner
 
@@ -45,4 +50,3 @@ class PartnerPayment(models.Model):
 
 	def __str__(self):
 		return f"{self.partner} - {self.amount} on {self.payment_date.date()}"
-

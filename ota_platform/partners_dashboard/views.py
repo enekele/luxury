@@ -56,7 +56,7 @@ def partner_inventory(request_user):
     """Return the four inventory querysets owned by a partner user."""
     return {
         'hotels': Hotel.objects.filter(
-            partner__partner_profile__user=request_user
+            partner__partner_profile=request_user.partner_profile
         ),
         'flights': Flight.objects.filter(partner_profile__user=request_user),
         'cars': CarRental.objects.filter(partner_profile__user=request_user),
@@ -931,9 +931,7 @@ def cities_for_country(request):
 @partner_required
 def update_hotel_property(request, hotel_id):
     """Update a partner-owned hotel property."""
-    hotel = get_object_or_404(Hotel, id=hotel_id)
-    if not getattr(hotel, 'partner', None) or hotel.partner.owner != request.user:
-        return HttpResponseForbidden('You do not have permission to manage this property.')
+    hotel = owned_property(request.user, 'hotel', hotel_id)
 
     if request.method == 'POST':
         hotel.name = request.POST.get('name', hotel.name).strip()
@@ -1042,9 +1040,7 @@ def update_tour_property(request, tour_id):
 
 @partner_required
 def checkout_hotel_property(request, hotel_id):
-    hotel = get_object_or_404(Hotel, id=hotel_id)
-    if getattr(hotel, 'partner', None) is None or hotel.partner.owner != request.user:
-        return HttpResponseForbidden('You do not have permission to access this checkout page.')
+    hotel = owned_property(request.user, 'hotel', hotel_id)
     context = {'property': hotel, 'property_type': 'Hotel'}
     return render(request, 'partners_dashboard/checkout_hotel_property.html', context)
 

@@ -142,6 +142,14 @@ class PartnerPropertyManagementTests(TestCase):
         self.assertContains(response, 'KQ101')
         self.assertContains(response, 'Nairobi Safari Escape')
 
+    def test_partner_profile_is_the_property_owner(self):
+        self.assertEqual(self.partner.owner, self.user)
+        self.assertEqual(
+            self.hotel.partner.partner_profile,
+            self.partner,
+        )
+        self.assertEqual(self.hotel.partner.owner, self.user)
+
     def test_partner_has_a_separate_profile_and_cannot_use_end_user_profile(self):
         self.client.login(email='partner@example.com', password='StrongPass123!')
 
@@ -149,7 +157,7 @@ class PartnerPropertyManagementTests(TestCase):
             reverse('partners_dashboard:partner_profile')
         )
         self.assertEqual(partner_profile.status_code, 200)
-        self.assertContains(partner_profile, 'Partner account')
+        self.assertContains(partner_profile, 'Property owner account')
         self.assertContains(partner_profile, 'Blue Pearl Travel')
 
         end_user_profile = self.client.get(reverse('profile'))

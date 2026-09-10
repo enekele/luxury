@@ -1,14 +1,14 @@
 {% extends "partners_dashboard/base_partners.html" %}
 
-{% block page_title %}Partner Profile{% endblock %}
+{% block page_title %}Owner Profile{% endblock %}
 
 {% block content %}
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="card shadow-sm h-100">
             <div class="card-body">
-                <p class="text-uppercase small fw-semibold text-primary mb-2">Partner account</p>
-                <h1 class="h3 mb-1">{{ partner.company_name|default:"Your partner profile" }}</h1>
+                <p class="text-uppercase small fw-semibold text-primary mb-2">Property owner account</p>
+                <h1 class="h3 mb-1">{{ partner.company_name|default:"Your owner profile" }}</h1>
                 <p class="text-muted mb-4">{{ partner_user.email }}</p>
 
                 <div class="row g-3">
@@ -38,7 +38,7 @@
                     </div>
                 </div>
                 <p class="small text-muted mt-4 mb-0">
-                    You can manage only properties assigned to your partner account.
+                    You can manage only properties owned by your owner account.
                 </p>
             </div>
         </div>
